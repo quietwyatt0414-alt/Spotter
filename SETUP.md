@@ -53,8 +53,8 @@ firebase login
 Get the repo onto your Mac (the first time you use `git`, macOS may offer to install developer tools — say yes):
 
 ```
-git clone https://github.com/YOUR_GITHUB_NAME/spotter.git
-cd spotter
+git clone https://github.com/quietwyatt0414-alt/Spotter.git
+cd Spotter
 ```
 
 Deploy the privacy rules:
@@ -73,7 +73,7 @@ Answer its questions like this:
 
 | It asks | Answer |
 |---|---|
-| Which GitHub repository? | `YOUR_GITHUB_NAME/spotter` (it opens GitHub in your browser to approve) |
+| Which GitHub repository? | `quietwyatt0414-alt/Spotter` (it opens GitHub in your browser to approve) |
 | Set up the workflow to run a build script before every deploy? | **N** |
 | Set up automatic deployment… when a PR is merged? | **Y**, branch **main** |
 | File `.github/workflows/…` already exists. Overwrite? | **N** (the repo already has the right ones) |
