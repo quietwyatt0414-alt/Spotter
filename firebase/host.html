@@ -1,0 +1,149 @@
+<!-- SPOTTER-FIREBASE-HOST:START — inserted before the app script by build_firebase.py. Adds Google sign-in
+     and saves to Firestore by giving the app the same small storage interface it uses on Claude. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="Spotter">
+<style>
+#gate{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+#gate[hidden]{display:none}
+#gate .g-in{width:min(400px,100%);display:flex;flex-direction:column;align-items:stretch;gap:12px;text-align:center}
+#gate .g-brand{justify-content:center;font-size:30px;margin-bottom:6px}
+#gate .g-brand .brand-dot{width:14px;height:14px}
+#gate h1{font-size:34px;font-weight:800;text-transform:uppercase;line-height:1.05;margin:4px 0}
+#gate p{color:var(--tx2);margin:0;font-size:15px}
+#gate .g-small{font-size:13px;color:var(--tx3)}
+#gate .g-warn{background:color-mix(in srgb,var(--warm) 14%,transparent);border:1px solid color-mix(in srgb,var(--warm) 40%,transparent);color:var(--tx);border-radius:12px;padding:12px;font-size:14px;text-align:left}
+#gate .g-err{color:var(--danger);font-size:14px;min-height:1em}
+#gate .g-feats{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;text-align:left;font-size:14px;color:var(--tx2);margin:6px 0 4px}
+#gate .g-feats span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--acc);transform:rotate(45deg);margin-right:8px;vertical-align:1px}
+</style>
+<div id="gate" hidden>
+  <div class="g-in">
+    <div class="brand g-brand"><span class="brand-dot"></span>SPOTTER</div>
+    <h1>Free workout tracker</h1>
+    <p>Log your lifts, see if you’re progressing, keep your streak. No ads, no subscription.</p>
+    <div class="g-feats"><span>Routines & PRs</span><span>Rest timer</span><span>Overload check</span><span>Syncs to your phone & laptop</span></div>
+    <div id="gateWarn" class="g-warn" hidden></div>
+    <div id="gateSetup" class="g-warn" hidden></div>
+    <button class="btn btn-acc block lg" id="gateSignIn">Sign in with Google</button>
+    <div id="gateErr" class="g-err" role="alert"></div>
+    <button class="btn btn-line block" id="gateLocal">Use without an account</button>
+    <div class="g-small">Without an account, your log stays on this device only. You can sign in later from Settings and it moves over.</div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script>
+// Classic script: runs before the app, so the app sees SPOTTER_HOST and window.claude right away.
+(() => {
+  let settle;
+  const state = {user:null, api:null, done:false};
+  const wait = new Promise(r => { settle = r; });
+  window.__spotter = {state, settle:user => { if (state.done) return; state.done = true; settle(user); }};
+  window.SPOTTER_HOST = {
+    cloudName:'your Google account',
+    privacyNote:'Your log syncs between your phone and laptop. Other people using this app can’t see it.',
+    wait,
+    account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || ''} : null,
+    signIn:() => { try { localStorage.removeItem('spotter.noaccount'); } catch {} location.reload(); },
+    signOut:() => window.__spotter.signOut ? window.__spotter.signOut() : location.reload(),
+  };
+  // the app asks for 'db' and 'user'; null means "no account", so it saves on this device
+  window.claude = {use:async name => { await wait; if (!state.user || !state.api) return null; return state.api[name] || null; }};
+})();
+</script>
+<script type="module">
+const V = '13.4.0', CDN = `https://www.gstatic.com/firebasejs/${V}/`;
+const S = window.__spotter.state, settle = window.__spotter.settle;
+const $g = id => document.getElementById(id);
+const gate = $g('gate'), err = $g('gateErr');
+const noAccount = () => { try { return localStorage.getItem('spotter.noaccount') === '1'; } catch { return false; } };
+const showGate = () => { document.getElementById('loading').style.display = 'none'; gate.hidden = false; };
+const goLocal = () => { gate.hidden = true; document.getElementById('loading').style.display = ''; settle(null); };
+$g('gateLocal').onclick = () => { try { localStorage.setItem('spotter.noaccount', '1'); } catch {} goLocal(); };
+
+// Google blocks its sign-in inside other apps' built-in browsers
+if (/FBAN|FBAV|Instagram|Line\/|Snapchat|musical_ly|TikTok|Bytedance|; wv\)/i.test(navigator.userAgent)) {
+  const w = $g('gateWarn'); w.hidden = false;
+  w.innerHTML = '<b>Open this in Safari or Chrome to sign in.</b> Google blocks sign-in inside other apps. Tap the ••• or share button and choose “Open in browser”, or <button class="link" id="gateCopy" style="padding:0">copy the link</button>.';
+  document.getElementById('gateCopy').onclick = () => navigator.clipboard.writeText(location.href).then(() => err.textContent = 'Link copied — paste it into Safari or Chrome.').catch(() => err.textContent = location.href);
+}
+
+const cfg = window.SPOTTER_FIREBASE_CONFIG || {};
+if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
+  const s = $g('gateSetup'); s.hidden = false;
+  s.innerHTML = '<b>Almost set up.</b> Paste your Firebase config into <code>config.js</code> and deploy again (see README). Until then, you can use Spotter without an account.';
+  $g('gateSignIn').disabled = true; $g('gateSignIn').style.opacity = .4;
+  if (noAccount()) goLocal(); else showGate();
+} else {
+  try {
+    const [{initializeApp}, A, F] = await Promise.all([import(CDN + 'firebase-app.js'), import(CDN + 'firebase-auth.js'), import(CDN + 'firebase-firestore.js')]);
+    // when served from Firebase Hosting, sign in through this same address (avoids Safari's cross-site blocking)
+    if (/\.(web\.app|firebaseapp\.com)$/.test(location.hostname)) cfg.authDomain = location.hostname;
+    const app = initializeApp(cfg);
+    const auth = A.getAuth(app);
+    let fs;
+    try { fs = F.initializeFirestore(app, {localCache:F.persistentLocalCache({tabManager:F.persistentMultipleTabManager()})}); }
+    catch { fs = F.initializeFirestore(app, {}); }
+
+    // Firestore errors -> the error codes the app already handles
+    const mapErr = e => { const c = (e && e.code) || ''; return {code:c === 'permission-denied' || c === 'invalid-argument' ? 'invalid_argument' : c === 'resource-exhausted' ? 'quota_exceeded' : c === 'unauthenticated' ? 'revoked' : 'unavailable', message:(e && e.message) || String(e)}; };
+    const snap = s => ({id:s.id, exists:s.exists(), data:() => s.data(), metadata:{fromCache:!!(s.metadata && s.metadata.fromCache), hasPendingWrites:!!(s.metadata && s.metadata.hasPendingWrites)}});
+    const db = {
+      doc(path) { const r = F.doc(fs, path); return {id:r.id, path,
+        get:async () => { try { return snap(await F.getDoc(r)); } catch (e) { throw mapErr(e); } },
+        set:async data => { try { await F.setDoc(r, data); } catch (e) { throw mapErr(e); } }}; },
+      collection(path) { const c = F.collection(fs, path); return {path, doc:id => db.doc(path + '/' + id),
+        // server first, but fall back to this device's copy after 2.5s so the app opens at a gym with bad signal
+        get:async () => {
+          const wrap = q => ({docs:q.docs.map(snap), size:q.size, empty:q.empty});
+          const server = F.getDocs(c).then(wrap);
+          const cached = new Promise(res => setTimeout(() => F.getDocsFromCache(c).then(q => q.size ? res(wrap(q)) : null).catch(() => {}), 2500));
+          try { return await Promise.race([server, cached.then(v => v || server)]); } catch (e) { throw mapErr(e); }
+        }}; },
+    };
+    const userApi = {id:async () => S.user && S.user.uid, me:async () => ({id:S.user.uid}), can:async () => true, isOwner:async () => true, canEdit:async () => true};
+
+    window.__spotter.signOut = async () => {
+      try { await A.signOut(auth); } catch {}
+      try { await F.terminate(fs); await F.clearIndexedDbPersistence(fs); } catch {}
+      try { localStorage.removeItem('spotter.v1'); localStorage.removeItem('spotter.noaccount'); } catch {}
+      location.reload();
+    };
+    const provider = new A.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:'select_account'});
+    const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    $g('gateSignIn').onclick = async () => {
+      err.textContent = '';
+      try {
+        if (standalone) await A.signInWithRedirect(auth, provider);
+        else await A.signInWithPopup(auth, provider);
+      } catch (e) {
+        const c = (e && e.code) || '';
+        if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment' || c === 'auth/cancelled-popup-request') { try { await A.signInWithRedirect(auth, provider); } catch (e2) { err.textContent = 'Sign-in didn’t work: ' + (e2.code || e2.message); } }
+        else if (c === 'auth/popup-closed-by-user') {}
+        else if (c === 'auth/unauthorized-domain') err.textContent = 'This address isn’t on the Firebase project’s allowed list yet. Add it under Authentication → Settings → Authorized domains.';
+        else if (c === 'auth/network-request-failed') err.textContent = 'No connection. Try again, or use without an account for now.';
+        else err.textContent = 'Sign-in didn’t work (' + (c || e.message) + ').';
+      }
+    };
+    A.getRedirectResult(auth).catch(e => { if (e && e.code && e.code !== 'auth/no-auth-event') err.textContent = 'Sign-in didn’t work (' + e.code + ').'; });
+    let first = true;
+    A.onAuthStateChanged(auth, user => {
+      if (S.done) { if ((user && user.uid) !== (S.user && S.user.uid)) location.reload(); return; }   // account changed after the app started
+      if (user) { S.user = user; S.api = {db, user:userApi}; try { localStorage.removeItem('spotter.noaccount'); } catch {} gate.hidden = true; document.getElementById('loading').style.display = ''; settle(user); }
+      else if (first && noAccount()) goLocal();
+      else showGate();
+      first = false;
+    });
+  } catch (e) {
+    // couldn't load Firebase (offline on first visit, or blocked) — still usable on this device
+    err.textContent = 'Couldn’t reach Google sign-in. Check your connection, or use without an account for now.';
+    $g('gateSignIn').onclick = () => location.reload();
+    $g('gateSignIn').textContent = 'Try again';
+    if (noAccount()) goLocal(); else showGate();
+  }
+}
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+<!-- SPOTTER-FIREBASE-HOST:END -->

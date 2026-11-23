@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Spotter keeps each person's log at data/users/{their uid}/{profile | active | log-YYYY-MM}.
+// People can read and write only their own documents. Everything else is closed.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /data/users/{uid}/{docId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && request.auth.uid == uid
+                   && (docId in ['profile', 'active'] || docId.matches('log-[0-9]{4}-[0-9]{2}'))
+                   && request.resource.data.size() < 50;
+    }
+  }
+}

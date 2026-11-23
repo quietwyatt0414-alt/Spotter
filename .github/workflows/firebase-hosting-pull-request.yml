@@ -1,0 +1,28 @@
+# Every pull request gets its own temporary preview link (posted as a comment), so changes can be
+# tried on a phone before they go live. Previews expire after 7 days.
+name: Preview pull request
+on: pull_request
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+jobs:
+  preview:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_YOUR_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: python3 scripts/build.py
+      - name: Not connected to Firebase yet
+        if: env.FIREBASE_SA == ''
+        run: echo "::notice::Skipping preview — the Firebase service account secret isn't set up yet (see SETUP.md step 6)."
+      - name: Deploy preview
+        if: env.FIREBASE_SA != ''
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_YOUR_PROJECT_ID }}
+          expires: 7d

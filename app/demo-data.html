@@ -1,0 +1,101 @@
+<!-- SPOTTER-DEMO-DATA:START — inserted before the app script by build_demo.py; the rest of the demo page is the main Spotter app unchanged -->
+<script>
+window.SPOTTER_DEMO = {
+  label: 'a lifter running ULRPPLR (Upper, Lower, rest, Push, Pull, Legs, rest) for 5 months, who took a logged vacation week about 7 weeks ago (so his streak survived it) and then switched gyms (the new gym’s machines read differently, and that hasn’t been fixed yet)',
+  generate(nowTs) {
+    // deterministic random numbers so every reset looks the same
+    let seed = 20261123;
+    const rnd = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const LB = 0.45359237, DAY = 864e5, MIN = 6e4;
+
+    // exercise: [start weight lb, increment lb, rep low, rep high, sets, warm-ups?, rounding lb]
+    const P = {
+      bench_bb:[185,5,6,8,4,1,5], row_bb:[155,5,8,10,4,1,5], press_db:[60,5,8,10,3,0,5], pulldown:[150,10,10,12,3,0,5], lat_db:[25,5,12,15,3,0,5], curl_ez:[75,5,8,12,3,0,5], pushdown:[60,5,10,12,3,0,5],
+      squat:[245,5,5,6,4,1,5], rdl:[205,10,8,10,3,1,5], leg_press:[360,20,10,12,3,0,10], seated_curl:[110,5,10,12,3,0,5], calf_stand:[180,10,10,12,4,0,10], hlr:[0,0,10,15,3,0,0],
+      incline_bb:[155,5,6,8,4,1,5], ohp:[115,5,6,8,3,1,5], fly_cable:[30,5,12,15,3,0,5], lat_cable:[15,2.5,12,15,4,0,2.5], dips:[0,10,8,12,3,0,5], oh_ext_cable:[50,5,10,12,3,0,5],
+      deadlift:[315,5,4,5,3,1,5], pullup:[0,10,6,10,4,0,5], row_cable:[160,10,10,12,3,0,5], face_pull:[50,5,12,15,3,0,5], c_kelso:[135,10,10,12,3,0,5], hammer:[40,5,10,12,3,0,5], preacher:[65,5,8,12,3,0,5],
+      hack:[230,10,8,10,4,1,10], bss:[50,5,8,10,3,0,5], leg_ext:[140,10,12,15,3,0,10], lying_curl:[100,5,10,12,3,0,5], hip_thrust:[225,10,8,12,3,0,10], calf_seat:[110,10,12,15,4,0,10],
+    };
+    const DAYS = {
+      Upper:['bench_bb','row_bb','press_db','pulldown','lat_db','curl_ez','pushdown'],
+      Lower:['squat','rdl','leg_press','seated_curl','calf_stand','hlr'],
+      Push:['incline_bb','ohp','fly_cable','lat_cable','dips','oh_ext_cable'],
+      Pull:['deadlift','pullup','row_cable','face_pull','c_kelso','hammer','preacher'],
+      Legs:['hack','bss','leg_ext','lying_curl','hip_thrust','calf_seat'],
+    };
+    const NOTES = {squat:'Belt on top sets', hack:'Sled setting 3, feet high', bench_bb:'1 sec pause on first rep', pullup:'Weight is added plates', dips:'Weight is added plates', c_kelso:'Chest on incline bench, squeeze 1 sec'};
+    const SPLIT = ['Upper','Lower',null,'Push','Pull','Legs',null];
+    // new gym: same effort shows up as a different number on these machines
+    const GYM2 = {leg_press:0.78, hack:0.72, pulldown:1.18, row_cable:1.2, seated_curl:0.88, lying_curl:0.9, leg_ext:1.15, calf_stand:0.8, calf_seat:0.85, fly_cable:1.3, lat_cable:1.35, face_pull:1.2, pushdown:1.25, oh_ext_cable:1.3};
+    const routineIds = {Upper:'r_upper', Lower:'r_lower', Push:'r_push', Pull:'r_pull', Legs:'r_legs'};
+
+    const st = {};
+    for (const [id,p] of Object.entries(P)) st[id] = {w:p[0], r:p[2]};
+    const best = {};
+    const e1 = (w,r) => !(w > 0) || !(r > 0) ? 0 : r === 1 ? w : w * (1 + r / 30);
+    const round = (x, step) => step ? Math.max(step, Math.round(x / step) * step) : 0;
+
+    const today = new Date(nowTs); today.setHours(0,0,0,0);
+    const TOTAL = 152;                                   // ~5 months of history before today
+    const startDay = new Date(today); startDay.setDate(startDay.getDate() - TOTAL);
+    const slotOf = d => ((d + 3 - TOTAL) % 7 + 7) % 7;   // today lands on Push (slot 3), after a rest day
+    const workouts = [];
+    let missedPrev = false;
+
+    for (let d = 0; d < TOTAL; d++) {
+      const name = SPLIT[slotOf(d)];
+      if (!name) continue;
+      const vacation = d >= TOTAL - 54 && d < TOTAL - 47;          // a week off ~7 weeks ago
+      const miss = !missedPrev && d < TOTAL - 10 && rnd() < 0.06;   // the odd skipped session
+      if (vacation || miss) { missedPrev = true; continue; }
+      missedPrev = false;
+      const deload = d >= 84 && d < 91;
+      const day = new Date(startDay); day.setDate(day.getDate() + d);
+      const start = day.getTime() + (15.5 + rnd() * 2) * 3600e3;
+      const ex = [];
+      for (const id of DAYS[name]) {
+        const [, inc, lo, hi, nSets, warm, step] = P[id];
+        const s = st[id];
+        const trueW = deload ? round(s.w * 0.85, step) : s.w;
+        // after the week off he trains at a new gym whose machines/cables read differently
+        const w = (d >= TOTAL - 47 && GYM2[id]) ? round(trueW * GYM2[id], step) : trueW;
+        const sets = [];
+        if (warm) { sets.push({w:round(w * 0.45, 5) * LB, r:10, t:'w'}); sets.push({w:round(w * 0.7, 5) * LB, r:5, t:'w'}); }
+        const n = deload ? nSets - 1 : nSets;
+        const reps = [];
+        for (let k = 0; k < n; k++) {
+          let r = deload ? lo : s.r - (k >= 2 && rnd() < 0.55 ? 1 : 0) - (k === n - 1 && rnd() < 0.3 ? 1 : 0);
+          if (rnd() < 0.12) r += 1; if (rnd() < 0.08) r -= 1;
+          r = Math.max(lo - 2, Math.min(hi + 1, r));
+          reps.push(r);
+          const set = {w:w * LB, r, t:'n'};
+          const v = e1(set.w, r);
+          if (v > 0 && best[id] > 0 && v > best[id] + 1e-9) set.pr = true;
+          if (v > (best[id] || 0)) best[id] = v;
+          sets.push(set);
+        }
+        ex.push({exId:id, note:NOTES[id] || '', sets});
+        if (!deload) {   // double progression: hit the top of the range on every set, then add weight
+          const top = reps[0] >= hi && (reps.length < 2 || reps[1] >= hi);
+          if (top && inc) { s.w += inc; s.r = lo; }
+          else if (top && !inc) { s.r = Math.min(hi, s.r); }
+          else if (rnd() < 0.65) s.r = Math.min(hi, s.r + 1);
+        }
+      }
+      const nSets = ex.reduce((a, e) => a + e.sets.length, 0);
+      workouts.push({id:'demo_' + d, name, start:Math.round(start), end:Math.round(start + (nSets * 2.6 + 8 + rnd() * 12) * MIN), routineId:routineIds[name], ex});
+    }
+    workouts.sort((a, b) => b.start - a.start);
+    const idxOf = d => { const x = new Date(startDay); x.setDate(x.getDate() + d); return Math.round(Date.UTC(x.getFullYear(), x.getMonth(), x.getDate()) / DAY); };
+    const off = [{id:'off_vac', type:'vacation', from:idxOf(TOTAL - 54), to:idxOf(TOTAL - 48), note:'Moving to a new place'},
+                 {id:'off_sick', type:'sick', from:idxOf(TOTAL - 120), to:idxOf(TOTAL - 120), note:'Food poisoning'}];
+    return {
+      settings:{units:'lb', rest:120, theme:'volt'},
+      routines:Object.entries(DAYS).map(([name, ids]) => ({id:routineIds[name], name, ex:ids.map(id => ({exId:id, n:P[id][4]}))})),
+      customExercises:[{id:'c_kelso', name:'Kelso Shrug', muscle:'Traps'}],
+      workouts, active:null, off,
+    };
+  },
+};
+</script>
+<!-- SPOTTER-DEMO-DATA:END -->

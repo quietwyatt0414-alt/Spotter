@@ -1,0 +1,28 @@
+# Every push to main builds the site and puts it live on Firebase Hosting.
+name: Deploy live
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  checks: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_YOUR_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: python3 scripts/build.py
+      - name: Not connected to Firebase yet
+        if: env.FIREBASE_SA == ''
+        run: echo "::notice::Skipping deploy — the Firebase service account secret isn't set up yet (see SETUP.md step 6)."
+      - name: Deploy to live site
+        if: env.FIREBASE_SA != ''
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_YOUR_PROJECT_ID }}
+          channelId: live
