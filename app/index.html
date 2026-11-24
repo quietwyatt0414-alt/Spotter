@@ -985,15 +985,16 @@ function prevFor(e, j) {
   return prev.filter(x => (x.t === 'w') === warm)[k] || null;
 }
 // the working set behind the best estimated 1-rep max (most reps if there's no weight to go on)
-function bestSet(exId, excludeId) {
+function bestSet(exId, excludeId, minReps = 0) {
   let b = null;
   for (const w of S.workouts) { if (w.id === excludeId) continue; const a = adjAt(exId, w.start); if (a.old) continue;
     for (const e of w.ex) if (e.exId === exId) for (const x of withBW(exId, scaleSets(e.sets.filter(z => z.t !== 'w'), a.f), bwOf(w))) {
-      const v = e1(x); if (!(x.r > 0)) continue;
+      const v = e1(x); if (!(x.r > 0) || x.r < minReps) continue;
       if (!b || v > b.e1 + 1e-9 || (v === 0 && b.e1 === 0 && x.r > b.s.r)) b = {s:x, e1:v, ts:w.start};
     } }
   return b;
 }
+const SET_PR_REPS = 4;
 function bestE1(exId, excludeId) { const b = bestSet(exId, excludeId); return b ? b.e1 : 0; }
 const workVol = w => w.ex.reduce((a,e) => a + withBW(e.exId, e.sets, bwOf(w)).reduce((b,s) => b + (s.w > 0 && s.r > 0 ? s.w * s.r : 0), 0), 0);
 const workSets = w => w.ex.reduce((a,e) => a + e.sets.length, 0);
@@ -1593,13 +1594,14 @@ function renderWorkout() {
   renderRest();
 }
 function exCard(e, i) {
-  const rec = bestSet(e.exId, S.active.id), best = rec ? rec.e1 : 0, bwNow = curBW(), isBW = bwFrac(e.exId) > 0;
+  // while lifting, records are real sets of 4+ reps (a heavy single isn't something to chase every session)
+  const rec = bestSet(e.exId, S.active.id, SET_PR_REPS), best = rec ? rec.e1 : 0, bwNow = curBW(), isBW = bwFrac(e.exId) > 0;
   let n = 0;
   const rows = e.sets.map((s, j) => {
     if (s.t !== 'w') n++;
     const p = prevFor(e, j);
     const lbl = s.t === 'w' ? 'W' : s.t === 'd' ? 'D' : n;
-    const pr = s.done && s.t !== 'w' && best > 0 && e1(withBW(e.exId, [{...s, w:s.w || 0}], bwNow)[0]) > best + 1e-9;
+    const pr = s.done && s.t !== 'w' && s.r >= SET_PR_REPS && best > 0 && e1(withBW(e.exId, [{...s, w:s.w || 0}], bwNow)[0]) > best + 1e-9;
     return `<div class="set-row ${s.done?'done':''}">
       <button class="set-num t-${s.t}" data-a="set-type" data-ei="${i}" data-si="${j}" aria-label="Set type">${lbl}</button>
       <button class="prev" data-a="set-prev" data-ei="${i}" data-si="${j}" aria-label="Use previous">${p ? (isBW ? `BW${p.w > 0 ? '+' + fmtW(p.w) : ''} × ${p.r}` : fmtSet(p)) : '—'}</button>
