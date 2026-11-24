@@ -78,8 +78,8 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
 } else {
   try {
     const [{initializeApp}, A, F] = await Promise.all([import(CDN + 'firebase-app.js'), import(CDN + 'firebase-auth.js'), import(CDN + 'firebase-firestore.js')]);
-    // when served from Firebase Hosting, sign in through this same address (avoids Safari's cross-site blocking)
-    if (/\.(web\.app|firebaseapp\.com)$/.test(location.hostname)) cfg.authDomain = location.hostname;
+    // sign-in goes through cfg.authDomain from config.js. Pointing it at the site's own address (e.g. x.web.app) makes
+    // redirect sign-in work in Safari, but only after that address's /__/auth/handler is added to the Google OAuth client.
     const app = initializeApp(cfg);
     const auth = A.getAuth(app);
     let fs;
@@ -116,7 +116,8 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     $g('gateSignIn').onclick = async () => {
       err.textContent = '';
       try {
-        if (standalone) await A.signInWithRedirect(auth, provider);
+        // popup first everywhere (works with any authDomain); redirect only if popups aren't possible
+        if (standalone && cfg.authDomain === location.hostname) await A.signInWithRedirect(auth, provider);
         else await A.signInWithPopup(auth, provider);
       } catch (e) {
         const c = (e && e.code) || '';
