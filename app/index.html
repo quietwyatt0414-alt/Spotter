@@ -403,6 +403,18 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .streak-note .link{white-space:nowrap;margin-left:auto}
 .stat.streak .fire{font-style:normal;font-size:22px;line-height:1;filter:grayscale(1);opacity:.35}
 .stat.streak.lit .fire{filter:none;opacity:1}
+button.ex-name{text-align:left;padding:0}
+.ex-mus{font-size:12px;font-weight:600;margin-top:3px;line-height:1.35;text-transform:none;letter-spacing:0}
+.ex-mus .mus-p{color:var(--tx2)} .ex-mus .mus-s{color:var(--tx3);font-weight:500}
+.ex-best{font-size:11px;color:var(--tx3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.ex-pick small.ex-mus{display:block;margin:2px 0 1px}
+.mrow{display:flex;gap:10px;align-items:baseline;margin:8px 0}
+.mlbl{width:78px;flex:none;font-size:11px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em}
+.mrow > div{display:flex;flex-wrap:wrap;gap:6px}
+.mchip{display:inline-block;font-size:13px;font-weight:700;border-radius:999px;padding:4px 10px}
+.mchip.p{background:var(--acc);color:var(--acc-ink)} .mchip.s{border:1px solid var(--line);color:var(--tx2)}
+.mpick{display:flex;flex-wrap:wrap;gap:6px}
+.mchip.pick{background:var(--s2);color:var(--tx2)} .mchip.pick.on{background:var(--acc);color:var(--acc-ink)}
 .foot-note{text-align:center;color:var(--tx3);font-size:13px;margin-top:28px}
 
 /* loading */
@@ -473,6 +485,36 @@ const LIB_RAW = {
 const LIB = {};
 const MUSCLES = Object.keys(LIB_RAW);
 for (const m of MUSCLES) for (const [id,name] of LIB_RAW[m]) LIB[id] = {id,name,muscle:m};
+// muscles worked: id -> [primary, secondary] (comma-separated)
+const MUSCLE_NAMES = ['Chest','Upper chest','Lower chest','Front delts','Side delts','Rear delts','Lats','Upper back','Lower back','Traps','Biceps','Brachialis','Triceps','Forearms','Abs','Obliques','Hip flexors','Quads','Hamstrings','Glutes','Abductors','Adductors','Calves'];
+const MW = {
+  bench_bb:['Chest','Front delts,Triceps'], incline_bb:['Upper chest','Front delts,Triceps'], decline_bb:['Lower chest','Triceps,Front delts'],
+  bench_db:['Chest','Front delts,Triceps'], incline_db:['Upper chest','Front delts,Triceps'], smith_incline:['Upper chest','Front delts,Triceps'],
+  press_mach:['Chest','Front delts,Triceps'], incline_mach:['Upper chest','Front delts,Triceps'], fly_db:['Chest','Front delts'], fly_cable:['Chest','Front delts'],
+  pec_deck:['Chest','Front delts'], dips:['Lower chest,Triceps','Front delts'], pushup:['Chest','Front delts,Triceps,Abs'],
+  deadlift:['Glutes,Hamstrings,Lower back','Quads,Traps,Lats,Forearms'], pullup:['Lats','Biceps,Upper back,Rear delts,Forearms'], chinup:['Lats,Biceps','Upper back,Forearms'],
+  pulldown:['Lats','Biceps,Upper back,Rear delts'], pulldown_cg:['Lats','Biceps,Upper back'], row_bb:['Upper back,Lats','Rear delts,Biceps,Lower back'],
+  pendlay:['Upper back,Lats','Rear delts,Biceps,Lower back'], row_db:['Lats,Upper back','Rear delts,Biceps'], row_cable:['Upper back,Lats','Rear delts,Biceps'],
+  row_tbar:['Upper back,Lats','Rear delts,Biceps,Lower back'], row_chest:['Upper back','Lats,Rear delts,Biceps'], row_mach:['Upper back,Lats','Rear delts,Biceps'],
+  pullover_cable:['Lats','Triceps'], rack_pull:['Upper back,Traps,Lower back','Glutes,Hamstrings,Forearms'], back_ext:['Lower back','Glutes,Hamstrings'],
+  ohp:['Front delts','Side delts,Triceps,Upper chest'], press_db:['Front delts','Side delts,Triceps'], press_smach:['Front delts','Side delts,Triceps'], arnold:['Front delts','Side delts,Triceps'],
+  lat_db:['Side delts','Traps'], lat_cable:['Side delts','Traps'], lat_mach:['Side delts','Traps'], rear_fly:['Rear delts','Upper back'], rev_pec:['Rear delts','Upper back'],
+  face_pull:['Rear delts','Upper back,Traps'], front_raise:['Front delts','Upper chest'], upright:['Side delts,Traps','Front delts,Biceps'],
+  shrug_db:['Traps','Forearms'], shrug_bb:['Traps','Forearms'],
+  curl_bb:['Biceps','Brachialis,Forearms'], curl_ez:['Biceps','Brachialis,Forearms'], curl_db:['Biceps','Brachialis,Forearms'], hammer:['Brachialis,Biceps','Forearms'],
+  preacher:['Biceps','Brachialis'], incline_curl:['Biceps','Forearms'], curl_cable:['Biceps','Forearms'], bayesian:['Biceps','Forearms'], spider:['Biceps','Brachialis'], conc:['Biceps','Brachialis'],
+  pushdown:['Triceps',''], rope_pd:['Triceps',''], oh_ext_cable:['Triceps',''], oh_ext_db:['Triceps',''], skull:['Triceps',''], cgbp:['Triceps,Chest','Front delts'],
+  dip_mach:['Triceps','Chest,Front delts'], kickback:['Triceps',''], wrist_curl:['Forearms',''], rev_curl:['Forearms,Brachialis','Biceps'],
+  squat:['Quads,Glutes','Adductors,Hamstrings,Lower back,Abs'], front_squat:['Quads','Glutes,Upper back,Abs'], hack:['Quads','Glutes'], leg_press:['Quads,Glutes','Hamstrings,Adductors'],
+  pendulum:['Quads','Glutes'], smith_squat:['Quads,Glutes','Adductors'], goblet:['Quads,Glutes','Adductors,Abs'], bss:['Quads,Glutes','Adductors,Hamstrings'],
+  lunge:['Quads,Glutes','Hamstrings,Adductors'], step_up:['Quads,Glutes','Hamstrings'], leg_ext:['Quads',''],
+  rdl:['Hamstrings,Glutes','Lower back,Forearms'], rdl_db:['Hamstrings,Glutes','Lower back,Forearms'], sldl:['Hamstrings','Glutes,Lower back'],
+  lying_curl:['Hamstrings','Calves'], seated_curl:['Hamstrings','Calves'], good_morning:['Hamstrings,Lower back','Glutes'], nordic:['Hamstrings',''],
+  hip_thrust:['Glutes','Hamstrings,Adductors'], glute_bridge:['Glutes','Hamstrings'], abductor:['Abductors','Glutes'], kickback_cable:['Glutes','Hamstrings'], adductor:['Adductors',''],
+  calf_stand:['Calves',''], calf_seat:['Calves',''], calf_press:['Calves',''],
+  hlr:['Abs','Hip flexors,Obliques'], cable_crunch:['Abs','Obliques'], ab_wheel:['Abs','Lats,Obliques'], ab_mach:['Abs',''], crunch:['Abs',''], decline_situp:['Abs','Hip flexors'], russian:['Obliques','Abs'],
+};
+for (const [id, [p, s2]] of Object.entries(MW)) if (LIB[id]) { LIB[id].p = p.split(',').filter(Boolean); LIB[id].s = s2.split(',').filter(Boolean); }
 
 const TEMPLATES = [
   {name:'Push', ex:[['bench_bb',4],['incline_db',3],['press_db',3],['lat_db',4],['pushdown',3],['oh_ext_cable',3]]},
@@ -588,6 +630,10 @@ const fmtClock = ms => { const t = Math.max(0, Math.floor(ms / 1000)); const h =
 const monthKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
 const weekStart = ts => { const d = new Date(ts); d.setHours(0,0,0,0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); };
 const exInfo = id => LIB[id] || S.customExercises.find(c => c.id === id) || {id, name:'Unknown exercise', muscle:'Other'};
+// primary & secondary muscles; custom exercises without a list fall back to their group
+const musclesOf = id => { const x = exInfo(id); return {p:(x.p && x.p.length) ? x.p : [x.muscle], s:x.s || []}; };
+const musLine = id => { const m = musclesOf(id); return m.p.join(', ') + (m.s.length ? ' + ' + m.s.join(', ') : ''); };
+const musHTML = id => { const m = musclesOf(id); return `<span class="mus-p">${esc(m.p.join(', '))}</span>${m.s.length ? `<span class="mus-s"> + ${esc(m.s.join(', '))}</span>` : ''}`; };
 const exName = id => exInfo(id).name;
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
@@ -1232,7 +1278,7 @@ function viewProgress() {
   if (!exIds.length) return html + `<div class="empty"><b>No data yet</b>Log a few workouts, then pick any exercise here to see your progress on it.</div>`;
   if (!progEx || !counts[progEx]) progEx = (S.workouts[0] && S.workouts[0].ex[0] && counts[S.workouts[0].ex[0].exId] && S.workouts[0].ex[0].exId) || exIds[0];
   const o = overload(progEx), info = exInfo(progEx), hist = o.ses.length ? o.ses : o.all;
-  html += `<button class="ex-pick" data-a="prog-pick"><span><span class="ex-pick-k">Exercise</span><b>${esc(info.name)}</b><small>${esc(info.muscle)} · ${plural(o.all.length,'session')}</small></span><span class="ex-pick-c">Change ${ic('down')}</span></button>`;
+  html += `<button class="ex-pick" data-a="prog-pick"><span><span class="ex-pick-k">Exercise</span><b>${esc(info.name)}</b><small class="ex-mus">${musHTML(progEx)}</small><small>${plural(o.all.length,'session')}</small></span><span class="ex-pick-c">Change ${ic('down')}</span></button>`;
   html += overloadCard(o);
   html += equipCard(progEx, o);
   const W = o.weighted;
@@ -1411,7 +1457,7 @@ function exCard(e, i) {
     </div>`;
   }).join('');
   return `<section class="ex" data-card="${i}">
-    <div class="ex-head"><div><div class="ex-name">${esc(exName(e.exId))}</div><div class="ex-mus">${esc(exInfo(e.exId).muscle)}${best > 0 ? ` · best e1RM ${fmtW(best)} ${unit()}` : ''}</div></div>
+    <div class="ex-head"><div><button class="ex-name" data-a="ex-info" data-id="${esc(e.exId)}">${esc(exName(e.exId))}</button><div class="ex-mus">${musHTML(e.exId)}</div>${best > 0 ? `<div class="ex-best">Best e1RM ${fmtW(best)} ${unit()}</div>` : ''}</div>
       <button class="icon-btn" data-a="ex-menu" data-ei="${i}" aria-label="Exercise options">${ic('dots')}</button></div>
     ${e.note ? `<div class="ex-note">${esc(e.note)}</div>` : ''}
     <div class="set-row hdr"><span>Set</span><span>Previous</span><span>${unit()}</span><span>Reps</span><span>${ic('check')}</span></div>
@@ -1586,7 +1632,7 @@ function screenRoutine() {
     <label class="field"><span>Name</span><input data-draftname value="${esc(d.name)}" placeholder="e.g. Upper A" maxlength="40"></label>
     <div class="sec-head" style="margin-top:16px"><h2>Exercises</h2></div>
     <div class="list">${d.ex.length ? d.ex.map((e,i) => `<div class="re-ex">
-      <div class="nm"><b>${esc(exName(e.exId))}</b><small>${esc(exInfo(e.exId).muscle)}</small></div>
+      <div class="nm"><b>${esc(exName(e.exId))}</b><small>${esc(musLine(e.exId))}</small></div>
       <div class="step"><button data-a="re-n" data-i="${i}" data-v="-1" aria-label="Fewer sets">−</button><span>${e.n} sets</span><button data-a="re-n" data-i="${i}" data-v="1" aria-label="More sets">+</button></div>
       <button class="icon-btn" data-a="re-up" data-i="${i}" aria-label="Move up" ${i===0?'disabled style="opacity:.3"':''}>${ic('up')}</button>
       <button class="icon-btn" data-a="re-del" data-i="${i}" aria-label="Remove">${ic('x')}</button>
@@ -1630,9 +1676,9 @@ function renderPkList() {
   const all = pkPool();
   const q = pk.q.trim().toLowerCase();
   const terms = q.split(/\s+/).filter(Boolean);
-  let list = all.filter(x => (pk.mus === 'All' || x.muscle === pk.mus) && terms.every(t => (x.name + ' ' + x.muscle).toLowerCase().includes(t)));
+  let list = all.filter(x => (pk.mus === 'All' || x.muscle === pk.mus) && terms.every(t => (x.name + ' ' + x.muscle + ' ' + musLine(x.id)).toLowerCase().includes(t)));
   list.sort((a,b) => a.name.localeCompare(b.name));
-  const item = x => { const st = pk.meta ? pk.meta(x.id) : null; return `<button class="pk-item ${pk.sel.includes(x.id)?'on':''}" data-a="pk-toggle" data-id="${esc(x.id)}"><span><b>${esc(x.name)}</b><small class="${st ? 'st-' + st.cls : ''}">${st ? esc(x.muscle) + ' · ' + esc(st.text) : esc(x.muscle) + (x.custom ? ' · custom' : '')}</small></span><span class="tick">${ic('check')}</span></button>`; };
+  const item = x => { const st = pk.meta ? pk.meta(x.id) : null; return `<button class="pk-item ${pk.sel.includes(x.id)?'on':''}" data-a="pk-toggle" data-id="${esc(x.id)}"><span><b>${esc(x.name)}</b><small class="${st ? 'st-' + st.cls : ''}">${st ? esc(musclesOf(x.id).p.join(', ')) + ' · ' + esc(st.text) : esc(musLine(x.id)) + (x.custom ? ' · custom' : '')}</small></span><span class="tick">${ic('check')}</span></button>`; };
   let html = '';
   if (!q && pk.mus === 'All') {
     const recent = []; for (const w of S.workouts) for (const e of w.ex) if (!recent.includes(e.exId) && recent.length < 8) recent.push(e.exId);
@@ -1648,11 +1694,30 @@ function updatePkAdd() {
   b.textContent = `Add ${n ? n + ' ' : ''}exercise${n === 1 ? '' : 's'}`;
   b.disabled = !n; b.style.opacity = n ? '1' : '.4';
 }
+function exInfoModal(id) {
+  const x = exInfo(id), m = musclesOf(id);
+  const ses = S.workouts.filter(w => w.ex.some(e => e.exId === id));
+  const best = bestE1(id);
+  const chips = (list, cls) => list.length ? list.map(n => `<span class="mchip ${cls}">${esc(n)}</span>`).join('') : '<span class="faint">None</span>';
+  modal({title:x.name, body:`<div class="mrow"><span class="mlbl">Primary</span><div>${chips(m.p, 'p')}</div></div>
+    <div class="mrow"><span class="mlbl">Secondary</span><div>${chips(m.s, 's')}</div></div>
+    <p class="faint" style="margin-top:12px;font-size:13px">${esc(x.muscle)}${x.custom || id.startsWith('c_') ? ' · custom exercise' : ''} · ${ses.length ? `done ${plural(ses.length,'time')}${best ? `, best e1RM ${fmtW(best)} ${unit()}` : ''}` : 'not logged yet'}</p>`,
+    actions:[...(id.startsWith('c_') ? [{label:'Edit muscles', fn:() => customMusclesModal(id)}] : []), {label:'Close', cls:'btn-acc'}]});
+}
+function muscleChips(name, sel) {
+  return `<input type="hidden" name="${name}" value="${esc(sel.join(','))}"><div class="mpick" data-for="${name}">${MUSCLE_NAMES.map(n => `<button type="button" class="mchip pick ${sel.includes(n) ? 'on' : ''}" data-a="mchip" data-m="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
+}
+function customMusclesModal(id) {
+  const c = S.customExercises.find(x => x.id === id); if (!c) return;
+  modal({title:'Muscles worked', body:`<p style="font-size:14px">${esc(c.name)}</p><div class="field"><span>Primary</span>${muscleChips('prim', c.p || [])}</div><div class="field"><span>Secondary</span>${muscleChips('sec', c.s || [])}</div>`,
+    actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc', fn:v => { c.p = v.prim ? v.prim.split(',') : []; c.s = v.sec ? v.sec.split(',').filter(n => !c.p.includes(n)) : []; markDirty('profile'); renderAll(); toast('Muscles saved'); }}]});
+}
 function newCustomExercise(prefill = '') {
   const opts = [...MUSCLES, 'Other'].map(m => `<option ${m === (pk && pk.mus !== 'All' ? pk.mus : 'Chest') ? 'selected' : ''}>${m}</option>`).join('');
-  modal({title:'Custom exercise', body:`<label class="field"><span>Name</span><input name="name" value="${esc(prefill)}" placeholder="e.g. Machine Preacher Curl" maxlength="50"></label><label class="field"><span>Muscle</span><select name="muscle">${opts}</select></label>`,
+  modal({title:'Custom exercise', body:`<label class="field"><span>Name</span><input name="name" value="${esc(prefill)}" placeholder="e.g. Machine Preacher Curl" maxlength="50"></label><label class="field"><span>Group (for filters)</span><select name="muscle">${opts}</select></label><div class="field"><span>Primary muscles (optional)</span>${muscleChips('prim', [])}</div><div class="field"><span>Secondary muscles (optional)</span>${muscleChips('sec', [])}</div>`,
     actions:[{label:'Cancel'}, {label:'Create', cls:'btn-acc', validate:v => !!v.name.trim(), fn:v => {
       const c = {id:'c_' + uid(), name:v.name.trim(), muscle:v.muscle};
+      if (v.prim) c.p = v.prim.split(','); if (v.sec) c.s = v.sec.split(',').filter(n => !(c.p || []).includes(n));
       S.customExercises.push(c); markDirty('profile');
       if (pk) { pk.q = ''; if (pk.single) { const cb = pk.cb; closePicker(); cb([c.id]); } else { pk.sel.push(c.id); renderPicker(); } }
       toast('Exercise created');
@@ -2085,9 +2150,16 @@ const A = {
     if (s.w == null) s.w = 0;
     s.done = true; markDirty('active'); rerenderCard(i); startRest();
   },
+  'ex-info': el => exInfoModal(el.dataset.id),
+  mchip: el => {
+    const box = el.closest('.mpick'), inp = box && document.querySelector(`#modal input[name="${box.dataset.for}"]`); if (!inp) return;
+    el.classList.toggle('on');
+    inp.value = [...box.querySelectorAll('.mchip.on')].map(b => b.dataset.m).join(',');
+  },
   'ex-menu': el => {
     const i = +el.dataset.ei, e = S.active.ex[i];
     menu(exName(e.exId), [
+      {label:'Muscles worked', fn:() => exInfoModal(e.exId)},
       {label: e.note ? 'Edit note' : 'Add note', fn:() => modal({title:'Note', body:`<label class="field"><textarea name="note" style="font-family:var(--body);font-size:16px" placeholder="Seat height 4, slow negatives…">${esc(e.note)}</textarea></label>`, focus:'note',
         actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc', fn:v => { e.note = v.note.trim().slice(0, 200); markDirty('active'); rerenderCard(i); }}]})},
       {label:'Replace exercise', fn:() => openPicker(ids => { e.exId = ids[0]; markDirty('active'); renderWorkout(); }, {single:true, title:'Replace with'})},
