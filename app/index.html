@@ -15,7 +15,7 @@
   --bg:#0b0b0d; --s1:#141417; --s2:#1c1c20; --s3:#26262c; --line:#2a2a31;
   --tx:#f4f4f5; --tx2:#a3a3ad; --tx3:#6e6e78;
   --acc:#d4ff3f; --acc-ink:#0b0b0d; --acc-dim:rgba(212,255,63,.10); --acc-mid:rgba(212,255,63,.22);
-  --warm:#fbbf24; --drop:#c4a1ff; --danger:#ff7a7a;
+  --warm:#fbbf24; --drop:#c4a1ff; --danger:#ff7a7a; --hot:#ff6a3d;
   --r:14px; --head:'Barlow Condensed',system-ui,sans-serif; --body:'Barlow',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -242,6 +242,44 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .seg{display:flex;background:var(--s2);border-radius:12px;padding:3px;gap:3px}
 .seg button{flex:1;height:36px;border-radius:9px;font-weight:700;font-size:14px;color:var(--tx2)}
 .seg button.on{background:var(--acc-bg);color:var(--acc-ink)}
+.bm-card{--bm0:color-mix(in srgb,var(--tx3) 30%,var(--s2));padding:14px 12px 8px;margin-bottom:14px}
+.bm-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.bm-head h2{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.bm-head .seg{width:210px;flex:none}
+.bm-sub b{color:var(--tx2)}
+.bm-fig svg{width:100%;max-width:400px;display:block;margin:4px auto 0;-webkit-tap-highlight-color:transparent}
+.bm-lbl{fill:var(--tx3);font-size:11px;font-weight:700;letter-spacing:.12em}
+.bm-m{cursor:pointer;outline:none}
+.bm-m path{stroke:var(--s1);stroke-width:1;stroke-linejoin:round;transition:fill .25s}
+@media (hover:hover){.bm-m:hover path{filter:brightness(1.15)}}
+.bm-m:focus-visible path{stroke:var(--tx2);stroke-width:1.6}
+.bm-m.sel path{stroke:var(--tx);stroke-width:1.8}
+.bm-deco{pointer-events:none}
+.bm-legend{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 12px;font-size:12px;font-weight:600;color:var(--tx2);margin:8px 0 4px}
+.bm-legend span{display:inline-flex;align-items:center;gap:5px}
+.bm-legend i{width:12px;height:12px;border-radius:4px;flex:none}
+.bm-legend .tgt{color:var(--tx)}
+.bm-hint{text-align:center;font-size:13px;color:var(--tx3);padding:8px 0 4px}
+.bm-detail{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
+.bm-dh{display:flex;align-items:center;justify-content:space-between}
+.bm-dh b{font-size:20px;font-weight:700}
+.bm-kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.bm-kv>div{background:var(--s2);border-radius:12px;padding:10px;border:1px solid transparent}
+.bm-kv>div.on{border-color:var(--line)}
+.bm-kv b{display:block;font-size:24px;font-weight:700;line-height:1.1}
+.bm-kv span{font-size:11px;color:var(--tx2);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.bm-kv em{display:block;font-style:normal;font-size:12px;color:var(--tx3);margin-top:4px;line-height:1.3}
+.bm-meter{position:relative;height:8px;border-radius:4px;background:var(--s2);margin:14px 0 4px;overflow:hidden}
+.bm-meter .tgt{position:absolute;left:40%;width:40%;top:0;bottom:0;background:color-mix(in srgb,var(--acc) 22%,var(--s2))}
+.bm-meter .fill{position:absolute;left:0;top:2px;bottom:2px;border-radius:3px;background:var(--acc)}
+.bm-meter-l{position:relative;height:14px;font-size:11px;font-weight:600;color:var(--tx3)}
+.bm-meter-l span{position:absolute;transform:translateX(-50%)}
+.bm-meter-l span:first-child{transform:none} .bm-meter-l span:last-child{transform:translateX(-100%)}
+.bm-ex-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin:10px 0 4px}
+.bm-ex button{display:flex;align-items:center;gap:8px;width:100%;padding:9px 2px;border-top:1px solid var(--line);font-size:14px;font-weight:600;text-align:left}
+.bm-ex button span:first-child{flex:1}
+.bm-none{font-size:13px;color:var(--tx2);padding:10px 0 4px}
+.bm-card .tbl-toggle tr[data-a]{cursor:pointer}
 .chart-card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px 8px}
 .chart-ttl{font-family:var(--head);font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .chart-sub{font-size:13px;color:var(--tx3);margin-bottom:6px}
@@ -653,13 +691,13 @@ function themePalette(t, light) {
   const ink = minC('#0b0b0d') >= minC('#ffffff') ? '#0b0b0d' : '#ffffff';
   return {...p, acc, fill, ink, light, grad:!!t.grad,
     accBg:t.grad ? `linear-gradient(135deg, ${stops.join(', ')})` : acc,
-    warm:light ? '#a16207' : '#fbbf24', drop:light ? '#7c3aed' : '#c4a1ff', danger:light ? '#dc2626' : '#ff7a7a'};
+    warm:light ? '#a16207' : '#fbbf24', hot:light ? '#e4471c' : '#ff6a3d', drop:light ? '#7c3aed' : '#c4a1ff', danger:light ? '#dc2626' : '#ff7a7a'};
 }
 function applyTheme(settings) {
   const t = THEMES.find(x => x.id === (settings && settings.theme)) || THEMES[0];
   const P = themePalette(t, settings && settings.appearance === 'light');
   const root = document.documentElement.style;
-  for (const k of ['bg','s1','s2','s3','line','tx','tx2','tx3','acc','warm','drop','danger']) root.setProperty('--' + k, P[k]);
+  for (const k of ['bg','s1','s2','s3','line','tx','tx2','tx3','acc','warm','drop','danger','hot']) root.setProperty('--' + k, P[k]);
   const [r,g,b] = hexRgb(P.acc);
   root.setProperty('--acc-bg', P.accBg);
   root.setProperty('--acc-ink', P.ink);
@@ -1383,6 +1421,131 @@ function screenGymSwitch() {
   </div>`;
 }
 
+/* ---------- body map ---------- */
+// Original front/back figure. Paths are the viewer's left half (centre x=80); the right half is mirrored.
+const BODY_SIL = 'M80,39 L73,39 L72,51 C66,54 57,55 50,57 C40,59 34,65 32,75 L30,100 C29,112 28,122 27,132 C25,148 23,162 22,180 L21,195 C20,203 21,211 25,213 C29,214 32,209 32,199 L33,183 C36,167 39,151 41,135 L44,113 L46,99 C50,120 54,140 56,158 C55,168 53,178 52,190 C50,214 50,240 52,268 L53,284 C51,300 50,318 54,338 L55,346 C52,350 50,356 56,358 L74,358 C75,352 73,348 71,344 C73,320 74,300 73,286 L74,270 C76,250 78,222 78,202 L80,198 Z';
+const BODY_REG = {
+  front: {
+    'Traps': ['M72,52 C66,55 59,56 54,58 C60,60 67,60 74,59 Z'],
+    'Front delts': ['M53,60 C46,60 41,63 39,68 C41,76 44,82 47,86 L47.5,72 C49,67 51,63 53,60 Z'],
+    'Side delts': ['M37.5,65 C34.5,69 33,75 33,81 L34,95 C36.5,91 40,88 44,85 C40.5,79 38,72 37.5,65 Z'],
+    'Upper chest': ['M78.8,61 L55,61 C51.5,63.5 49.5,67.5 49,71 C58,71.4 70,72 78.8,73 Z'],
+    'Chest': ['M78.8,74.6 C70,73.6 58,73 48.9,72.6 L48.6,83 C58,84 70,85.4 78.8,87 Z'],
+    'Lower chest': ['M78.8,88.6 C70,87 58,85.6 48.7,84.6 C49.4,91 51.2,96 54.5,98.5 C62,103 72,103 78.8,100.5 Z'],
+    'Biceps': ['M45.6,99 C41,104 37.6,114 37,125 C39.4,131 44.6,131 46,126 C47.2,116 47.2,106 45.6,99 Z'],
+    'Brachialis': ['M34.4,102 C32.4,110 31.4,120 31.2,129.5 L35.4,131.6 C35,122 35,112 34.4,102 Z'],
+    'Forearms': ['M30,136 C27,150 25,164 24.6,180 L31,180.5 C34,166 37.6,152 40.6,138 C37,134.5 33,134 30,136 Z'],
+    'Abs': ['M78.8,104 L68.6,105 C67.6,125 67.6,148 69.4,170 C72.4,174 76,176 78.8,177 Z'],
+    'Obliques': ['M66.8,106.5 C61,108.5 56,112 52.6,116 C54.6,132 56.4,148 57.2,162 C61,166 64.6,168 67.4,168.5 C65.6,148 65.6,126 66.8,106.5 Z'],
+    'Hip flexors': ['M67.6,174.5 C63,176.5 59,180.5 57,186 L64.4,195.5 C67.4,189.5 70.6,184 74,180.5 Z'],
+    'Abductors': ['M53.6,176 C52.4,184 51.4,194 51.2,204 L55.6,199.5 C55.8,191.5 56,183.5 56,178 Z'],
+    'Quads': ['M57.4,191.5 C53.4,210 52.2,236 54,262 C58,272 66,276 72,272 C74,252 74.2,230 72.4,207 L66,198.5 Z'],
+    'Adductors': ['M74.4,199 C76.4,212 77.4,226 76.6,240 L73.8,236 C73.8,224 73.4,212 72.6,203.5 Z'],
+    'Calves': ['M53.4,292 C51.4,304 51.4,316 53.4,328 L56.4,326 C56.4,314 56.4,302 56.2,292 Z', 'M72,292 C73.8,304 73.8,314 72,324 L69.8,322 C69.8,312 69.8,300 69.6,292 Z'],
+  },
+  back: {
+    'Traps': ['M80,44 L73.4,46 C67,52 59,56 51.6,59 C58.6,62.5 66,69 71.4,80 C74.6,89 77.8,98 80,103.5 Z'],
+    'Rear delts': ['M49.8,60.5 C43,61.5 37.6,65.5 35.6,72 C38.4,78.5 43,82.5 48,83 C48.8,75 49.4,67 49.8,60.5 Z'],
+    'Side delts': ['M34.6,67.5 C33,73 32.4,81 33,92.5 C35.6,88.5 38,85 40.6,81.5 C37.4,77.5 35.4,73 34.6,67.5 Z'],
+    'Upper back': ['M69.6,81 C64,74 57,68 51.6,63.6 L50.2,84.4 C56.4,90.2 63.6,95.6 72.2,99.4 C73.6,93.6 72.6,87 69.6,81 Z'],
+    'Lats': ['M50,87.6 C50.2,104 54,124 60,142 C64.4,145 68.4,146 71.6,145 C72.2,130 72.6,116 72.6,102.4 C64.4,99 56.6,94.2 50,87.6 Z'],
+    'Lower back': ['M78.8,106 L74.4,106.6 C74.6,122 74.4,136 73.8,148 C70,155 65.6,161 62,167.4 C68,169.4 74,170.2 78.8,170.4 Z'],
+    'Triceps': ['M44.4,92 C38.4,96 33.4,104 32.2,116 C32,124 33,129.6 35.8,132 L42,132 C44,120 45.6,108 44.4,92 Z'],
+    'Forearms': ['M30,136 C27,150 25,164 24.6,180 L31,180.5 C34,166 37.6,152 40.6,138 C37,134.5 33,134 30,136 Z'],
+    'Abductors': ['M60.4,170.4 C56.4,172.4 53.6,176 52.6,181.4 L56.6,182.4 C60.4,177.6 66,175 72.4,173.6 Z'],
+    'Glutes': ['M78.8,176 C70,174.4 62.4,176.6 56.6,183 C53.6,192 54.2,204 58,212 C66,216.4 74,215 78.8,211 Z'],
+    'Hamstrings': ['M57.4,216.4 C54.4,234 54.2,252 56,268 C60,274 66,276 70.2,272 C72.2,256 72.4,236 72.4,219 C66.4,220.6 61.4,219.6 57.4,216.4 Z'],
+    'Adductors': ['M74.2,216.6 C76.2,228 77.2,240 76.4,252 L73.6,250 C73.8,240 74,228 74.2,216.6 Z'],
+    'Calves': ['M55.4,290 C52.4,300 52.4,312 55.4,324 C60,330 66,330 71,324 C73,312 73,300 71,290 C66,286 60,286 55.4,290 Z'],
+  },
+};
+function bodyFigure(side, fillOf, sel) {
+  const mir = s => `<path d="${s}"/><path d="${s}" transform="translate(160,0) scale(-1,1)"/>`;
+  const regs = Object.entries(BODY_REG[side]).map(([m, ps]) =>
+    `<g class="bm-m${sel === m ? ' sel' : ''}" data-a="body-sel" data-m="${m}" fill="${fillOf(m)}" role="button" tabindex="0" aria-label="${m}"><title>${m}</title>${ps.map(mir).join('')}</g>`).join('');
+  const abLines = side === 'front' ? `<g class="bm-deco" stroke="var(--s1)" stroke-width="1.4" fill="none"><path d="M69,119 H91 M68.6,133 H91.4 M69,147 H91"/></g>` : '';
+  const spine = side === 'back' ? `<path class="bm-deco" d="M80,104 V172" stroke="var(--s1)" stroke-width="1.6"/>` : '';
+  return `<g class="bm-sil" fill="var(--s2)"><circle cx="80" cy="23" r="15"/>${mir(BODY_SIL)}</g>${regs}${abLines}${spine}`;
+}
+// rough recovery windows (hours): big muscles ~3 days, small ~2
+const REC_H = {Chest:72, 'Upper chest':72, 'Lower chest':72, Lats:72, 'Upper back':72, 'Lower back':72, Quads:72, Hamstrings:72, Glutes:72, Adductors:72};
+const recHours = m => REC_H[m] || 48;
+const GROUP_MUS = {Back:['Lats','Upper back'], Shoulders:['Front delts','Side delts'], Core:['Abs'], Legs:['Quads','Hamstrings'], Arms:['Biceps','Triceps']};
+const toMus = arr => [...new Set(arr.flatMap(m => MUSCLE_NAMES.includes(m) ? [m] : (GROUP_MUS[m] || [])))];
+function muscleStats(now = Date.now()) {
+  const since = now - 7 * DAY, st = {};
+  for (const m of MUSCLE_NAMES) st[m] = {vol:0, last:0, lastEx:null, fat:0, ex:{}};
+  for (const w of S.workouts) {
+    const t = w.end || w.start, load = {};
+    for (const e of w.ex) {
+      const n = e.sets.filter(x => x.t !== 'w').length; if (!n) continue;
+      const mm = musclesOf(e.exId), p = toMus(mm.p), s = toMus(mm.s).filter(m => !p.includes(m));
+      for (const [list, wt, role] of [[p, 1, 'p'], [s, .5, 's']]) for (const m of list) {
+        const x = st[m]; load[m] = (load[m] || 0) + n * wt;
+        if (t > x.last) { x.last = t; x.lastEx = e.exId; }
+        if (t >= since && t <= now + DAY) { x.vol += n * wt; const r = x.ex[e.exId] = x.ex[e.exId] || {sets:0, role}; r.sets += n; if (role === 'p') r.role = 'p'; }
+      }
+    }
+    const h = Math.max(0, (now - t) / 36e5);
+    for (const m in load) if (h < recHours(m)) st[m].fat += Math.min(1, load[m] / 5) * (1 - h / recHours(m));
+  }
+  for (const m of MUSCLE_NAMES) st[m].fat = Math.min(1, st[m].fat);
+  return st;
+}
+let bodyMode = (() => { try { return localStorage.getItem('spotter.body') === 'rec' ? 'rec' : 'vol'; } catch { return 'vol'; } })();
+let bodySel = null;
+const volLevel = v => v <= 0 ? 0 : v < 5 ? 1 : v < 10 ? 2 : v <= 20 ? 3 : 4;
+const recLevel = f => f < .005 ? 0 : f < .25 ? 1 : f < .5 ? 2 : f < .75 ? 3 : 4;
+const BM_PCT = [0, 28, 52, 78, 100];
+const bmFill = (lvl, mode) => lvl ? `color-mix(in srgb, var(${mode === 'rec' ? '--hot' : '--acc'}) ${BM_PCT[lvl]}%, var(--bm0))` : 'var(--bm0)';
+const fmtSets = v => (Math.round(v * 2) / 2).toString().replace('.5', '½').replace(/^0½/, '½');
+const agoText = t => { const d = dayIdx(Date.now()) - dayIdx(t); return d <= 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`; };
+function bodyCard() {
+  const st = muscleStats(), mode = bodyMode;
+  const lvl = m => mode === 'rec' ? recLevel(st[m].fat) : volLevel(st[m].vol);
+  const fillOf = m => bmFill(lvl(m), mode);
+  const legend = (mode === 'rec' ? ['Ready', '75%+', '50%+', '25%+', '<25%'] : ['0', '1–4', '5–9', '10–20', '20+'])
+    .map((l, i) => `<span class="${mode === 'vol' && i === 3 ? 'tgt' : ''}"><i style="background:${bmFill(i, mode)}"></i>${l}${mode === 'vol' && i === 3 ? ' target' : ''}</span>`).join('');
+  let sub;
+  if (mode === 'vol') {
+    const on = MUSCLE_NAMES.filter(m => st[m].vol >= 10 && st[m].vol <= 20).length, under = MUSCLE_NAMES.filter(m => st[m].vol > 0 && st[m].vol < 10).length;
+    sub = `Sets in the last 7 days. Main muscle counts 1, helper muscles ½. <b>${on}</b> on target · <b>${under}</b> under`;
+  } else {
+    const tired = MUSCLE_NAMES.filter(m => st[m].fat >= .5).length;
+    sub = `Estimated from your recent sessions. Big muscles take about 3 days, small ones about 2. <b>${tired ? plural(tired, 'muscle') + ' still under 50%' : 'Everything’s at least half recovered'}</b>`;
+  }
+  const svg = `<svg viewBox="0 0 340 378" role="group" aria-label="Body map, ${mode === 'rec' ? 'recovery' : 'weekly sets'}">
+    <g>${bodyFigure('front', fillOf, bodySel)}</g><g transform="translate(180,0)">${bodyFigure('back', fillOf, bodySel)}</g>
+    <text x="80" y="374" text-anchor="middle" class="bm-lbl">FRONT</text><text x="260" y="374" text-anchor="middle" class="bm-lbl">BACK</text></svg>`;
+  const rows = MUSCLE_NAMES.map(m => `<tr data-a="body-sel" data-m="${m}"><td>${m}</td><td>${fmtSets(st[m].vol)}</td><td>${Math.round((1 - st[m].fat) * 100)}%</td><td>${st[m].last ? fmtShort(st[m].last) : '—'}</td></tr>`).join('');
+  return `<div class="chart-card bm-card">
+    <div class="bm-head"><h2>Muscles</h2><div class="seg">${[['vol','Volume'],['rec','Recovery']].map(([k,l]) => `<button class="${mode === k ? 'on' : ''}" data-a="body-mode" data-k="${k}">${l}</button>`).join('')}</div></div>
+    <div class="chart-sub bm-sub">${sub}</div>
+    <div class="bm-fig">${svg}</div>
+    <div class="bm-legend">${legend}</div>
+    ${bodySel && st[bodySel] ? bodyDetail(bodySel, st[bodySel], mode) : `<div class="bm-hint">Tap a muscle for details</div>`}
+    <details class="tbl-toggle"><summary>Show as list</summary><table><tr><th>Muscle</th><th>Sets (7d)</th><th>Recovered</th><th>Last</th></tr>${rows}</table></details>
+  </div>`;
+}
+function bodyDetail(m, x, mode) {
+  const rec = Math.round((1 - x.fat) * 100), v = x.vol;
+  const status = v <= 0 ? 'No sets in the last 7 days' : v < 10 ? `Under target. ${fmtSets(10 - v)} more to reach 10` : v <= 20 ? 'On target (10–20 sets)' : 'Above 20 sets. Plenty this week';
+  const recNote = !x.last ? 'Never trained' : rec >= 100 ? 'Fully recovered' : rec >= 75 ? 'Nearly recovered' : rec >= 50 ? 'Recovering' : 'Still tired';
+  const ex = Object.entries(x.ex).sort((a,b) => b[1].sets - a[1].sets);
+  const pct = Math.min(100, v / 25 * 100);
+  return `<div class="bm-detail">
+    <div class="bm-dh"><b>${m}</b><button class="icon-btn" data-a="body-sel" data-m="${m}" aria-label="Close">${ic('x')}</button></div>
+    <div class="bm-kv">
+      <div class="${mode === 'vol' ? 'on' : ''}"><b>${fmtSets(v)}</b><span>Sets · 7 days</span><em>${status}</em></div>
+      <div class="${mode === 'rec' ? 'on' : ''}"><b>${rec}%</b><span>Recovered</span><em>${recNote}${x.last ? ` · trained ${agoText(x.last)}` : ''}</em></div>
+    </div>
+    <div class="bm-meter" aria-hidden="true"><i class="tgt"></i><i class="fill" style="width:${pct}%"></i></div>
+    <div class="bm-meter-l" aria-hidden="true"><span>0</span><span style="left:40%">10</span><span style="left:80%">20</span><span style="left:100%">25+</span></div>
+    ${ex.length ? `<div class="bm-ex-h">This week</div><div class="bm-ex">${ex.map(([id, r]) => `<button data-a="ex-info" data-id="${esc(id)}"><span>${esc(exInfo(id).name)}</span><span class="faint">${plural(r.sets, 'set')}</span><span class="tag">${r.role === 'p' ? 'Main' : 'Helper'}</span></button>`).join('')}</div>`
+      : `<div class="bm-none">${x.last ? `Last hit ${fmtShort(x.last)} with <b>${esc(exInfo(x.lastEx).name)}</b>.` : 'None of your logged exercises work this muscle yet.'}</div>`}
+  </div>`;
+}
+
 function viewProgress() {
   let html = `<header class="top"><h1 class="h1" style="margin:0">Progress</h1>${syncPill()}</header>`;
   const counts = {};
@@ -1391,6 +1554,7 @@ function viewProgress() {
   if (!exIds.length) return html + `<div class="empty"><b>No data yet</b>Log a few workouts, then pick any exercise here to see your progress on it.</div>`;
   if (!progEx || !counts[progEx]) progEx = (S.workouts[0] && S.workouts[0].ex[0] && counts[S.workouts[0].ex[0].exId] && S.workouts[0].ex[0].exId) || exIds[0];
   const o = overload(progEx), info = exInfo(progEx), hist = o.ses.length ? o.ses : o.all;
+  html += bodyCard();
   html += `<button class="ex-pick" data-a="prog-pick"><span><span class="ex-pick-k">Exercise</span><b>${esc(info.name)}</b><small class="ex-mus">${musHTML(progEx)}</small><small>${plural(o.all.length,'session')}</small></span><span class="ex-pick-c">Change ${ic('down')}</span></button>`;
   html += overloadCard(o);
   html += equipCard(progEx, o);
@@ -2434,6 +2598,8 @@ const A = {
       markDirty('profile'); renderView(); toast('Gym switch undone');
     }}]});
   },
+  'body-mode': el => { bodyMode = el.dataset.k; try { localStorage.setItem('spotter.body', bodyMode); } catch {} const y = window.scrollY; renderView(); window.scrollTo(0, y); },
+  'body-sel': el => { const m = el.dataset.m; bodySel = bodySel === m ? null : m; const y = window.scrollY; renderView(); window.scrollTo(0, y); },
   'prog-metric': el => { progMetric = el.dataset.k; const y = window.scrollY; renderView(); window.scrollTo(0, y); },
   'cal-nav': el => {
     const d = new Date(calMonth); d.setMonth(d.getMonth() + +el.dataset.v);
@@ -2600,6 +2766,7 @@ document.addEventListener('change', e => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { if ($('#modal').classList.contains('open')) tryCloseModal(); else if (pk) closePicker(); }
   if (e.key === 'Enter' && e.target.matches('#workout input[data-f]')) e.target.blur();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.bm-m')) { e.preventDefault(); A['body-sel'](e.target.closest('.bm-m')); }
 });
 
 boot();
