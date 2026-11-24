@@ -1778,11 +1778,48 @@ function exInfoModal(id) {
       ...(canAdd ? [{label:'Add to current workout', cls:u ? 'btn-ghost' : 'btn-acc', fn:() => {
         S.active.ex.push({id:uid(), exId:id, note:'', sets:[newSet(), newSet(), newSet()]}); markDirty('active'); workoutOpen = true; screen = null; renderAll(); toast(`${x.name} added`); }}] : []),
       ...(isCustom ? [{label:'Edit exercise', fn:() => customEditModal(id)}] : []),
-      ...(isCustom && !u && !(S.active && S.active.ex.some(e => e.exId === id)) && !S.routines.some(r => r.ex.some(e => e.exId === id)) ? [{label:'Delete exercise', cls:'btn-danger-ghost', fn:() => {
-        const c = S.customExercises.find(c2 => c2.id === id), at = S.customExercises.indexOf(c);
-        S.customExercises = S.customExercises.filter(c2 => c2.id !== id); markDirty('profile'); renderAll();
-        toastUndo('Exercise deleted', () => { S.customExercises.splice(at, 0, c); markDirty('profile'); renderAll(); }); }}] : []),
+      ...(isCustom ? [{label:'Delete exercise', cls:'btn-danger-ghost', fn:() => confirmDeleteCustom(id)}] : []),
       {label:'Close', cls:'btn-line'}]});
+}
+// deleting a custom exercise removes it everywhere: history, routines, the workout in progress
+function customImpact(id) {
+  const hits = S.workouts.filter(w => w.ex.some(e => e.exId === id));
+  const sets = hits.reduce((a,w) => a + w.ex.filter(e => e.exId === id).reduce((b,e) => b + e.sets.length, 0), 0);
+  const emptied = hits.filter(w => w.ex.every(e => e.exId === id));
+  const routines = S.routines.filter(r => r.ex.some(e => e.exId === id));
+  const inActive = !!(S.active && S.active.ex.some(e => e.exId === id));
+  return {hits, sets, emptied, routines, inActive};
+}
+function confirmDeleteCustom(id) {
+  const c = S.customExercises.find(x => x.id === id); if (!c) return;
+  const im = customImpact(id);
+  const lines = [
+    im.hits.length ? `${plural(im.sets,'set')} from ${plural(im.hits.length,'workout')} in your history` : '',
+    im.emptied.length ? `${plural(im.emptied.length,'workout')} that only had this exercise (deleted completely)` : '',
+    im.routines.length ? `it from ${plural(im.routines.length,'routine')}: ${im.routines.map(r => esc(r.name)).join(', ')}` : '',
+    im.inActive ? 'it from the workout you’re doing now' : '',
+    im.hits.length ? 'its PRs and progress chart' : '',
+  ].filter(Boolean);
+  const body = lines.length
+    ? `<p><b style="color:var(--tx)">${esc(c.name)}</b> will be deleted everywhere. This removes:</p><ul class="loss">${lines.map(l => `<li>${l}</li>`).join('')}</ul>`
+    : `<p><b style="color:var(--tx)">${esc(c.name)}</b> will be removed from your exercise list. You haven’t used it anywhere yet.</p>`;
+  modal({title:'Are you sure?', body, actions:[{label:'Delete exercise', cls:'btn-danger-ghost', fn:() => deleteCustom(id)}, {label:'Keep it', cls:'btn-acc'}]});
+}
+function deleteCustom(id) {
+  const snap = {workouts:clone(S.workouts), routines:clone(S.routines), customExercises:clone(S.customExercises), active:clone(S.active), adjust:clone(S.adjust)};
+  const name = exName(id);
+  const months = new Set(S.workouts.filter(w => w.ex.some(e => e.exId === id)).map(w => 'log-' + monthKey(w.start)));
+  S.workouts = S.workouts.map(w => w.ex.some(e => e.exId === id) ? {...w, ex:w.ex.filter(e => e.exId !== id)} : w).filter(w => w.ex.length);
+  S.routines = S.routines.map(r => ({...r, ex:r.ex.filter(e => e.exId !== id)}));
+  if (S.active) S.active.ex = S.active.ex.filter(e => e.exId !== id);
+  delete S.adjust[id];
+  S.customExercises = S.customExercises.filter(x => x.id !== id);
+  if (progEx === id) progEx = null;
+  markDirty('profile', 'active', ...months); renderAll();
+  toastUndo(`${name} deleted`, () => {
+    Object.assign(S, {workouts:snap.workouts, routines:snap.routines, customExercises:snap.customExercises, active:snap.active, adjust:snap.adjust});
+    markDirty('profile', 'active', ...months); renderAll(); toast(`${name} restored`);
+  });
 }
 function customEditModal(id) {
   const c = S.customExercises.find(x => x.id === id); if (!c) return;
