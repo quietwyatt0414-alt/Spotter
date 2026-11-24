@@ -19,7 +19,9 @@
   --r:14px; --head:'Barlow Condensed',system-ui,sans-serif; --body:'Barlow',system-ui,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--body);font-size:16px;line-height:1.4}
+html{background:var(--bg)}
+body{background:var(--page-bg,var(--bg));background-attachment:fixed;min-height:100vh}
+html,body{margin:0;color:var(--tx);font-family:var(--body);font-size:16px;line-height:1.4}
 body.locked{overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 input,textarea,select{font:inherit;color:var(--tx)}
@@ -31,7 +33,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 /* top */
 .top{display:flex;align-items:center;justify-content:space-between;margin:4px 0 18px}
 .brand{font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:.14em;display:flex;align-items:center;gap:8px}
-.brand-dot{width:10px;height:10px;border-radius:3px;background:var(--acc);transform:rotate(45deg)}
+.brand-dot{width:10px;height:10px;border-radius:3px;background:var(--acc-bg);transform:rotate(45deg)}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:var(--s2);color:var(--tx2);font-size:13px;font-weight:600}
 .pill svg.i{width:15px;height:15px}
 .pill.ok{color:var(--acc)}
@@ -49,7 +51,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .btn.block{display:flex;width:100%}
 .btn.lg{height:54px;font-size:17px;font-family:var(--head);text-transform:uppercase;letter-spacing:.08em;font-size:19px}
 .btn.sm{height:36px;padding:0 14px;font-size:14px;border-radius:10px}
-.btn-acc{background:var(--acc);color:var(--acc-ink)}
+.btn-acc{background:var(--acc-bg);color:var(--acc-ink)}
 .btn-ghost{background:var(--s2);color:var(--tx)}
 .btn-line{border:1px solid var(--line);color:var(--tx)}
 .btn-danger{background:var(--danger);color:#1a0b0b}
@@ -80,7 +82,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .resume{background:linear-gradient(135deg,var(--acc-mid),var(--acc-dim));border:1px solid var(--acc-mid);border-radius:var(--r);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .resume b{font-family:var(--head);font-size:22px;display:block;line-height:1.1}
 .live{display:inline-flex;align-items:center;gap:6px;color:var(--acc);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
-.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc);animation:pulse 1.4s infinite}
+.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc-bg);animation:pulse 1.4s infinite}
 @keyframes pulse{50%{opacity:.3}}
 
 /* tabbar & mini */
@@ -88,11 +90,11 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--tx3);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .tab.on{color:var(--acc)}
 .tab svg.i{width:22px;height:22px}
-.mini{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(66px + env(safe-area-inset-bottom));width:min(504px,calc(100% - 16px));background:var(--acc);color:var(--acc-ink);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;font-weight:700;z-index:11;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.mini{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(66px + env(safe-area-inset-bottom));width:min(504px,calc(100% - 16px));background:var(--acc-bg);color:var(--acc-ink);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;font-weight:700;z-index:11;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .mini span{font-family:var(--head);font-size:17px;letter-spacing:.02em}
 
 /* layers */
-.layer{position:fixed;inset:0;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;display:none}
+.layer{position:fixed;inset:0;background:var(--page-bg,var(--bg));overflow-y:auto;-webkit-overflow-scrolling:touch;display:none}
 .layer.open{display:block}
 #workout{z-index:20} #screen{z-index:30}
 .lhead{position:sticky;top:0;z-index:2;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
@@ -121,9 +123,9 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .set-row input::placeholder{color:var(--tx3);font-weight:500}
 .set-row.done input{background:transparent}
 .chk{height:36px;border-radius:8px;background:var(--s2);display:flex;align-items:center;justify-content:center;color:var(--tx3)}
-.set-row.done .chk{background:var(--acc);color:var(--acc-ink)}
+.set-row.done .chk{background:var(--acc-bg);color:var(--acc-ink)}
 .chk svg.i{stroke-width:3}
-.pr-badge{position:absolute;right:52px;top:-6px;background:var(--acc);color:var(--acc-ink);font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;letter-spacing:.06em;display:flex;align-items:center;gap:3px}
+.pr-badge{position:absolute;right:52px;top:-6px;background:var(--acc-bg);color:var(--acc-ink);font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;letter-spacing:.06em;display:flex;align-items:center;gap:3px}
 .pr-badge svg.i{width:11px;height:11px;stroke-width:2.5}
 .ex-foot{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}
 .ex-foot button{height:38px;border-radius:10px;background:var(--s2);font-weight:700;font-size:14px;color:var(--tx2)}
@@ -139,7 +141,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .rest-lbl{font-size:12px;color:var(--tx2);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .rest-btns{display:flex;gap:6px}
 .rest-btns button{height:36px;padding:0 12px;border-radius:9px;background:color-mix(in srgb,currentColor 14%,transparent);font-weight:700;font-size:14px}
-.rest.done{background:var(--acc);color:var(--acc-ink)}
+.rest.done{background:var(--acc-bg);color:var(--acc-ink)}
 .rest.done .rest-lbl{color:var(--acc-ink)}
 .rest.done .rest-fill{display:none}
 
@@ -157,7 +159,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 10px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;height:32px;padding:0 12px;border-radius:999px;background:var(--s2);font-size:13px;font-weight:700;color:var(--tx2)}
-.chip.on{background:var(--acc);color:var(--acc-ink)}
+.chip.on{background:var(--acc-bg);color:var(--acc-ink)}
 .pk-list{flex:1;overflow-y:auto;padding:0 8px 12px;border-top:1px solid var(--line)}
 .pk-group{font-size:11px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;padding:14px 8px 6px}
 .pk-item{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;padding:10px 8px;border-radius:10px;text-align:left}
@@ -165,7 +167,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .pk-item b{display:block;font-weight:600;font-size:16px}
 .pk-item small{color:var(--tx3);font-size:13px}
 .pk-item .tick{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none;color:transparent}
-.pk-item.on .tick{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.pk-item.on .tick{background:var(--acc-bg);border-color:transparent;color:var(--acc-ink)}
 .pk-item.on b{color:var(--acc)}
 .sheet-foot{padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:8px}
 
@@ -192,7 +194,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.has-undo{pointer-events:auto;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 16px;z-index:70}
 .toast.has-undo span{white-space:nowrap}
-.toast.has-undo button{background:var(--acc);color:var(--acc-ink);font-weight:800;border-radius:9px;padding:8px 14px;font-size:14px}
+.toast.has-undo button{background:var(--acc-bg);color:var(--acc-ink);font-weight:800;border-radius:9px;padding:8px 14px;font-size:14px}
 .toast.show.has-undo{bottom:calc(84px + env(safe-area-inset-bottom))}
 
 /* history */
@@ -220,7 +222,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 /* summary */
 .sum-hero{text-align:center;padding:30px 0 10px}
 .sum-hero .big{font-family:var(--head);font-size:44px;font-weight:800;text-transform:uppercase;line-height:1}
-.sum-badge{width:72px;height:72px;margin:0 auto 14px;border-radius:20px;background:var(--acc);color:var(--acc-ink);display:flex;align-items:center;justify-content:center}
+.sum-badge{width:72px;height:72px;margin:0 auto 14px;border-radius:20px;background:var(--acc-bg);color:var(--acc-ink);display:flex;align-items:center;justify-content:center}
 .sum-badge svg.i{width:38px;height:38px;stroke-width:2.2}
 .pr-list{display:flex;flex-direction:column;gap:8px}
 .pr-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--acc-dim);border:1px solid var(--acc-mid);border-radius:12px;padding:10px 12px}
@@ -239,7 +241,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 /* progress */
 .seg{display:flex;background:var(--s2);border-radius:12px;padding:3px;gap:3px}
 .seg button{flex:1;height:36px;border-radius:9px;font-weight:700;font-size:14px;color:var(--tx2)}
-.seg button.on{background:var(--acc);color:var(--acc-ink)}
+.seg button.on{background:var(--acc-bg);color:var(--acc-ink)}
 .chart-card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px 8px}
 .chart-ttl{font-family:var(--head);font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .chart-sub{font-size:13px;color:var(--tx3);margin-bottom:6px}
@@ -294,7 +296,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .cal-dow{text-align:center;font-size:11px;font-weight:800;color:var(--tx3);padding:2px 0 4px}
 .cal-d{position:relative;aspect-ratio:1;border-radius:10px;font-weight:700;font-size:15px;color:var(--tx2);display:flex;align-items:center;justify-content:center}
 .cal-d:not(:disabled):active{background:var(--s2)}
-.cal-d.has{background:var(--acc);color:var(--acc-ink)}
+.cal-d.has{background:var(--acc-bg);color:var(--acc-ink)}
 .cal-d.today{box-shadow:inset 0 0 0 2px var(--tx3);color:var(--tx)}
 .cal-d.has.today{box-shadow:none}
 .cal-d.sel{outline:2px solid var(--tx);outline-offset:1px}
@@ -313,7 +315,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .ov-ic svg.i{width:24px;height:24px;stroke-width:2.4}
 .ov-lbl{font-family:var(--head);font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;line-height:1.1}
 .ov-why{font-size:14px;color:var(--tx2);margin-top:3px}
-.ov-up{border-color:var(--acc-mid);background:linear-gradient(135deg,var(--acc-dim),transparent)} .ov-up .ov-ic{background:var(--acc);color:var(--acc-ink)} .ov-up .ov-lbl{color:var(--acc)}
+.ov-up{border-color:var(--acc-mid);background:linear-gradient(135deg,var(--acc-dim),transparent)} .ov-up .ov-ic{background:var(--acc-bg);color:var(--acc-ink)} .ov-up .ov-lbl{color:var(--acc)}
 .ov-flat{border-color:color-mix(in srgb,var(--warm) 35%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--warm) 10%,transparent),transparent)} .ov-flat .ov-ic{background:var(--warm);color:#1a1200} .ov-flat .ov-lbl{color:var(--warm)}
 .ov-down{border-color:color-mix(in srgb,var(--danger) 35%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--danger) 10%,transparent),transparent)} .ov-down .ov-ic{background:var(--danger);color:#1a0505} .ov-down .ov-lbl{color:var(--danger)}
 .ov-new .ov-ic{background:var(--s2);color:var(--tx2)}
@@ -413,10 +415,10 @@ button.ex-name{text-align:left;padding:0}
 .mlbl{width:78px;flex:none;font-size:11px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em}
 .mrow > div{display:flex;flex-wrap:wrap;gap:6px}
 .mchip{display:inline-block;font-size:13px;font-weight:700;border-radius:999px;padding:4px 10px}
-.mchip.p{background:var(--acc);color:var(--acc-ink)} .mchip.s{border:1px solid var(--line);color:var(--tx2)}
+.mchip.p{background:var(--acc-bg);color:var(--acc-ink)} .mchip.s{border:1px solid var(--line);color:var(--tx2)}
 .mpick{display:flex;flex-wrap:wrap;gap:5px}
 .mchip.pick{font-size:12.5px;padding:4px 9px}
-.mchip.pick{background:var(--s2);color:var(--tx2)} .mchip.pick.on{background:var(--acc);color:var(--acc-ink)}
+.mchip.pick{background:var(--s2);color:var(--tx2)} .mchip.pick.on{background:var(--acc-bg);color:var(--acc-ink)}
 .exl{gap:8px}
 .exr{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .exr:active{background:var(--s2)}
@@ -430,6 +432,11 @@ button.ex-name{text-align:left;padding:0}
 .tab span{font-size:10.5px}
 @keyframes nudge{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
 .mcard.nudge{animation:nudge .35s}
+.th-mode{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;margin-bottom:4px;border-bottom:1px solid var(--line)}
+.th-mode b{display:block} .th-mode small{color:var(--tx3);font-size:13px}
+.switch{position:relative;width:52px;height:32px;border-radius:999px;background:var(--s3);flex:none;transition:background .2s}
+.switch span{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .2s}
+.switch.on{background:var(--acc-bg)} .switch.on span{transform:translateX(20px)}
 .foot-note{text-align:center;color:var(--tx3);font-size:13px;margin-top:28px}
 
 /* loading */
@@ -591,46 +598,80 @@ function quoteHTML() {
   return `<span class="quote-mark" aria-hidden="true">“</span><div class="quote-q">${esc(q.q)}</div><div class="quote-a"><span><b>— ${esc(q.a)}</b>${q.s ? ` · ${esc(q.s)}` : ''}</span><span>${quoteIdx + 1}/${QUOTES.length}</span></div>`;
 }
 
-/* ---------- themes ---------- */
+/* ---------- themes ----------
+   A theme is a color (solid, tinted, or gradient); Dark mode is a separate switch, so every theme
+   works both ways. Light mode darkens accent colors until text stays readable. */
 const DARK = {bg:'#0b0b0d', s1:'#141417', s2:'#1c1c20', s3:'#26262c', line:'#2a2a31', tx:'#f4f4f5', tx2:'#a3a3ad', tx3:'#6e6e78'};
-const LIGHT = {bg:'#f4f4f6', s1:'#ffffff', s2:'#ebebef', s3:'#e0e0e6', line:'#d9d9e0', tx:'#0b0b0d', tx2:'#4b4b55', tx3:'#71717b', warm:'#a16207', drop:'#7c3aed', danger:'#dc2626', light:true};
+const LIGHT = {bg:'#f4f4f6', s1:'#ffffff', s2:'#ebebef', s3:'#e0e0e6', line:'#d9d9e0', tx:'#0b0b0d', tx2:'#4b4b55', tx3:'#6b6b75'};
 const THEMES = [
-  {id:'volt', name:'Volt', group:'Dark', ...DARK, acc:'#d4ff3f'},
-  {id:'blue', name:'Electric Blue', group:'Dark', ...DARK, acc:'#4da3ff'},
-  {id:'red', name:'Red', group:'Dark', ...DARK, acc:'#ff4d4d'},
-  {id:'orange', name:'Orange', group:'Dark', ...DARK, acc:'#ff7a1a'},
-  {id:'gold', name:'Gold', group:'Dark', ...DARK, acc:'#ffc933'},
-  {id:'green', name:'Green', group:'Dark', ...DARK, acc:'#2ee88a'},
-  {id:'teal', name:'Teal', group:'Dark', ...DARK, acc:'#2dd4bf'},
-  {id:'cyan', name:'Cyan', group:'Dark', ...DARK, acc:'#22d3ee'},
-  {id:'purple', name:'Purple', group:'Dark', ...DARK, acc:'#a78bfa'},
-  {id:'pink', name:'Hot Pink', group:'Dark', ...DARK, acc:'#ff4fa3'},
-  {id:'rose', name:'Rose', group:'Dark', ...DARK, acc:'#fda4af'},
-  {id:'ice', name:'Ice', group:'Dark', ...DARK, acc:'#bfe3ff'},
-  {id:'blackout', name:'Blackout', group:'Dark', bg:'#000000', s1:'#0e0e0f', s2:'#18181a', s3:'#232326', line:'#27272a', tx:'#fafafa', tx2:'#a1a1aa', tx3:'#71717a', acc:'#ffffff'},
-  {id:'navy', name:'Navy', group:'Tinted', bg:'#0a1020', s1:'#111a2e', s2:'#18233b', s3:'#22304d', line:'#22304a', tx:'#eef3ff', tx2:'#9fb0cf', tx3:'#6a7da1', acc:'#5aa9ff'},
-  {id:'forest', name:'Forest', group:'Tinted', bg:'#08120d', s1:'#0f1c15', s2:'#16261d', s3:'#1f3328', line:'#213629', tx:'#ecf7f0', tx2:'#9dbcaa', tx3:'#678574', acc:'#4ade80'},
-  {id:'burgundy', name:'Burgundy', group:'Tinted', bg:'#14080b', s1:'#1f0e13', s2:'#2a141a', s3:'#371b23', line:'#381d25', tx:'#fbeff1', tx2:'#c9a2ab', tx3:'#8f6973', acc:'#ff5c7a'},
-  {id:'midnight', name:'Midnight', group:'Tinted', bg:'#0e0a1a', s1:'#161127', s2:'#1f1835', s3:'#2a2145', line:'#2c2446', tx:'#f3effd', tx2:'#ada3cc', tx3:'#746b94', acc:'#b88cff'},
-  {id:'light', name:'Light', group:'Light', ...LIGHT, acc:'#111114'},
-  {id:'lightblue', name:'Light Blue', group:'Light', ...LIGHT, acc:'#1d5fd1'},
-  {id:'sand', name:'Sand', group:'Light', ...LIGHT, bg:'#f6f1e8', s1:'#fffaf2', s2:'#efe7da', s3:'#e6dccb', line:'#ddd1bd', tx:'#1c1712', tx2:'#574c3f', tx3:'#7d7060', acc:'#c2410c'},
+  {id:'teal', name:'Teal', group:'Solid', acc:'#2dd4bf'},
+  {id:'volt', name:'Volt', group:'Solid', acc:'#d4ff3f'},
+  {id:'blue', name:'Electric Blue', group:'Solid', acc:'#4da3ff'},
+  {id:'cyan', name:'Cyan', group:'Solid', acc:'#22d3ee'},
+  {id:'green', name:'Green', group:'Solid', acc:'#2ee88a'},
+  {id:'gold', name:'Gold', group:'Solid', acc:'#ffc933'},
+  {id:'orange', name:'Orange', group:'Solid', acc:'#ff7a1a'},
+  {id:'red', name:'Red', group:'Solid', acc:'#ff4d4d'},
+  {id:'pink', name:'Hot Pink', group:'Solid', acc:'#ff4fa3'},
+  {id:'rose', name:'Rose', group:'Solid', acc:'#fda4af', lightAcc:'#be185d'},
+  {id:'purple', name:'Purple', group:'Solid', acc:'#a78bfa'},
+  {id:'ice', name:'Ice', group:'Solid', acc:'#bfe3ff'},
+  {id:'blackout', name:'Mono', group:'Solid', acc:'#ffffff', lightAcc:'#111114', darkPal:{bg:'#000000', s1:'#0e0e0f', s2:'#18181a', s3:'#232326', line:'#27272a', tx:'#fafafa', tx2:'#a1a1aa', tx3:'#71717a'}, lightPal:{bg:'#ffffff', s1:'#f6f6f7'}},
+  {id:'navy', name:'Navy', group:'Tinted', hue:220, acc:'#5aa9ff', lightAcc:'#1d5fd1', darkPal:{bg:'#0a1020', s1:'#111a2e', s2:'#18233b', s3:'#22304d', line:'#22304a', tx:'#eef3ff', tx2:'#9fb0cf', tx3:'#6a7da1'}},
+  {id:'forest', name:'Forest', group:'Tinted', hue:150, acc:'#4ade80', darkPal:{bg:'#08120d', s1:'#0f1c15', s2:'#16261d', s3:'#1f3328', line:'#213629', tx:'#ecf7f0', tx2:'#9dbcaa', tx3:'#678574'}},
+  {id:'burgundy', name:'Burgundy', group:'Tinted', hue:345, acc:'#ff5c7a', darkPal:{bg:'#14080b', s1:'#1f0e13', s2:'#2a141a', s3:'#371b23', line:'#381d25', tx:'#fbeff1', tx2:'#c9a2ab', tx3:'#8f6973'}},
+  {id:'midnight', name:'Midnight', group:'Tinted', hue:260, acc:'#b88cff', darkPal:{bg:'#0e0a1a', s1:'#161127', s2:'#1f1835', s3:'#2a2145', line:'#2c2446', tx:'#f3effd', tx2:'#ada3cc', tx3:'#746b94'}},
+  {id:'sand', name:'Sand', group:'Tinted', hue:35, acc:'#f0883e', lightAcc:'#c2410c', darkPal:{bg:'#14100b', s1:'#1d1811', s2:'#262018', s3:'#312920', line:'#352c22', tx:'#f8f1e7', tx2:'#c4b39d', tx3:'#8a7a66'}, lightPal:{bg:'#f6f1e8', s1:'#fffaf2', s2:'#efe7da', s3:'#e6dccb', line:'#ddd1bd', tx:'#1c1712', tx2:'#574c3f', tx3:'#75685a'}},
+  {id:'vaporwave', name:'Vaporwave', group:'Gradients', grad:['#ff71ce','#b967ff','#01cdfe']},
+  {id:'vice', name:'Vice', group:'Gradients', grad:['#ff4f9a','#ff8ec4','#2ee6d6']},
+  {id:'sunset', name:'Sunset', group:'Gradients', grad:['#ffb347','#ff5f6d','#c147e9']},
+  {id:'ocean', name:'Ocean', group:'Gradients', grad:['#2e8bff','#22d3ee','#2dd4bf']},
+  {id:'aurora', name:'Aurora', group:'Gradients', grad:['#22e3a0','#3ec9ff','#a970ff']},
+  {id:'fire', name:'Fire', group:'Gradients', grad:['#ff3d3d','#ff8a1f','#ffd23f']},
+  {id:'cotton', name:'Cotton Candy', group:'Gradients', grad:['#ff9ad5','#c3b6ff','#8fd8ff']},
+  {id:'mojito', name:'Mojito', group:'Gradients', grad:['#d4ff3f','#4ade80','#14b8a6']},
 ];
+const THEME_GROUPS = ['Solid', 'Tinted', 'Gradients'];
 const hexRgb = h => [1,3,5].map(i => parseInt(h.slice(i, i+2), 16));
 const lum = h => { const [r,g,b] = hexRgb(h).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126*r + .7152*g + .0722*b; };
 const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x,y) + .05) / (Math.min(x,y) + .05); };
-function applyTheme(id) {
-  const t = THEMES.find(x => x.id === id) || THEMES[0];
+function hexHsl(h) { let [r,g,b] = hexRgb(h).map(v => v / 255); const mx = Math.max(r,g,b), mn = Math.min(r,g,b), l = (mx + mn) / 2; let hh = 0, ss = 0;
+  if (mx !== mn) { const d = mx - mn; ss = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); hh = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; hh *= 60; }
+  return [hh, ss * 100, l * 100]; }
+function hslHex(h, s, l) { s /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); }
+// darken a color until it reads on `bg` (for light mode)
+function readableOn(hex, bg, target) { let [h,s,l] = hexHsl(hex); let out = hex; while (contrast(out, bg) < target && l > 12) { l -= 2; out = hslHex(h, Math.min(100, s), l); } return out; }
+const tintLight = h => ({bg:hslHex(h,30,96), s1:hslHex(h,40,99), s2:hslHex(h,24,92), s3:hslHex(h,20,88), line:hslHex(h,18,84), tx:hslHex(h,30,9), tx2:hslHex(h,12,30), tx3:hslHex(h,9,42)});
+function themePalette(t, light) {
+  const p = light ? {...LIGHT, ...(t.hue != null ? tintLight(t.hue) : {}), ...(t.lightPal || {})} : {...DARK, ...(t.darkPal || {})};
+  const stops = t.grad || [t.acc];
+  let acc = stops.reduce((b,c) => contrast(c, p.bg) > contrast(b, p.bg) ? c : b, stops[0]);     // text/icon accent
+  if (light) acc = t.lightAcc || readableOn(acc, p.s1, 4.5);
+  const fill = t.grad ? stops : [acc];
+  const minC = ink => Math.min(...fill.map(c => contrast(c, ink)));
+  const ink = minC('#0b0b0d') >= minC('#ffffff') ? '#0b0b0d' : '#ffffff';
+  return {...p, acc, fill, ink, light, grad:!!t.grad,
+    accBg:t.grad ? `linear-gradient(135deg, ${stops.join(', ')})` : acc,
+    warm:light ? '#a16207' : '#fbbf24', drop:light ? '#7c3aed' : '#c4a1ff', danger:light ? '#dc2626' : '#ff7a7a'};
+}
+function applyTheme(settings) {
+  const t = THEMES.find(x => x.id === (settings && settings.theme)) || THEMES[0];
+  const P = themePalette(t, settings && settings.appearance === 'light');
   const root = document.documentElement.style;
-  for (const k of ['bg','s1','s2','s3','line','tx','tx2','tx3','acc']) root.setProperty('--' + k, t[k]);
-  const ink = contrast(t.acc, '#0b0b0d') >= contrast(t.acc, '#ffffff') ? '#0b0b0d' : '#ffffff';
-  const [r,g,b] = hexRgb(t.acc);
-  root.setProperty('--acc-ink', ink);
-  root.setProperty('--acc-dim', `rgba(${r},${g},${b},${t.light ? .09 : .10})`);
-  root.setProperty('--acc-mid', `rgba(${r},${g},${b},${t.light ? .22 : .22})`);
-  root.setProperty('--warm', t.warm || '#fbbf24'); root.setProperty('--drop', t.drop || '#c4a1ff'); root.setProperty('--danger', t.danger || '#ff7a7a');
-  root.setProperty('color-scheme', t.light ? 'light' : 'dark');
-  const m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', t.bg);
+  for (const k of ['bg','s1','s2','s3','line','tx','tx2','tx3','acc','warm','drop','danger']) root.setProperty('--' + k, P[k]);
+  const [r,g,b] = hexRgb(P.acc);
+  root.setProperty('--acc-bg', P.accBg);
+  root.setProperty('--acc-ink', P.ink);
+  root.setProperty('--acc-dim', `rgba(${r},${g},${b},${P.light ? .09 : .10})`);
+  root.setProperty('--acc-mid', `rgba(${r},${g},${b},.22)`);
+  // gradient themes get a soft glow of their colors behind the page
+  const rgba = (hex, a) => { const [x,y,z] = hexRgb(hex); return `rgba(${x},${y},${z},${a})`; };
+  root.setProperty('--page-bg', P.grad
+    ? `radial-gradient(120% 55% at 0% 0%, ${rgba(t.grad[0], P.light ? .14 : .17)}, transparent 62%), radial-gradient(120% 55% at 100% 0%, ${rgba(t.grad[t.grad.length-1], P.light ? .12 : .14)}, transparent 62%), ${P.bg}`
+    : P.bg);
+  root.setProperty('color-scheme', P.light ? 'light' : 'dark');
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', P.bg);
 }
 
 /* ---------- helpers ---------- */
@@ -666,7 +707,7 @@ const exName = id => exInfo(id).name;
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 /* ---------- state ---------- */
-const DEFAULT = () => ({settings:{units:'lb', rest:90, theme:'volt'}, routines:[], customExercises:[], workouts:[], active:null, adjust:{}, gyms:[], off:[], imports:[]});
+const DEFAULT = () => ({settings:{units:'lb', rest:90, theme:'teal', appearance:'dark'}, routines:[], customExercises:[], workouts:[], active:null, adjust:{}, gyms:[], off:[], imports:[]});
 let S = DEFAULT();
 let tab = 'home';
 let workoutOpen = false;
@@ -680,7 +721,10 @@ function normalize(d) {
   if (d.settings && typeof d.settings === 'object') {
     n.settings.units = d.settings.units === 'kg' ? 'kg' : 'lb';
     n.settings.rest = Number.isFinite(+d.settings.rest) ? +d.settings.rest : 90;
-    n.settings.theme = THEMES.some(t => t.id === d.settings.theme) ? d.settings.theme : 'volt';
+    const OLD_LIGHT = {light:'blackout', lightblue:'blue', sand:'sand'};   // old light-only themes -> color + light mode
+    const th = OLD_LIGHT[d.settings.theme] ? OLD_LIGHT[d.settings.theme] : d.settings.theme;
+    n.settings.theme = THEMES.some(t => t.id === th) ? th : 'teal';
+    n.settings.appearance = d.settings.appearance === 'light' || d.settings.appearance === 'dark' ? d.settings.appearance : (OLD_LIGHT[d.settings.theme] ? 'light' : 'dark');
   }
   if (Array.isArray(d.routines)) n.routines = d.routines.filter(r => r && r.id && Array.isArray(r.ex));
   if (Array.isArray(d.customExercises)) n.customExercises = d.customExercises.filter(c => c && c.id && c.name);
@@ -794,12 +838,12 @@ function bootDemo() {
       try { localStorage.setItem(ANCHOR_KEY, String(anchor + ms)); } catch {}
     }
   }
-  S = d; mode = 'local'; localReason = 'demo'; applyTheme(S.settings.theme); ready(); saveLocal();
+  S = d; mode = 'local'; localReason = 'demo'; applyTheme(S.settings); ready(); saveLocal();
 }
 async function boot() {
   if (DEMO) { bootDemo(); return; }
   const local = loadLocal();
-  applyTheme(local.settings.theme);
+  applyTheme(local.settings);
   if (HOST && HOST.wait) { try { await HOST.wait; } catch {} }
   let decided = false;
   const decide = fn => { if (decided) return false; decided = true; fn(); return true; };
@@ -991,7 +1035,7 @@ function defaultName() { const h = new Date().getHours(); return h < 12 ? 'Morni
 
 /* ---------- render: shell ---------- */
 function renderAll() {
-  applyTheme(S.settings.theme);
+  applyTheme(S.settings);
   renderTabbar(); renderView(); renderMini(); renderWorkout(); renderScreen(); syncLock();
 }
 function syncLock() {
@@ -1463,10 +1507,14 @@ function viewSettings() {
       <div class="set-item" style="flex-direction:column;align-items:stretch"><div class="lbl"><b>Rest timer</b><small>Starts when you check off a set</small></div>${seg('rest',[[0,'Off'],[60,'1:00'],[90,'1:30'],[120,'2:00'],[180,'3:00']])}</div>
     </div>
     <div class="sec-head"><h2>Theme</h2><span class="faint" style="font-size:14px">${esc((THEMES.find(t => t.id === S.settings.theme) || THEMES[0]).name)}</span></div>
-    <div class="card">${['Dark','Tinted','Light'].map(g => `<div class="th-group">${g}</div><div class="th-grid">${THEMES.filter(t => t.group === g).map(t => `
+    <div class="card">
+      <div class="th-mode"><div class="lbl"><b>Dark mode</b><small>${S.settings.appearance === 'light' ? 'Off — light backgrounds' : 'On — dark backgrounds'}</small></div>
+        <button class="switch ${S.settings.appearance === 'light' ? '' : 'on'}" role="switch" aria-checked="${S.settings.appearance !== 'light'}" aria-label="Dark mode" data-a="appearance"><span></span></button></div>
+      ${THEME_GROUPS.map(g => `<div class="th-group">${g}</div><div class="th-grid">${THEMES.filter(t => t.group === g).map(t => { const P = themePalette(t, S.settings.appearance === 'light'); return `
       <button class="th ${S.settings.theme === t.id ? 'on' : ''}" data-a="theme" data-k="${t.id}" aria-label="${esc(t.name)} theme" aria-pressed="${S.settings.theme === t.id}">
-        <span class="th-sw" style="background:${t.bg};border-color:${t.line}"><span style="background:${t.s2}"></span><b style="background:${t.tx2}"></b><i style="background:${t.acc}"></i></span>
-        <span class="th-nm">${esc(t.name)}</span></button>`).join('')}</div>`).join('')}</div>
+        <span class="th-sw" style="background:${P.bg};border-color:${P.line}"><span style="background:${P.s2}"></span><b style="background:${P.tx2}"></b><i style="background:${P.accBg}"></i></span>
+        <span class="th-nm">${esc(t.name)}</span></button>`; }).join('')}</div>`).join('')}
+    </div>
     <div class="sec-head"><h2>Your data</h2></div>
     <div class="card store ${st.ok?'ok':''}"><div class="ic">${ic(st.ok?'cloud':'phone')}</div><div><b>${st.t}</b><div class="muted" style="font-size:14px;margin-top:2px">${st.d}</div></div></div>
     ${HOST ? (() => { const a = HOST.account && HOST.account(); return a ? `<div class="card acct"><div><small>Signed in as</small><b>${esc(a.name || a.email || 'Google account')}</b>${a.name && a.email ? `<small>${esc(a.email)}</small>` : ''}</div><button class="btn btn-line sm" data-a="host-signout">Sign out</button></div>`
@@ -2436,6 +2484,7 @@ const A = {
     el.classList.add('fade');
     setTimeout(() => { el.innerHTML = quoteHTML(); el.classList.remove('fade'); }, 180);
   },
+  appearance: () => { S.settings.appearance = S.settings.appearance === 'light' ? 'dark' : 'light'; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   theme: el => { S.settings.theme = el.dataset.k; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   setting: el => {
     const k = el.dataset.k; let v = el.dataset.v; if (k === 'rest') v = +v;
