@@ -399,6 +399,10 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .acct{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
 .acct b{display:block} .acct small{display:block;color:var(--tx3);font-size:12px}
 .loss{margin:0 0 4px;padding-left:20px;color:var(--tx2)} .loss li{margin:2px 0}
+.stat.streak b{display:flex;align-items:baseline;gap:4px}
+.streak-note .link{white-space:nowrap;margin-left:auto}
+.stat.streak .fire{font-style:normal;font-size:22px;line-height:1;filter:grayscale(1);opacity:.35}
+.stat.streak.lit .fire{filter:none;opacity:1}
 .foot-note{text-align:center;color:var(--tx3);font-size:13px;margin-top:28px}
 
 /* loading */
@@ -872,11 +876,11 @@ function homeStats() {
 function streakNote(st) {
   if (!S.workouts.length) return '';
   const logLink = `<button class="link" data-a="off-new" style="padding:0 0 0 4px">Sick or away?</button>`;
-  if (st.offToday) return `<div class="streak-note ok"><span class="emo">${OFF[st.offToday.type].emoji}</span>${OFF[st.offToday.type].label} logged — ${st.streak ? `your ${st.streak}-day streak is safe` : 'rest up'}</div>`;
+  if (st.offToday) return `<div class="streak-note ok"><span class="emo">${OFF[st.offToday.type].emoji}</span>${OFF[st.offToday.type].label} logged — ${st.streak ? `your 🔥 ${st.streak}-day streak is safe` : 'rest up'}</div>`;
   if (!st.streak) return `<div class="streak-note">Lift today to start a new streak. You get ${MAX_REST} rest days in a row, and logged sick or vacation days don’t use those up.</div>`;
   if (st.doneToday) return `<div class="streak-note ok">${ic('check')}Streak locked in for today</div>`;
   const left = st.deadline - st.today;
-  if (left <= 0) return `<div class="streak-note warn">${ic('clock')}Lift today or your ${st.streak}-day streak resets.${logLink}</div>`;
+  if (left <= 0) return `<div class="streak-note warn">${ic('clock')}Lift today or your 🔥 ${st.streak}-day streak resets.${logLink}</div>`;
   const day = new Date(idxTs(st.deadline)).toLocaleDateString(undefined, {weekday:'long'});
   return `<div class="streak-note">${ic('clock')}Rest day — lift by ${left === 1 ? 'tomorrow' : left < 7 ? day : fmtShort(idxTs(st.deadline))} to keep your streak.${logLink}</div>`;
 }
@@ -965,7 +969,7 @@ function viewHome() {
     <button class="quote" data-a="quote-next" aria-label="Next quote" title="Tap for another quote">${quoteHTML()}</button>
     <div class="stats3">
       <div class="stat"><b>${thisWeek}</b><span>This week</span></div>
-      <div class="stat"><b>${streak}</b><span>Day streak</span></div>
+      <div class="stat streak${streak ? ' lit' : ''}"><b>${streak}<i class="fire" aria-hidden="true">🔥</i></b><span>Day streak</span></div>
       <div class="stat"><b>${S.workouts.length}</b><span>Workouts</span></div>
     </div>
     ${streakNote(st)}
