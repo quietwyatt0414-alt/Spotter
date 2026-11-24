@@ -409,7 +409,10 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 button.ex-name{text-align:left;padding:0}
 .ex-mus{font-size:12px;font-weight:600;margin-top:3px;line-height:1.35;text-transform:none;letter-spacing:0}
 .ex-mus .mus-p{color:var(--tx2)} .ex-mus .mus-s{color:var(--tx3);font-weight:500}
-.ex-best{font-size:11px;color:var(--tx3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.ex-best{display:flex;align-items:flex-start;gap:5px;font-size:13px;color:var(--tx2);font-weight:600;margin-top:5px;line-height:1.35}
+.ex-best b{color:var(--tx);font-weight:700}
+.ex-best svg.i{width:14px;height:14px;flex:none;margin-top:1px;color:var(--acc)}
+.ex-bw{display:block;font-size:13px;font-weight:700;color:var(--acc);margin-top:5px;padding:2px 0;text-align:left}
 .ex-pick small.ex-mus{display:block;margin:2px 0 1px}
 .mrow{display:flex;gap:10px;align-items:baseline;margin:8px 0}
 .mlbl{width:78px;flex:none;font-size:11px;font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em}
@@ -686,7 +689,7 @@ const toU = kg => isLb() ? kg / KG : kg;
 const toKg = v => isLb() ? v * KG : v;
 const fmtNum = n => { const r = Math.round(n * 10) / 10; return Number.isInteger(r) ? String(r) : r.toFixed(1); };
 const fmtW = kg => fmtNum(toU(kg || 0));
-const fmtSet = s => `${s.w > 0 ? fmtW(s.w) : 'BW'} × ${s.r}`;
+const fmtSet = s => s.bw > 0 ? `BW${s.w - s.bw > 0.05 ? '+' + fmtW(s.w - s.bw) : ''} × ${s.r}` : `${s.w > 0 ? fmtW(s.w) : 'BW'} × ${s.r}`;
 const fmtVol = kg => Math.round(toU(kg)).toLocaleString() + ' ' + unit();
 const e1 = s => (!s || !(s.w > 0) || !(s.r > 0)) ? 0 : (s.r === 1 ? s.w : s.w * (1 + s.r / 30));
 const DAY = 864e5;
@@ -697,6 +700,13 @@ const fmtDur = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m >
 const fmtClock = ms => { const t = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = t%60; return h ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`; };
 const monthKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
 const weekStart = ts => { const d = new Date(ts); d.setHours(0,0,0,0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); };
+// bodyweight moves: share of bodyweight lifted each rep (custom bodyweight exercises count it all)
+const BW_FRAC = {pullup:1, chinup:1, dips:1, pushup:.65};
+const bwFrac = id => BW_FRAC[id] != null ? BW_FRAC[id] : (String(id).startsWith('c_') && exInfo(id).eq === 'Bodyweight' ? 1 : 0);
+const curBW = () => +S.settings.bw || 0;                       // kg
+const bwOf = w => (w && +w.bw) || curBW();                     // bodyweight when that workout was logged
+// sets with bodyweight folded in: w = total load, bw = the bodyweight part (logged added weight stays in the log untouched)
+const withBW = (exId, sets, kg) => { const b = bwFrac(exId) * kg; return b > 0 ? sets.map(x => ({...x, w:(x.w || 0) + b, bw:b})) : sets; };
 const exInfo = id => LIB[id] || S.customExercises.find(c => c.id === id) || {id, name:'Unknown exercise', muscle:'Other'};
 // primary & secondary muscles; custom exercises without a list fall back to their group
 const equipOf = id => exInfo(id).eq || 'Other';
@@ -724,6 +734,8 @@ function normalize(d) {
     const OLD_LIGHT = {light:'blackout', lightblue:'blue', sand:'sand'};   // old light-only themes -> color + light mode
     const th = OLD_LIGHT[d.settings.theme] ? OLD_LIGHT[d.settings.theme] : d.settings.theme;
     n.settings.theme = THEMES.some(t => t.id === th) ? th : 'teal';
+    if (+d.settings.bw > 0 && +d.settings.bw < 400) n.settings.bw = +d.settings.bw;
+    if (d.settings.bwAsked) n.settings.bwAsked = true;
     n.settings.appearance = d.settings.appearance === 'light' || d.settings.appearance === 'dark' ? d.settings.appearance : (OLD_LIGHT[d.settings.theme] ? 'light' : 'dark');
   }
   if (Array.isArray(d.routines)) n.routines = d.routines.filter(r => r && r.id && Array.isArray(r.ex));
@@ -828,6 +840,7 @@ function bootDemo() {
   let d = loadLocal(), anchor = 0;
   try { anchor = +localStorage.getItem(ANCHOR_KEY) || 0; } catch {}
   if (!anchor || !d.workouts.length) d = freshDemo();
+  if (!d.settings.bw) d.settings.bw = 81.647;   // 180 lb
   else {
     // slide the sample log forward so it always ends around today
     const shift = dayIdx(Date.now()) - dayIdx(anchor);
@@ -886,6 +899,22 @@ function ready() {
   $('#loading').style.display = 'none';
   if (S.active) workoutOpen = false;
   renderAll();
+  if (!DEMO && !S.settings.bw && !S.settings.bwAsked) setTimeout(() => { if (!$('#modal').classList.contains('open')) bwModal(true); }, 400);
+}
+function bwModal(first) {
+  const cur = S.settings.bw ? fmtW(S.settings.bw) : '';
+  modal({title:first ? 'What do you weigh?' : 'Bodyweight',
+    body:`<p>${first ? 'Spotter adds your bodyweight to pull-ups, chin-ups, dips and push-ups (about 65% for push-ups), so they count toward your volume and records.' : 'Used for pull-ups, chin-ups, dips and push-ups. Workouts you already logged keep the weight they were logged at.'}</p>
+      <label class="field"><span>Bodyweight (${unit()})</span><input name="bw" inputmode="decimal" autocomplete="off" value="${cur}" placeholder="${isLb() ? 'e.g. 175' : 'e.g. 80'}"></label>
+      ${first ? '<p class="faint" style="font-size:13px">You can change it anytime in Settings.</p>' : ''}`,
+    focus:'bw', actions:[{label:first ? 'Skip' : 'Cancel', fn:() => { if (first && !S.settings.bwAsked) { S.settings.bwAsked = true; markDirty('profile'); } }},
+      {label:'Save', cls:'btn-acc', validate:v => { const x = parseFloat(String(v.bw).replace(',', '.')), kg = toKg(x);
+        return x > 0 && kg >= 25 && kg <= 320 ? true : `Enter your weight in ${unit()}`; },
+       fn:v => { const old = curBW(), nw = Math.round(toKg(parseFloat(String(v.bw).replace(',', '.'))) * 1000) / 1000;
+         // workouts logged before this change keep the bodyweight they were done at
+         if (old && Math.abs(old - nw) > 1e-6) { const ks = new Set(); for (const w of S.workouts) if (!w.bw) { w.bw = old; ks.add('log-' + monthKey(w.start)); } if (ks.size) markDirty(...ks); }
+         S.settings.bw = nw; S.settings.bwAsked = true; markDirty('profile');
+         const y = window.scrollY; renderAll(); window.scrollTo(0, y); toast(`Bodyweight set to ${fmtW(S.settings.bw)} ${unit()}`); }}]});
 }
 
 /* ---------- derived ---------- */
@@ -955,14 +984,18 @@ function prevFor(e, j) {
   const k = e.sets.slice(0, j).filter(x => (x.t === 'w') === warm).length;
   return prev.filter(x => (x.t === 'w') === warm)[k] || null;
 }
-function bestE1(exId, excludeId) {
-  let b = 0;
-  for (const w of S.workouts) { if (w.id === excludeId) continue; for (const e of w.ex) if (e.exId === exId) {
-    const a = adjAt(exId, w.start); if (a.old) continue;
-    for (const s of e.sets) if (s.t !== 'w') b = Math.max(b, e1(s) * a.f); } }
+// the working set behind the best estimated 1-rep max (most reps if there's no weight to go on)
+function bestSet(exId, excludeId) {
+  let b = null;
+  for (const w of S.workouts) { if (w.id === excludeId) continue; const a = adjAt(exId, w.start); if (a.old) continue;
+    for (const e of w.ex) if (e.exId === exId) for (const x of withBW(exId, scaleSets(e.sets.filter(z => z.t !== 'w'), a.f), bwOf(w))) {
+      const v = e1(x); if (!(x.r > 0)) continue;
+      if (!b || v > b.e1 + 1e-9 || (v === 0 && b.e1 === 0 && x.r > b.s.r)) b = {s:x, e1:v, ts:w.start};
+    } }
   return b;
 }
-const workVol = w => w.ex.reduce((a,e) => a + e.sets.reduce((b,s) => b + (s.w > 0 && s.r > 0 ? s.w * s.r : 0), 0), 0);
+function bestE1(exId, excludeId) { const b = bestSet(exId, excludeId); return b ? b.e1 : 0; }
+const workVol = w => w.ex.reduce((a,e) => a + withBW(e.exId, e.sets, bwOf(w)).reduce((b,s) => b + (s.w > 0 && s.r > 0 ? s.w * s.r : 0), 0), 0);
 const workSets = w => w.ex.reduce((a,e) => a + e.sets.length, 0);
 const workPRs = w => w.ex.reduce((a,e) => a + e.sets.filter(s => s.pr).length, 0);
 const dayIdx = ts => { const d = new Date(ts); return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY); };
@@ -1118,7 +1151,7 @@ function historyCard(w) {
     <div class="hw-top"><span class="hw-name">${esc(w.name)}</span><span class="hw-date">${fmtTime(w.start)}</span></div>
     <div class="hw-meta"><span>${ic('clock')}${fmtDur(w.end - w.start)}</span><span>${ic('weight')}${fmtVol(workVol(w))}</span>${prs ? `<span class="trophy">${ic('trophy')}${plural(prs,'PR')}</span>` : ''}</div>
     <div class="hw-ex">${w.ex.slice(0,6).map(e => {
-      const best = e.sets.reduce((b,s) => e1(s) > e1(b) ? s : b, e.sets[0]);
+      const eff = withBW(e.exId, e.sets, bwOf(w)), best = eff.reduce((b,s) => e1(s) > e1(b) ? s : b, eff[0]);
       return `<span>${e.sets.length} × ${esc(exName(e.exId))}</span><span class="best">${best ? fmtSet(best) : ''}</span>`;
     }).join('')}${w.ex.length > 6 ? `<span class="faint">+${w.ex.length - 6} more</span><span></span>` : ''}</div>
   </button>`;
@@ -1222,7 +1255,7 @@ function exSessions(exId) {          // chronological, working sets only
   for (const w of S.workouts) {
     const e = w.ex.find(x => x.exId === exId); if (!e) continue;
     const adj = adjAt(exId, w.start);
-    const work = scaleSets(e.sets.filter(s => s.t !== 'w'), adj.f);
+    const work = withBW(exId, scaleSets(e.sets.filter(s => s.t !== 'w'), adj.f), bwOf(w));
     if (!work.length) continue;
     const best = work.reduce((b,s) => (e1(s) > e1(b) || (e1(s) === e1(b) && s.r > b.r)) ? s : b, work[0]);
     out.push({ts:w.start, id:w.id, sets:work, best, old:adj.old, f:adj.f, e1:e1(best), top:Math.max(...work.map(s => s.w || 0)),
@@ -1268,8 +1301,10 @@ const STATUS = {
 function nextTarget(o) {
   const L = o.last; if (!L) return '';
   if (!o.weighted) return `Beat <b>${L.bestReps} reps</b>: try <b>${L.bestReps + 1}</b> on your best set.`;
-  const top = L.top, reps = Math.max(...L.sets.filter(x => x.w === top).map(x => x.r));
+  const top = L.top, topSets = L.sets.filter(x => x.w === top), reps = Math.max(...topSets.map(x => x.r)), bw = topSets[0].bw || 0;
   const inc = isLb() ? 5 : 2.5, wU = toU(top);
+  if (bw) { const add = toU(top - bw), lab = a => 'BW' + (a > 0.05 ? '+' + fmtNum(a) : '');
+    return `Beat <b>${lab(add)} × ${reps}</b>: try <b>${lab(add)} × ${reps + 1}</b> or <b>${lab(add + inc)} × ${reps}</b>.`; }
   return `Beat <b>${fmtNum(wU)} ${unit()} × ${reps}</b>: try <b>${fmtNum(wU)} × ${reps + 1}</b> or <b>${fmtNum(wU + inc)} × ${reps}</b>.`;
 }
 function overloadCard(o) {
@@ -1504,6 +1539,7 @@ function viewSettings() {
   return `<header class="top"><h1 class="h1" style="margin:0">Settings</h1></header>
     <div class="set-group">
       <div class="set-item"><div class="lbl"><b>Units</b><small>Changes every number in the app</small></div>${seg('units',[['lb','lb'],['kg','kg']])}</div>
+      <div class="set-item"><div class="lbl"><b>Bodyweight</b><small>Counts toward pull-ups, chin-ups, dips &amp; push-ups</small></div><button class="btn ${S.settings.bw ? 'btn-line' : 'btn-acc'} sm" data-a="bw-edit">${S.settings.bw ? `${fmtW(S.settings.bw)} ${unit()}` : 'Add'}</button></div>
       <div class="set-item" style="flex-direction:column;align-items:stretch"><div class="lbl"><b>Rest timer</b><small>Starts when you check off a set</small></div>${seg('rest',[[0,'Off'],[60,'1:00'],[90,'1:30'],[120,'2:00'],[180,'3:00']])}</div>
     </div>
     <div class="sec-head"><h2>Theme</h2><span class="faint" style="font-size:14px">${esc((THEMES.find(t => t.id === S.settings.theme) || THEMES[0]).name)}</span></div>
@@ -1557,16 +1593,16 @@ function renderWorkout() {
   renderRest();
 }
 function exCard(e, i) {
-  const best = bestE1(e.exId, S.active.id);
+  const rec = bestSet(e.exId, S.active.id), best = rec ? rec.e1 : 0, bwNow = curBW(), isBW = bwFrac(e.exId) > 0;
   let n = 0;
   const rows = e.sets.map((s, j) => {
     if (s.t !== 'w') n++;
     const p = prevFor(e, j);
     const lbl = s.t === 'w' ? 'W' : s.t === 'd' ? 'D' : n;
-    const pr = s.done && s.t !== 'w' && best > 0 && e1(s) > best + 1e-9;
+    const pr = s.done && s.t !== 'w' && best > 0 && e1(withBW(e.exId, [{...s, w:s.w || 0}], bwNow)[0]) > best + 1e-9;
     return `<div class="set-row ${s.done?'done':''}">
       <button class="set-num t-${s.t}" data-a="set-type" data-ei="${i}" data-si="${j}" aria-label="Set type">${lbl}</button>
-      <button class="prev" data-a="set-prev" data-ei="${i}" data-si="${j}" aria-label="Use previous">${p ? fmtSet(p) : '—'}</button>
+      <button class="prev" data-a="set-prev" data-ei="${i}" data-si="${j}" aria-label="Use previous">${p ? (isBW ? `BW${p.w > 0 ? '+' + fmtW(p.w) : ''} × ${p.r}` : fmtSet(p)) : '—'}</button>
       <input inputmode="decimal" autocomplete="off" data-f="w" data-ei="${i}" data-si="${j}" value="${s.w != null ? fmtW(s.w) : ''}" placeholder="${p && p.w != null ? fmtW(p.w) : ''}" aria-label="Weight">
       <input inputmode="numeric" autocomplete="off" data-f="r" data-ei="${i}" data-si="${j}" value="${s.r != null ? s.r : ''}" placeholder="${p ? p.r : ''}" aria-label="Reps">
       <button class="chk" data-a="set-done" data-ei="${i}" data-si="${j}" aria-label="Complete set">${ic('check')}</button>
@@ -1574,10 +1610,10 @@ function exCard(e, i) {
     </div>`;
   }).join('');
   return `<section class="ex" data-card="${i}">
-    <div class="ex-head"><div><button class="ex-name" data-a="ex-info" data-id="${esc(e.exId)}">${esc(exName(e.exId))}</button><div class="ex-mus">${musHTML(e.exId)}</div>${best > 0 ? `<div class="ex-best">Best e1RM ${fmtW(best)} ${unit()}</div>` : ''}</div>
+    <div class="ex-head"><div><button class="ex-name" data-a="ex-info" data-id="${esc(e.exId)}">${esc(exName(e.exId))}</button><div class="ex-mus">${musHTML(e.exId)}</div>${rec ? `<div class="ex-best">${ic('trophy')}<span>Record <b>${fmtSet(rec.s)}</b>${rec.e1 > 0 ? ` · ${fmtW(rec.e1)} ${unit()} e1RM` : ''} · ${fmtShort(rec.ts)}</span></div>` : ''}${bwFrac(e.exId) && !bwNow ? `<button class="ex-bw" data-a="bw-edit">Add your bodyweight so these sets count</button>` : ''}</div>
       <button class="icon-btn" data-a="ex-menu" data-ei="${i}" aria-label="Exercise options">${ic('dots')}</button></div>
     ${e.note ? `<div class="ex-note">${esc(e.note)}</div>` : ''}
-    <div class="set-row hdr"><span>Set</span><span>Previous</span><span>${unit()}</span><span>Reps</span><span>${ic('check')}</span></div>
+    <div class="set-row hdr"><span>Set</span><span>Previous</span><span>${isBW ? '+' + unit() : unit()}</span><span>Reps</span><span>${ic('check')}</span></div>
     ${rows}
     <div class="ex-foot"><button data-a="set-add" data-ei="${i}">+ Add set</button><button data-a="set-del" data-ei="${i}" aria-label="Remove last set">− Set</button></div>
   </section>`;
@@ -1647,17 +1683,18 @@ function finishWorkout() {
 }
 function doFinish(doneEx) {
   const w = S.active;
-  const prs = [];
+  const prs = [], bwNow = curBW();
   const ex = doneEx.map(e => {
     let best = bestE1(e.exId, w.id);
     const sets = e.sets.map(s => {
-      const out = {w:s.w > 0 ? s.w : 0, r:s.r, t:s.t};
-      if (s.t !== 'w' && best > 0 && e1(out) > best + 1e-9) { out.pr = true; best = e1(out); prs.push({exId:e.exId, s:out}); }
+      const out = {w:s.w > 0 ? s.w : 0, r:s.r, t:s.t}, eff = withBW(e.exId, [out], bwNow)[0];
+      if (s.t !== 'w' && best > 0 && e1(eff) > best + 1e-9) { out.pr = true; best = e1(eff); prs.push({exId:e.exId, s:eff}); }
       return out;
     });
     return {exId:e.exId, note:e.note || '', sets};
   });
   const rec = {id:w.id, name:(w.name || '').trim() || defaultName(), start:w.start, end:Date.now(), routineId:w.routineId || null, ex};
+  if (bwNow) rec.bw = bwNow;
   S.workouts.push(rec); S.workouts.sort((a,b) => b.start - a.start);
   S.active = null; rest = null; workoutOpen = false;
   markDirty('active', 'log-' + monthKey(rec.start));
@@ -1734,7 +1771,7 @@ function screenDetail() {
       <div class="stat"><b>${workPRs(w)}</b><span>PRs</span></div>
     </div>
     ${w.ex.map(e => { let n = 0; return `<div class="card dt-ex"><h4>${esc(exName(e.exId))}</h4>${e.note ? `<div class="ex-note" style="margin:0 0 8px">${esc(e.note)}</div>` : ''}
-      ${e.sets.map(s => { if (s.t !== 'w') n++; return `<div class="dt-set"><span class="n" style="color:${s.t==='w'?'var(--warm)':s.t==='d'?'var(--drop)':''}">${s.t==='w'?'W':s.t==='d'?'D':n}</span><span>${s.w > 0 ? fmtW(s.w) + ' ' + unit() : 'Bodyweight'} × ${s.r}</span><span class="e">${s.pr ? `<span class="trophy">${ic('trophy')}</span>` : ''}${e1(s) ? fmtW(e1(s)) + ' e1RM' : ''}</span></div>`; }).join('')}
+      ${e.sets.map(s => { if (s.t !== 'w') n++; return `<div class="dt-set"><span class="n" style="color:${s.t==='w'?'var(--warm)':s.t==='d'?'var(--drop)':''}">${s.t==='w'?'W':s.t==='d'?'D':n}</span><span>${bwFrac(e.exId) ? 'Bodyweight' + (s.w > 0 ? ' + ' + fmtW(s.w) + ' ' + unit() : '') : s.w > 0 ? fmtW(s.w) + ' ' + unit() : 'Bodyweight'} × ${s.r}</span><span class="e">${s.pr ? `<span class="trophy">${ic('trophy')}</span>` : ''}${(v => v ? fmtW(v) + ' e1RM' : '')(e1(withBW(e.exId, [s], bwOf(w))[0]))}</span></div>`; }).join('')}
     </div>`; }).join('')}
     <div class="list" style="margin-top:14px">
       <button class="btn btn-acc block" data-a="repeat-workout" data-id="${w.id}">Do this workout again</button>
@@ -2160,7 +2197,7 @@ function impDoImport() {
   const best = {};
   for (const w of S.workouts.slice().reverse()) for (const e of w.ex) {
     const a = adjAt(e.exId, w.start);
-    for (const s of e.sets) { if (s.t === 'w') continue; const v = a.old ? 0 : e1(s) * a.f;
+    for (const s of e.sets) { if (s.t === 'w') continue; const v = a.old ? 0 : e1(withBW(e.exId, [{...s, w:(s.w || 0) * a.f}], bwOf(w))[0]);
       if (w.imp === batch.id) { if (v > 0 && best[e.exId] > 0 && v > best[e.exId] + 1e-9) s.pr = true; else delete s.pr; }
       if (v > (best[e.exId] || 0)) best[e.exId] = v; }
   }
@@ -2486,6 +2523,7 @@ const A = {
   },
   appearance: () => { S.settings.appearance = S.settings.appearance === 'light' ? 'dark' : 'light'; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   theme: el => { S.settings.theme = el.dataset.k; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
+  'bw-edit': () => bwModal(false),
   setting: el => {
     const k = el.dataset.k; let v = el.dataset.v; if (k === 'rest') v = +v;
     S.settings[k] = v; markDirty('profile'); renderAll();
@@ -2536,7 +2574,7 @@ const A = {
   'modal-act': el => {
     const a = modalActs[+el.dataset.k]; if (!a) return closeModal();
     const v = modalVals();
-    if (a.validate && !a.validate(v)) { toast('Fill that in first'); return; }
+    if (a.validate) { const ok = a.validate(v); if (ok !== true && (!ok || typeof ok === 'string')) { toast(typeof ok === 'string' ? ok : 'Fill that in first'); return; } }
     closeModal(); a.fn && a.fn(v);
   },
 };
