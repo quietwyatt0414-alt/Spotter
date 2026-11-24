@@ -177,7 +177,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .mcard h3{font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px}
 .mbody{color:var(--tx2);font-size:15px}
 .mbody p{margin:0 0 10px}
-.macts{display:flex;gap:8px;margin-top:16px}
+.macts{display:flex;gap:8px;margin-top:16px;position:sticky;bottom:-18px;background:var(--s1);padding:12px 0 18px;margin-bottom:-18px;z-index:2;box-shadow:0 -12px 12px -8px var(--s1)}
 .macts .btn{flex:1}
 .macts.col{flex-direction:column}
 .macts.col .btn{flex:none}
@@ -414,7 +414,8 @@ button.ex-name{text-align:left;padding:0}
 .mrow > div{display:flex;flex-wrap:wrap;gap:6px}
 .mchip{display:inline-block;font-size:13px;font-weight:700;border-radius:999px;padding:4px 10px}
 .mchip.p{background:var(--acc);color:var(--acc-ink)} .mchip.s{border:1px solid var(--line);color:var(--tx2)}
-.mpick{display:flex;flex-wrap:wrap;gap:6px}
+.mpick{display:flex;flex-wrap:wrap;gap:5px}
+.mchip.pick{font-size:12.5px;padding:4px 9px}
 .mchip.pick{background:var(--s2);color:var(--tx2)} .mchip.pick.on{background:var(--acc);color:var(--acc-ink)}
 .exl{gap:8px}
 .exr{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
@@ -427,6 +428,8 @@ button.ex-name{text-align:left;padding:0}
 .ex-stats div{background:var(--s2);border-radius:10px;padding:8px 6px;text-align:center}
 .ex-stats b{display:block;font-family:var(--head);font-size:18px;color:var(--tx);white-space:nowrap} .ex-stats span{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em}
 .tab span{font-size:10.5px}
+@keyframes nudge{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.mcard.nudge{animation:nudge .35s}
 .foot-note{text-align:center;color:var(--tx3);font-size:13px;margin-top:28px}
 
 /* loading */
@@ -2205,10 +2208,17 @@ function modal({title, body = '', actions = [{label:'OK'}], col = false, focus})
   const m = $('#modal');
   m.innerHTML = `<div class="mbg" data-a="modal-bg"></div><div class="mcard" role="dialog" aria-modal="true">${title ? `<h3>${esc(title)}</h3>` : ''}<div class="mbody">${body}</div>
     <div class="macts ${col ? 'col' : ''}">${actions.map((a,i) => `<button class="btn ${a.cls || 'btn-ghost'} ${col ? 'block' : ''}" data-a="modal-act" data-k="${i}">${esc(a.label)}</button>`).join('')}</div></div>`;
+  m.dataset.dirty = '';
   m.classList.add('open');
   if (focus) setTimeout(() => { const f = m.querySelector(`[name="${focus}"]`); f && f.focus(); }, 30);
 }
-function closeModal() { const m = $('#modal'); m.classList.remove('open'); m.innerHTML = ''; }
+function modalDirty() { const m = $('#modal'); return m.classList.contains('open') && m.dataset.dirty === '1'; }
+function tryCloseModal() {
+  if (!modalDirty()) return closeModal();
+  const c = document.querySelector('#modal .mcard'); c.classList.remove('nudge'); void c.offsetWidth; c.classList.add('nudge');
+  toast('Tap Save to keep your changes, or Cancel');
+}
+function closeModal() { const m = $('#modal'); m.dataset.dirty = ''; m.classList.remove('open'); m.innerHTML = ''; }
 function modalVals() { const v = {}; $('#modal').querySelectorAll('[name]').forEach(el => v[el.name] = el.value); return v; }
 let toastT, undoFn = null;
 function toast(msg) { const t = $('#toast'); undoFn = null; t.classList.remove('has-undo'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
@@ -2287,7 +2297,7 @@ const A = {
   'exl-done': () => { exv.done = !exv.done; renderView(); },
   mchip: el => {
     const box = el.closest('.mpick'), inp = box && document.querySelector(`#modal input[name="${box.dataset.for}"]`); if (!inp) return;
-    el.classList.toggle('on');
+    el.classList.toggle('on'); $('#modal').dataset.dirty = '1';
     inp.value = [...box.querySelectorAll('.mchip.on')].map(b => b.dataset.m).join(',');
   },
   'ex-menu': el => {
@@ -2473,7 +2483,7 @@ const A = {
   'pk-add': () => { if (!pk.sel.length) return; const ids = pk.sel.slice(), cb = pk.cb; closePicker(); cb(ids); },
   'pk-new': () => newCustomExercise(pk ? pk.q : ''),
 
-  'modal-bg': closeModal,
+  'modal-bg': tryCloseModal,
   'modal-act': el => {
     const a = modalActs[+el.dataset.k]; if (!a) return closeModal();
     const v = modalVals();
@@ -2514,6 +2524,7 @@ document.addEventListener('click', e => {
   const fn = A[el.dataset.a]; if (fn) fn(el, e);
 });
 document.addEventListener('input', e => {
+  if (e.target.closest && e.target.closest('#modal')) $('#modal').dataset.dirty = '1';
   const t = e.target;
   if (t.matches('#workout input[data-f]') && S.active) {
     const s = S.active.ex[+t.dataset.ei].sets[+t.dataset.si];
@@ -2529,6 +2540,7 @@ document.addEventListener('input', e => {
   else if (t.matches('[data-gsname]') && gs) { gs.name = t.value; }
 });
 document.addEventListener('change', e => {
+  if (e.target.closest && e.target.closest('#modal')) $('#modal').dataset.dirty = '1';
   const t = e.target;
   if (t.matches('[data-impmap]') && imp) { imp.mapOpen = true; const f = t.dataset.impmap, v = t.value; for (const k of Object.keys(imp.map)) if (v !== '' && imp.map[k] === +v) imp.map[k] = null; imp.map[f] = v === '' ? null : +v; renderScreenKeep(); return; }
   if (t.matches('[data-impopt]') && imp) { imp.opts[t.dataset.impopt] = t.checked; renderScreenKeep(); return; }
@@ -2537,7 +2549,7 @@ document.addEventListener('change', e => {
   else if (t.matches('#modal [name=date]')) { const ex = document.querySelector('#modal h3') && progEx; const c = $('#eqConv'); if (c && ex && fromIso(t.value)) c.innerHTML = convFields(ex, fromIso(t.value)); }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if ($('#modal').classList.contains('open')) closeModal(); else if (pk) closePicker(); }
+  if (e.key === 'Escape') { if ($('#modal').classList.contains('open')) tryCloseModal(); else if (pk) closePicker(); }
   if (e.key === 'Enter' && e.target.matches('#workout input[data-f]')) e.target.blur();
 });
 
