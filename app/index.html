@@ -189,6 +189,10 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 /* toast */
 .toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:all .2s;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.has-undo{pointer-events:auto;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 16px;z-index:70}
+.toast.has-undo span{white-space:nowrap}
+.toast.has-undo button{background:var(--acc);color:var(--acc-ink);font-weight:800;border-radius:9px;padding:8px 14px;font-size:14px}
+.toast.show.has-undo{bottom:calc(84px + env(safe-area-inset-bottom))}
 
 /* history */
 .mhead{font-family:var(--head);font-size:15px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin:20px 0 8px}
@@ -394,6 +398,7 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .imp-foot b{display:block;font-family:var(--head);font-size:20px} .imp-foot small{color:var(--tx3);font-size:12px}
 .acct{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
 .acct b{display:block} .acct small{display:block;color:var(--tx3);font-size:12px}
+.loss{margin:0 0 4px;padding-left:20px;color:var(--tx2)} .loss li{margin:2px 0}
 .foot-note{text-align:center;color:var(--tx3);font-size:13px;margin-top:28px}
 
 /* loading */
@@ -1424,7 +1429,7 @@ function startWorkout({name, routineId = null, ex = []}) {
   };
   if (S.active) {
     modal({title:'Workout in progress', body:`<p>You’re already logging <b style="color:var(--tx)">${esc(S.active.name)}</b>. Discard it and start this one?</p>`,
-      actions:[{label:'Resume', fn:() => { workoutOpen = true; screen = null; renderAll(); }}, {label:'Discard & start', cls:'btn-danger', fn:go}]});
+      actions:[{label:'Discard & start…', cls:'btn-danger-ghost', fn:() => confirmDiscard(go)}, {label:'Resume', cls:'btn-acc', fn:() => { workoutOpen = true; screen = null; renderAll(); }}]});
   } else go();
 }
 function startRest() {
@@ -1467,7 +1472,7 @@ function finishWorkout() {
   const open = w.ex.reduce((a,e) => a + e.sets.filter(s => !s.done).length, 0);
   if (!doneEx.length) {
     modal({title:'No sets checked', body:'<p>Check off the sets you did (the ✓ on the right) and they’ll be saved. Nothing is checked yet.</p>',
-      actions:[{label:'Keep going'}, {label:'Discard', cls:'btn-danger', fn:discardWorkout}]});
+      actions:[{label:'Discard workout…', cls:'btn-danger-ghost', fn:() => confirmDiscard()}, {label:'Keep going', cls:'btn-acc'}]});
     return;
   }
   modal({title:'Finish workout?', body: open ? `<p>${plural(open,'unchecked set')} will be left out.</p>` : '<p>Nice work. Save it to your history?</p>',
@@ -1493,9 +1498,28 @@ function doFinish(doneEx) {
   screen = {type:'summary', id:rec.id, prs}; calMonth = null; calSel = null;
   renderAll();
 }
+function workoutLoss(w) {
+  const sets = w.ex.reduce((a,e) => a + e.sets.length, 0), done = w.ex.reduce((a,e) => a + e.sets.filter(x => x.done).length, 0);
+  const mins = Math.max(1, Math.round((Date.now() - w.start) / 60000));
+  return `<p><b style="color:var(--tx)">${esc(w.name)}</b> and everything in it will be deleted:</p>
+    <ul class="loss"><li>${plural(w.ex.length,'exercise')}</li><li>${plural(sets,'set')}${done ? `, ${done} checked off` : ''}</li><li>${mins >= 60 ? fmtDur(mins * 60000) : plural(mins,'minute')} of logging</li></ul>`;
+}
+// asks first, then deletes with a few seconds of Undo
+function confirmDiscard(then) {
+  const w = S.active; if (!w) return then && then();
+  const trivial = !w.ex.length || (Date.now() - w.start < 60000 && !w.ex.some(e => e.sets.some(x => x.done || x.w != null || x.r != null)));
+  if (trivial) { discardWorkout(); then && then(); return; }
+  modal({title:'Are you sure?', body:workoutLoss(w), actions:[{label:'Discard', cls:'btn-danger-ghost', fn:() => { discardWorkout(); then && then(); }}, {label:'Keep workout', cls:'btn-acc'}]});
+}
 function discardWorkout() {
+  const snap = clone(S.active);
   S.active = null; rest = null; workoutOpen = false;
-  markDirty('active'); renderAll(); toast('Workout discarded');
+  markDirty('active'); renderAll();
+  if (snap && snap.ex && snap.ex.length) toastUndo('Workout discarded', () => {
+    if (S.active) { toast('Finish or discard your current workout first'); return; }
+    S.active = snap; workoutOpen = true; screen = null; markDirty('active'); renderAll(); toast('Workout restored');
+  });
+  else toast('Workout discarded');
 }
 
 /* ---------- screens: summary / detail / routine editor ---------- */
@@ -1987,8 +2011,15 @@ function modal({title, body = '', actions = [{label:'OK'}], col = false, focus})
 }
 function closeModal() { const m = $('#modal'); m.classList.remove('open'); m.innerHTML = ''; }
 function modalVals() { const v = {}; $('#modal').querySelectorAll('[name]').forEach(el => v[el.name] = el.value); return v; }
-let toastT;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
+let toastT, undoFn = null;
+function toast(msg) { const t = $('#toast'); undoFn = null; t.classList.remove('has-undo'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
+// a few seconds to take back anything destructive
+function toastUndo(msg, fn, ms = 8000) {
+  const t = $('#toast'); undoFn = fn;
+  t.innerHTML = `<span>${esc(msg)}</span><button data-a="undo">Undo</button>`;
+  t.classList.add('show', 'has-undo'); clearTimeout(toastT);
+  toastT = setTimeout(() => { t.classList.remove('show', 'has-undo'); undoFn = null; }, ms);
+}
 function menu(title, items) { modal({title, col:true, actions:[...items, {label:'Cancel', cls:'btn-line'}]}); }
 
 /* ---------- backup ---------- */
@@ -2022,14 +2053,19 @@ const A = {
   'wk-open': () => { workoutOpen = true; screen = null; renderAll(); },
   'wk-min': () => { flush(); workoutOpen = false; renderAll(); },
   'wk-finish': finishWorkout,
-  'wk-cancel': () => modal({title:'Discard workout?', body:'<p>Nothing from this session will be saved.</p>', actions:[{label:'Keep going'}, {label:'Discard', cls:'btn-danger', fn:discardWorkout}]}),
+  'wk-cancel': () => confirmDiscard(),
+  undo: () => { const f = undoFn; undoFn = null; const t = $('#toast'); t.classList.remove('show', 'has-undo'); clearTimeout(toastT); if (f) f(); },
   'wk-add-ex': () => openPicker(ids => {
     ids.forEach(id => S.active.ex.push({id:uid(), exId:id, note:'', sets:[newSet(), newSet(), newSet()]}));
     markDirty('active'); renderWorkout();
     setTimeout(() => { const l = $('#workout'); l.scrollTo({top:l.scrollHeight, behavior:'smooth'}); }, 30);
   }),
   'set-add': el => { const e = S.active.ex[+el.dataset.ei]; e.sets.push(newSet()); markDirty('active'); rerenderCard(+el.dataset.ei); },
-  'set-del': el => { const i = +el.dataset.ei, e = S.active.ex[i]; if (e.sets.length <= 1) { exMenuRemove(i); return; } e.sets.pop(); markDirty('active'); rerenderCard(i); },
+  'set-del': el => {
+    const i = +el.dataset.ei, e = S.active.ex[i]; if (e.sets.length <= 1) { exMenuRemove(i); return; }
+    const s = e.sets.pop(); markDirty('active'); rerenderCard(i);
+    if (s.done || s.w != null || s.r != null) toastUndo('Set removed', () => { if (S.active && S.active.ex[i] === e) { e.sets.push(s); markDirty('active'); rerenderCard(i); } });
+  },
   'set-type': el => { const s = S.active.ex[+el.dataset.ei].sets[+el.dataset.si]; s.t = {n:'w', w:'d', d:'n'}[s.t] || 'n'; markDirty('active'); rerenderCard(+el.dataset.ei); if (s.t === 'w') toast('Warm-up set (W) — tap again for drop set (D)'); },
   'set-prev': el => {
     const i = +el.dataset.ei, j = +el.dataset.si, e = S.active.ex[i], p = prevFor(e, j);
@@ -2161,9 +2197,10 @@ const A = {
     menu(w.name, [
       {label:'Save as routine', fn:() => saveAsRoutine(w)},
       {label:'Rename', fn:() => modal({title:'Rename', body:`<label class="field"><input name="name" value="${esc(w.name)}" maxlength="40"></label>`, focus:'name', actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc', validate:v => !!v.name.trim(), fn:v => { w.name = v.name.trim(); markDirty('log-' + monthKey(w.start)); renderAll(); }}]})},
-      {label:'Delete workout', cls:'btn-danger-ghost', fn:() => modal({title:'Delete workout?', body:'<p>This removes it from your history and charts. Can’t be undone.</p>', actions:[{label:'Cancel'}, {label:'Delete', cls:'btn-danger', fn:() => {
-        S.workouts = S.workouts.filter(x => x.id !== w.id); markDirty('log-' + monthKey(w.start)); screen = null; renderAll(); toast('Workout deleted');
-      }}]})},
+      {label:'Delete workout', cls:'btn-danger-ghost', fn:() => modal({title:'Delete workout?', body:`<p>${esc(w.name)} from ${fmtDate(w.start)} will be removed from your history, charts and PRs.</p>`, actions:[{label:'Delete', cls:'btn-danger-ghost', fn:() => {
+        S.workouts = S.workouts.filter(x => x.id !== w.id); markDirty('log-' + monthKey(w.start)); screen = null; renderAll();
+        toastUndo('Workout deleted', () => { if (!S.workouts.some(x => x.id === w.id)) { S.workouts.push(w); S.workouts.sort((a,b) => b.start - a.start); markDirty('log-' + monthKey(w.start)); renderAll(); toast('Workout restored'); } });
+      }}, {label:'Keep it', cls:'btn-acc'}]})},
     ]);
   },
   'repeat-workout': el => { const w = S.workouts.find(x => x.id === el.dataset.id); if (w) startWorkout({name:w.name, routineId:w.routineId, ex:w.ex.map(e => ({exId:e.exId, n:e.sets.length}))}); },
@@ -2209,9 +2246,10 @@ const A = {
   'backup-copy': copyBackup,
   'backup-file': () => $('#fileIn').click(),
   'backup-paste': () => modal({title:'Paste backup', body:'<label class="field"><textarea name="txt" placeholder="Paste the backup text here"></textarea></label>', focus:'txt', actions:[{label:'Cancel'}, {label:'Import', cls:'btn-acc', fn:v => importBackup(v.txt)}]}),
-  wipe: () => modal({title:'Delete everything?', body:'<p>All workouts, routines and custom exercises will be erased. Copy a backup first if you might want them back.</p>', actions:[{label:'Cancel'}, {label:'Delete all', cls:'btn-danger', fn:() => {
-    const keys = allKeys(); S = DEFAULT(); workoutOpen = false; rest = null; markDirty(...keys); flush(); renderAll(); toast('All data deleted');
-  }}]}),
+  wipe: () => modal({title:'Delete everything?', body:'<p>All workouts, routines and custom exercises will be erased. Copy a backup first if you might want them back.</p>', actions:[{label:'Delete all', cls:'btn-danger-ghost', fn:() => {
+    const keys = allKeys(), snap = clone(S); S = DEFAULT(); workoutOpen = false; rest = null; markDirty(...keys); flush(); renderAll();
+    toastUndo('All data deleted', () => { S = normalize(snap); markDirty(...new Set([...keys, ...allKeys()])); flush(); renderAll(); toast('Everything’s back'); }, 12000);
+  }}, {label:'Keep my data', cls:'btn-acc'}]}),
 
   'pk-close': closePicker,
   'pk-mus': el => { pk.mus = el.dataset.k; renderPicker(); },
@@ -2237,14 +2275,17 @@ function renderScreenKeep() { const L = $('#screen'), st = L.scrollTop; renderSc
 function exMenuRemove(i) {
   const e = S.active.ex[i];
   const did = e.sets.some(s => s.done);
-  const go = () => { S.active.ex.splice(i, 1); markDirty('active'); renderWorkout(); };
+  const go = () => { const [gone] = S.active.ex.splice(i, 1); markDirty('active'); renderWorkout();
+    const act = S.active; toastUndo(`${exName(gone.exId)} removed`, () => { if (S.active === act) { act.ex.splice(Math.min(i, act.ex.length), 0, gone); markDirty('active'); renderWorkout(); } }); };
   if (did) modal({title:'Remove exercise?', body:`<p>${esc(exName(e.exId))} has checked-off sets. Remove it anyway?</p>`, actions:[{label:'Cancel'}, {label:'Remove', cls:'btn-danger', fn:go}]});
   else go();
 }
 function confirmDeleteRoutine(r, fromEditor) {
   modal({title:'Delete routine?', body:`<p>“${esc(r.name)}” will be removed. Your past workouts stay in history.</p>`, actions:[{label:'Cancel'}, {label:'Delete', cls:'btn-danger', fn:() => {
+    const at = S.routines.indexOf(r);
     S.routines = S.routines.filter(x => x.id !== r.id); markDirty('profile');
-    if (fromEditor) { draft = null; screen = null; } renderAll(); toast('Routine deleted');
+    if (fromEditor) { draft = null; screen = null; } renderAll();
+    toastUndo('Routine deleted', () => { if (!S.routines.some(x => x.id === r.id)) { S.routines.splice(Math.max(0, at), 0, r); markDirty('profile'); renderAll(); } });
   }}]});
 }
 function saveAsRoutine(w) {
