@@ -87,7 +87,7 @@ It creates a secret in your GitHub repo named something like `FIREBASE_SERVICE_A
 
 ## 7. Done
 
-Claude pushes the final touches, GitHub deploys, and your site is live at `https://YOUR_PROJECT_ID.web.app`.
+Claude pushes the final touches, GitHub deploys, and your site is live at `https://spotter-6d902.web.app`.
 
 - Open it, **Sign in with Google**.
 - Moving over from the Claude version: there, **Settings → Copy backup**; here, **Settings → Paste backup**.
