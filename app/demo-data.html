@@ -92,7 +92,7 @@ window.SPOTTER_DEMO = {
     return {
       settings:{units:'lb', rest:120, theme:'volt'},
       routines:Object.entries(DAYS).map(([name, ids]) => ({id:routineIds[name], name, ex:ids.map(id => ({exId:id, n:P[id][4]}))})),
-      customExercises:[{id:'c_kelso', name:'Kelso Shrug', muscle:'Traps', p:['Upper back'], s:['Traps','Rear delts']}],
+      customExercises:[{id:'c_kelso', name:'Kelso Shrug', muscle:'Traps', eq:'Dumbbell', p:['Upper back'], s:['Traps','Rear delts']}],
       workouts, active:null, off,
     };
   },
