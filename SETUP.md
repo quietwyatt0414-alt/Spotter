@@ -24,12 +24,16 @@ It's all free. Firebase's free plan needs no credit card, so it can never charge
 
 ## 3. Turn on Google sign-in
 
-**Build → Authentication → Get started → Sign-in method → Google →** switch on, pick your support email, **Save**.
+1. In the left menu: **Security → Authentication**. (Older versions of the console call this **Build → Authentication**.)
+2. If you see a **Get started** button, click it.
+3. Open the **Sign-in method** tab, then click **Google** (it may be under **Add new provider**).
+4. Switch **Enable** on. Set the **public-facing name** to `Spotter` (people see it on the Google sign-in screen) and pick
+   your email as the **support email**. Click **Save**. Google should now show as **Enabled** in the list.
 
 ## 4. Create the database
 
-**Build → Firestore Database → Create database →** Standard edition (if asked) → a location near you
-(for California: `us-west2` or `nam5`) → **Start in production mode**.
+In the left menu: **Databases & Storage → Firestore** (older consoles: **Build → Firestore Database**) → **Create database** →
+Standard edition (if asked) → a location near you (for California: `us-west2` or `nam5`) → **Production mode** → **Create**.
 
 ## 5. Install the Firebase tool on your Mac
 
