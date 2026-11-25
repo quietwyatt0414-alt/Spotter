@@ -857,18 +857,20 @@ function freshDemo() {
 function bootDemo() {
   let d = loadLocal(), anchor = 0;
   try { anchor = +localStorage.getItem(ANCHOR_KEY) || 0; } catch {}
-  if (!anchor || !d.workouts.length) d = freshDemo();
-  if (!d.settings.bw) d.settings.bw = 81.647;   // 180 lb
+  // start over if there's no saved demo, or it was saved with dates in the future (the Nov 2026 year-2083 bug)
+  if (!anchor || !d.workouts.length || anchor > Date.now() + DAY || d.workouts[0].start > Date.now() + DAY) d = freshDemo();
   else {
     // slide the sample log forward so it always ends around today
     const shift = dayIdx(Date.now()) - dayIdx(anchor);
     if (shift > 0) {
       const ms = shift * DAY;
       d.workouts.forEach(w => { w.start += ms; w.end += ms; });
+      d.off.forEach(o => { o.from += shift; o.to += shift; });
       if (d.active) d.active.start += ms;
       try { localStorage.setItem(ANCHOR_KEY, String(anchor + ms)); } catch {}
     }
   }
+  if (!d.settings.bw) d.settings.bw = 81.647;   // 180 lb
   S = d; mode = 'local'; localReason = 'demo'; applyTheme(S.settings); ready(); saveLocal();
 }
 async function boot() {
