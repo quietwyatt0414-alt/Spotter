@@ -444,6 +444,7 @@ button.ex-name{text-align:left;padding:0}
 .switch{position:relative;width:52px;height:32px;border-radius:999px;background:var(--s3);flex:none;transition:background .2s}
 .switch span{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .2s}
 .switch.on{background:var(--acc-bg)} .switch.on span{transform:translateX(20px)}
+.switch:disabled{opacity:.4}
 .foot-note{text-align:center;color:var(--tx3);font-size:13px;margin-top:28px}
 
 /* loading */
@@ -758,6 +759,7 @@ function normalize(d) {
     n.settings.theme = THEMES.some(t => t.id === th) ? th : 'teal';
     if (+d.settings.bw > 0 && +d.settings.bw < 400) n.settings.bw = +d.settings.bw;
     if (d.settings.bwAsked) n.settings.bwAsked = true;
+    if (d.settings.awake === false) n.settings.awake = false;
     n.settings.appearance = d.settings.appearance === 'light' || d.settings.appearance === 'dark' ? d.settings.appearance : (OLD_LIGHT[d.settings.theme] ? 'light' : 'dark');
   }
   if (Array.isArray(d.routines)) n.routines = d.routines.filter(r => r && r.id && Array.isArray(r.ex));
@@ -1096,6 +1098,19 @@ function renderAll() {
   applyTheme(S.settings);
   renderTabbar(); renderView(); renderMini(); renderWorkout(); renderScreen(); syncLock();
 }
+// keep the phone screen on while a workout is open, so it doesn't lock between sets
+let wakeLock = null, wakeBusy = false;
+const wakeSupported = () => 'wakeLock' in navigator;
+async function syncWake() {
+  const want = !!(S && S.active) && S.settings.awake !== false && document.visibilityState === 'visible' && wakeSupported();
+  if (want && !wakeLock && !wakeBusy) {
+    wakeBusy = true;
+    try { const l = await navigator.wakeLock.request('screen'); wakeLock = l; l.addEventListener('release', () => { if (wakeLock === l) wakeLock = null; }); } catch {}
+    wakeBusy = false;
+    if (!(S.active && S.settings.awake !== false) && wakeLock) syncWake();   // workout ended while the request was pending
+  } else if (!want && wakeLock) { const l = wakeLock; wakeLock = null; try { await l.release(); } catch {} }
+}
+document.addEventListener('visibilitychange', () => { if (booted) syncWake(); });
 function syncLock() {
   const any = $('#workout').classList.contains('open') || $('#screen').classList.contains('open') || $('#sheet').classList.contains('open');
   document.body.classList.toggle('locked', any);
@@ -1603,6 +1618,7 @@ function viewSettings() {
       <div class="set-item"><div class="lbl"><b>Units</b><small>Changes every number in the app</small></div>${seg('units',[['lb','lb'],['kg','kg']])}</div>
       <div class="set-item"><div class="lbl"><b>Bodyweight</b><small>Counts toward pull-ups, chin-ups, dips &amp; push-ups</small></div><button class="btn ${S.settings.bw ? 'btn-line' : 'btn-acc'} sm" data-a="bw-edit">${S.settings.bw ? `${fmtW(S.settings.bw)} ${unit()}` : 'Add'}</button></div>
       <div class="set-item" style="flex-direction:column;align-items:stretch"><div class="lbl"><b>Rest timer</b><small>Starts when you check off a set</small></div>${seg('rest',[[0,'Off'],[60,'1:00'],[90,'1:30'],[120,'2:00'],[180,'3:00']])}</div>
+      <div class="set-item"><div class="lbl"><b>Keep screen on</b><small>${wakeSupported() ? 'While a workout is open, so your phone doesn’t lock between sets' : 'Not supported in this browser'}</small></div><button class="switch ${S.settings.awake !== false && wakeSupported() ? 'on' : ''}" role="switch" aria-checked="${S.settings.awake !== false}" aria-label="Keep screen on" data-a="awake" ${wakeSupported() ? '' : 'disabled'}><span></span></button></div>
     </div>
     <div class="sec-head"><h2>Theme</h2><span class="faint" style="font-size:14px">${esc((THEMES.find(t => t.id === S.settings.theme) || THEMES[0]).name)}</span></div>
     <div class="card">
@@ -1633,6 +1649,7 @@ function viewSettings() {
 
 /* ---------- active workout ---------- */
 function renderWorkout() {
+  syncWake();
   const L = $('#workout');
   if (!S.active || !workoutOpen) { L.classList.remove('open'); L.innerHTML = ''; renderRest(); return; }
   const st = L.classList.contains('open') ? L.scrollTop : 0;
@@ -2585,6 +2602,7 @@ const A = {
     el.classList.add('fade');
     setTimeout(() => { el.innerHTML = quoteHTML(); el.classList.remove('fade'); }, 180);
   },
+  awake: () => { S.settings.awake = S.settings.awake === false; if (S.settings.awake) delete S.settings.awake; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); syncWake(); },
   appearance: () => { S.settings.appearance = S.settings.appearance === 'light' ? 'dark' : 'light'; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   theme: el => { S.settings.theme = el.dataset.k; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   'bw-edit': () => bwModal(false),
