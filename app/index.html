@@ -77,6 +77,10 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .rt-ex{font-size:14px;color:var(--tx2);line-height:1.35}
 .rt-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .rt-meta{font-size:13px;color:var(--tx3)}
+.upnext{display:flex;flex-direction:column;gap:6px;border-color:var(--acc-mid);background:linear-gradient(160deg,var(--acc-dim),var(--s1) 70%)}
+.upnext .btn{margin-top:8px}
+.un-top{display:flex;align-items:center;justify-content:space-between}
+.un-k{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--acc)}
 
 /* resume */
 .resume{background:linear-gradient(135deg,var(--acc-mid),var(--acc-dim));border:1px solid var(--acc-mid);border-radius:var(--r);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -1132,7 +1136,7 @@ function viewHome() {
   const resume = S.active ? `
     <div class="resume"><div><div class="live">In progress</div><b>${esc(S.active.name)}</b><span class="muted" style="font-size:14px">Started ${fmtTime(S.active.start)}</span></div>
     <button class="btn btn-acc" data-a="wk-open">Resume</button></div>`
-    : `<button class="btn btn-acc block lg" data-a="start-empty">${ic('plus')}Start empty workout</button>`;
+    : upNextCard() || `<button class="btn btn-acc block lg" data-a="start-empty">${ic('plus')}Start empty workout</button>`;
   const routines = S.routines.length ? `<div class="list">${S.routines.map(routineCard).join('')}</div>` : `
     <div class="empty"><b>No routines yet</b>Save the workouts you repeat — your split, PPL, whatever you run.
       <div style="display:flex;gap:8px;justify-content:center"><button class="btn btn-ghost" data-a="templates">Use a template</button><button class="btn btn-line" data-a="routine-new">Build my own</button></div></div>`;
@@ -1149,6 +1153,43 @@ function viewHome() {
     ${resume}
     <div class="sec-head"><h2>Routines</h2><div class="acts">${S.routines.length ? `<button class="link" data-a="templates">Templates</button><button class="link" data-a="routine-new">+ New</button>` : ''}</div></div>
     ${routines}`;
+}
+/* ---------- up next ---------- */
+// the routine you'd normally do next, learned from the order you actually run them (ties and new users: your routine list order)
+function upNextBase() {
+  const ids = new Set(S.routines.map(r => r.id)); if (!ids.size) return null;
+  const done = S.workouts.filter(w => ids.has(w.routineId)).slice(0, 120).reverse().map(w => w.routineId);   // oldest → newest
+  const order = S.routines.map(r => r.id), last = done[done.length - 1];
+  if (!last) return order[0];
+  const li = order.indexOf(last), after = k => (order.indexOf(k) - li + order.length) % order.length;
+  const cnt = {};
+  for (let i = 0; i < done.length - 1; i++) if (done[i] === last && done[i + 1] !== last) cnt[done[i + 1]] = (cnt[done[i + 1]] || 0) + 1;
+  const best = Object.entries(cnt).sort((a, b) => b[1] - a[1] || after(a[0]) - after(b[0]))[0];
+  return best ? best[0] : order[(li + 1) % order.length];
+}
+// Skip moves down your routine list; it resets once you log another workout
+const UPNEXT_KEY = 'spotter.upnext';
+const upNextAnchor = () => (S.workouts[0] && S.workouts[0].id) || 'none';
+function upNextSkips() { try { const o = JSON.parse(localStorage.getItem(UPNEXT_KEY) || 'null'); return o && o.base === upNextAnchor() ? o.n | 0 : 0; } catch { return 0; } }
+function upNext() {
+  const base = upNextBase(); if (!base) return null;
+  const order = S.routines.map(r => r.id), id = order[(order.indexOf(base) + upNextSkips()) % order.length];
+  return S.routines.find(r => r.id === id) || null;
+}
+function upNextCard() {
+  const r = upNext(); if (!r) return '';
+  const names = r.ex.map(e => exName(e.exId));
+  const shown = names.slice(0, 4).join(' · ') + (names.length > 4 ? ` · +${names.length - 4} more` : '');
+  const last = S.workouts.find(w => w.routineId === r.id), sets = r.ex.reduce((a, e) => a + (e.n || 0), 0);
+  const today = S.workouts.some(w => dayIdx(w.start) === dayIdx(Date.now()));
+  return `<div class="card upnext">
+    <div class="un-top"><span class="un-k">${today ? 'Next session' : 'Up next'}</span>${S.routines.length > 1 ? `<button class="link" data-a="upnext-skip">Skip</button>` : ''}</div>
+    <div class="rt-name">${esc(r.name)}</div>
+    <div class="rt-ex">${esc(shown) || '<span class="faint">No exercises</span>'}</div>
+    <div class="rt-meta">${plural(r.ex.length, 'exercise')} · ${plural(sets, 'set')}${last ? ` · Last ${fmtShort(last.start)}` : ''}</div>
+    <button class="btn btn-acc block lg" data-a="routine-start" data-id="${r.id}">${ic('lift')}Start ${esc(r.name)}</button>
+  </div>
+  <button class="btn btn-line block" data-a="start-empty" style="margin-top:10px">${ic('plus')}Start empty workout</button>`;
 }
 function routineCard(r) {
   const names = r.ex.map(e => exName(e.exId));
@@ -2431,6 +2472,7 @@ const A = {
     S.routines.push(r); markDirty('profile'); renderAll(); toast(`“${t.name}” added — tap ⋯ to edit it`);
   }}))),
   'routine-new': () => openRoutineEditor(null),
+  'upnext-skip': () => { try { localStorage.setItem(UPNEXT_KEY, JSON.stringify({base:upNextAnchor(), n:upNextSkips() + 1})); } catch {} const y = window.scrollY; renderView(); window.scrollTo(0, y); },
   'routine-start': el => { const r = S.routines.find(x => x.id === el.dataset.id); if (r) startWorkout({name:r.name, routineId:r.id, ex:r.ex}); },
   'routine-menu': el => {
     const r = S.routines.find(x => x.id === el.dataset.id); if (!r) return;
