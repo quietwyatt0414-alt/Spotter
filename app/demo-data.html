@@ -94,6 +94,9 @@ window.SPOTTER_DEMO = {
       routines:Object.entries(DAYS).map(([name, ids]) => ({id:routineIds[name], name, ex:ids.map(id => ({exId:id, n:P[id][4]}))})),
       customExercises:[{id:'c_kelso', name:'Kelso Shrug', muscle:'Traps', eq:'Dumbbell', p:['Upper back'], s:['Traps','Rear delts']}],
       workouts, active:null, off,
+      // weigh-ins about weekly on a slow bulk: ~176 -> ~181 lb
+      bwLog:Array.from({length:Math.floor(TOTAL / 7) + 1}, (_, k) => { const day = Math.min(TOTAL, k * 7 + (k % 3)), x = new Date(startDay); x.setDate(x.getDate() + day); x.setHours(7, 30, 0, 0);
+        return {id:'bw_' + k, t:x.getTime(), kg:(176 + 5.2 * day / TOTAL + Math.sin(k * 1.7) * 0.9) * LB}; }),
     };
   },
 };

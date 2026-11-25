@@ -246,6 +246,15 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .seg{display:flex;background:var(--s2);border-radius:12px;padding:3px;gap:3px}
 .seg button{flex:1;height:36px;border-radius:9px;font-weight:700;font-size:14px;color:var(--tx2)}
 .seg button.on{background:var(--acc-bg);color:var(--acc-ink)}
+.bw-hero{display:flex;flex-direction:column;gap:2px;margin:4px 0 14px}
+.bw-hero b{font-family:var(--head);font-size:44px;font-weight:700;line-height:1}
+.bw-hero small{font-size:20px;color:var(--tx2)}
+.bw-hero span{font-size:14px;color:var(--tx2);font-weight:600}
+.bw-note{font-size:13px;line-height:1.4;margin:12px 0 4px}
+.bw-list{padding:4px 14px}
+.bw-row{display:grid;grid-template-columns:1fr auto 52px 36px;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.bw-row:first-child{border-top:0}
+.bw-row .faint{text-align:right;font-size:13px}
 .chart-card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px 8px}
 .chart-ttl{font-family:var(--head);font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .chart-sub{font-size:13px;color:var(--tx3);margin-bottom:6px}
@@ -726,8 +735,15 @@ const weekStart = ts => { const d = new Date(ts); d.setHours(0,0,0,0); d.setDate
 // bodyweight moves: share of bodyweight lifted each rep (custom bodyweight exercises count it all)
 const BW_FRAC = {pullup:1, chinup:1, dips:1, pushup:.65};
 const bwFrac = id => BW_FRAC[id] != null ? BW_FRAC[id] : (String(id).startsWith('c_') && exInfo(id).eq === 'Bodyweight' ? 1 : 0);
-const curBW = () => +S.settings.bw || 0;                       // kg
-const bwOf = w => (w && +w.bw) || curBW();                     // bodyweight when that workout was logged
+const curBW = () => { const L = S.bwLog; return (L && L.length ? L[L.length - 1].kg : +S.settings.bw) || 0; };   // kg, latest weigh-in
+// weigh-in in effect on a day: the latest one on or before it (before your first weigh-in, the first one)
+function bwAt(ts) {
+  const L = S.bwLog || []; if (!L.length) return +S.settings.bw || 0;
+  const d = dayIdx(ts); let v = L[0].kg;
+  for (const e of L) { if (dayIdx(e.t) <= d) v = e.kg; else break; }
+  return v;
+}
+const bwOf = w => (w && +w.bw) || (w ? bwAt(w.start) : curBW());   // older workouts may carry the bodyweight they were saved with
 // sets with bodyweight folded in: w = total load, bw = the bodyweight part (logged added weight stays in the log untouched)
 const withBW = (exId, sets, kg) => { const b = bwFrac(exId) * kg; return b > 0 ? sets.map(x => ({...x, w:(x.w || 0) + b, bw:b})) : sets; };
 const exInfo = id => LIB[id] || S.customExercises.find(c => c.id === id) || {id, name:'Unknown exercise', muscle:'Other'};
@@ -740,7 +756,7 @@ const exName = id => exInfo(id).name;
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 /* ---------- state ---------- */
-const DEFAULT = () => ({settings:{units:'lb', rest:90, theme:'teal', appearance:'dark'}, routines:[], customExercises:[], workouts:[], active:null, adjust:{}, gyms:[], off:[], imports:[]});
+const DEFAULT = () => ({settings:{units:'lb', rest:90, theme:'teal', appearance:'dark'}, routines:[], customExercises:[], workouts:[], active:null, adjust:{}, gyms:[], off:[], imports:[], bwLog:[]});
 let S = DEFAULT();
 let tab = 'home';
 let workoutOpen = false;
@@ -770,6 +786,7 @@ function normalize(d) {
   }
   if (Array.isArray(d.gyms)) n.gyms = d.gyms.filter(g => g && +g.at > 0);
   if (Array.isArray(d.imports)) n.imports = d.imports.filter(b => b && b.id);
+  if (Array.isArray(d.bwLog)) n.bwLog = d.bwLog.filter(e => e && e.id && +e.t > 0 && +e.kg >= 20 && +e.kg <= 400).map(e => ({id:e.id, t:+e.t, kg:+e.kg})).sort((a, b) => a.t - b.t);
   if (Array.isArray(d.off)) n.off = d.off.filter(o => o && o.id && Number.isInteger(o.from) && Number.isInteger(o.to) && o.to >= o.from && (o.type === 'sick' || o.type === 'vacation'));
   if (Array.isArray(d.workouts)) n.workouts = d.workouts.filter(w => w && w.id && Array.isArray(w.ex) && w.start);
   if (d.active && d.active.id && Array.isArray(d.active.ex)) n.active = d.active;
@@ -817,7 +834,7 @@ function flush() {
   keys.forEach(writeDoc);
 }
 function docBody(k) {
-  if (k === 'profile') return clone({v:1, settings:S.settings, routines:S.routines, customExercises:S.customExercises, adjust:S.adjust, gyms:S.gyms, off:S.off, imports:S.imports});
+  if (k === 'profile') return clone({v:1, settings:S.settings, routines:S.routines, customExercises:S.customExercises, adjust:S.adjust, gyms:S.gyms, off:S.off, imports:S.imports, bwLog:S.bwLog});
   if (k === 'active') return clone({w:S.active || null});
   if (k.startsWith('log-')) { const m = k.slice(4); return clone({month:m, workouts:S.workouts.filter(w => monthKey(w.start) === m)}); }
   return {};
@@ -873,6 +890,7 @@ function bootDemo() {
       d.workouts.forEach(w => { w.start += ms; w.end += ms; });
       d.off.forEach(o => { o.from += shift; o.to += shift; });
       if (d.active) d.active.start += ms;
+      (d.bwLog || []).forEach(e => { e.t += ms; });
       try { localStorage.setItem(ANCHOR_KEY, String(anchor + ms)); } catch {}
     }
   }
@@ -911,7 +929,7 @@ async function boot() {
       } else {
         const p = docs.profile || {};
         S = normalize({
-          settings:p.settings, routines:p.routines, customExercises:p.customExercises, adjust:p.adjust, gyms:p.gyms, off:p.off, imports:p.imports,
+          settings:p.settings, routines:p.routines, customExercises:p.customExercises, adjust:p.adjust, gyms:p.gyms, off:p.off, imports:p.imports, bwLog:p.bwLog,
           active:(docs.active || {}).w || null,
           workouts:logs.flatMap(k => Array.isArray(docs[k].workouts) ? docs[k].workouts : []),
         });
@@ -925,7 +943,34 @@ function ready() {
   $('#loading').style.display = 'none';
   if (S.active) workoutOpen = false;
   renderAll();
+  if (migrateBw() && !DEMO) markDirty('profile');
   if (!DEMO && !S.settings.bw && !S.settings.bwAsked) setTimeout(() => { if (!$('#modal').classList.contains('open')) bwModal(true); }, 400);
+}
+// a bodyweight saved before the log existed becomes its first entry, dated at your first workout,
+// so the workouts it was already used for keep it
+function migrateBw() {
+  if (!(+S.settings.bw > 0) || S.bwLog.length) return false;
+  const first = S.workouts.length ? S.workouts[S.workouts.length - 1].start : Date.now();
+  S.bwLog = [{id:uid(), t:Math.min(first, Date.now()), kg:+S.settings.bw}]; return true;
+}
+function syncBwSetting() { const L = S.bwLog; if (L.length) S.settings.bw = L[L.length - 1].kg; else delete S.settings.bw; }
+// one weigh-in per day; a second one the same day replaces it
+function addWeighIn(kg, t) {
+  migrateBw();
+  S.bwLog = S.bwLog.filter(e => dayIdx(e.t) !== dayIdx(t));
+  S.bwLog.push({id:uid(), t, kg:Math.round(kg * 1000) / 1000}); S.bwLog.sort((a, b) => a.t - b.t);
+  syncBwSetting(); S.settings.bwAsked = true; markDirty('profile');
+}
+function weighInModal() {
+  modal({title:'Log weigh-in', body:`
+      <label class="field"><span>Weight (${unit()})</span><input name="bw" inputmode="decimal" autocomplete="off" value="${curBW() ? fmtW(curBW()) : ''}" placeholder="${isLb() ? 'e.g. 175' : 'e.g. 80'}"></label>
+      <label class="field"><span>Date</span><input name="date" type="date" value="${isoDay(Date.now())}" max="${isoDay(Date.now())}"></label>`,
+    focus:'bw', actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc',
+      validate:v => { const x = parseFloat(String(v.bw).replace(',', '.')), kg = toKg(x), d = fromIso(v.date);
+        if (!(x > 0 && kg >= 25 && kg <= 320)) return `Enter your weight in ${unit()}`;
+        return d && dayIdx(d) <= dayIdx(Date.now()) ? true : 'Pick a date that isn’t in the future'; },
+      fn:v => { const d = fromIso(v.date), t = dayIdx(d) === dayIdx(Date.now()) ? Date.now() : d + 12 * 36e5;
+        addWeighIn(toKg(parseFloat(String(v.bw).replace(',', '.'))), t); renderAll(); toast(`Logged ${fmtW(curBW())} ${unit()}`); }}]});
 }
 function bwModal(first) {
   const cur = S.settings.bw ? fmtW(S.settings.bw) : '';
@@ -936,10 +981,7 @@ function bwModal(first) {
     focus:'bw', actions:[{label:first ? 'Skip' : 'Cancel', fn:() => { if (first && !S.settings.bwAsked) { S.settings.bwAsked = true; markDirty('profile'); } }},
       {label:'Save', cls:'btn-acc', validate:v => { const x = parseFloat(String(v.bw).replace(',', '.')), kg = toKg(x);
         return x > 0 && kg >= 25 && kg <= 320 ? true : `Enter your weight in ${unit()}`; },
-       fn:v => { const old = curBW(), nw = Math.round(toKg(parseFloat(String(v.bw).replace(',', '.'))) * 1000) / 1000;
-         // workouts logged before this change keep the bodyweight they were done at
-         if (old && Math.abs(old - nw) > 1e-6) { const ks = new Set(); for (const w of S.workouts) if (!w.bw) { w.bw = old; ks.add('log-' + monthKey(w.start)); } if (ks.size) markDirty(...ks); }
-         S.settings.bw = nw; S.settings.bwAsked = true; markDirty('profile');
+       fn:v => { addWeighIn(toKg(parseFloat(String(v.bw).replace(',', '.'))), Date.now());
          const y = window.scrollY; renderAll(); window.scrollTo(0, y); toast(`Bodyweight set to ${fmtW(S.settings.bw)} ${unit()}`); }}]});
 }
 
@@ -1616,7 +1658,7 @@ function viewSettings() {
   return `<header class="top"><h1 class="h1" style="margin:0">Settings</h1></header>
     <div class="set-group">
       <div class="set-item"><div class="lbl"><b>Units</b><small>Changes every number in the app</small></div>${seg('units',[['lb','lb'],['kg','kg']])}</div>
-      <div class="set-item"><div class="lbl"><b>Bodyweight</b><small>Counts toward pull-ups, chin-ups, dips &amp; push-ups</small></div><button class="btn ${S.settings.bw ? 'btn-line' : 'btn-acc'} sm" data-a="bw-edit">${S.settings.bw ? `${fmtW(S.settings.bw)} ${unit()}` : 'Add'}</button></div>
+      <div class="set-item"><div class="lbl"><b>Bodyweight</b><small>Weigh-in log · counts toward pull-ups, chin-ups, dips &amp; push-ups</small></div><button class="btn ${S.settings.bw ? 'btn-line' : 'btn-acc'} sm" data-a="bw-open">${curBW() ? `${fmtW(curBW())} ${unit()}` : 'Add'}</button></div>
       <div class="set-item" style="flex-direction:column;align-items:stretch"><div class="lbl"><b>Rest timer</b><small>Starts when you check off a set</small></div>${seg('rest',[[0,'Off'],[60,'1:00'],[90,'1:30'],[120,'2:00'],[180,'3:00']])}</div>
       <div class="set-item"><div class="lbl"><b>Keep screen on</b><small>${wakeSupported() ? 'While a workout is open, so your phone doesn’t lock between sets' : 'Not supported in this browser'}</small></div><button class="switch ${S.settings.awake !== false && wakeSupported() ? 'on' : ''}" role="switch" aria-checked="${S.settings.awake !== false}" aria-label="Keep screen on" data-a="awake" ${wakeSupported() ? '' : 'disabled'}><span></span></button></div>
     </div>
@@ -1774,7 +1816,6 @@ function doFinish(doneEx) {
     return {exId:e.exId, note:e.note || '', sets};
   });
   const rec = {id:w.id, name:(w.name || '').trim() || defaultName(), start:w.start, end:Date.now(), routineId:w.routineId || null, ex};
-  if (bwNow) rec.bw = bwNow;
   S.workouts.push(rec); S.workouts.sort((a,b) => b.start - a.start);
   S.active = null; rest = null; workoutOpen = false;
   markDirty('active', 'log-' + monthKey(rec.start));
@@ -1816,7 +1857,28 @@ function renderScreen() {
   else if (screen.type === 'routine') L.innerHTML = screenRoutine();
   else if (screen.type === 'gymswitch') L.innerHTML = screenGymSwitch();
   else if (screen.type === 'import') L.innerHTML = screenImport();
+  else if (screen.type === 'bw') { L.innerHTML = screenBw(); initCharts(L); }
   L.scrollTop = 0;
+}
+function screenBw() {
+  const L = S.bwLog, cur = L[L.length - 1];
+  const head = `<div class="lhead"><button class="icon-btn" data-a="screen-close" aria-label="Close">${ic('x')}</button><div class="ttl">Bodyweight</div><button class="btn btn-acc sm" data-a="bw-log">${ic('plus')}Log</button></div>`;
+  if (!cur) return head + `<div class="wrap"><div class="empty"><b>No weigh-ins yet</b>Log your weight now and then. Pull-ups, chin-ups, dips and push-ups use whatever you weighed at the time.
+    <div><button class="btn btn-acc" data-a="bw-log">Log weigh-in</button></div></div></div>`;
+  // change over about a month, or since your first weigh-in if the log is newer than that
+  const ref = [...L].reverse().find(e => cur.t - e.t >= 28 * DAY) || L[0];
+  const diff = toU(cur.kg) - toU(ref.kg), span = Math.max(1, Math.round((cur.t - ref.t) / DAY));
+  const chg = ref === cur ? 'First weigh-in' : `${Math.abs(diff) < 0.05 ? 'No change' : `${diff > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(diff))} ${unit()}`} in ${span >= 28 && span <= 35 ? '30 days' : plural(span, 'day')}`;
+  const yr = t => new Date(t).getFullYear() !== new Date().getFullYear() ? `, ${new Date(t).getFullYear()}` : '';
+  const rows = [...L].reverse().map((e, i, arr) => { const prev = arr[i + 1], dd = prev ? toU(e.kg) - toU(prev.kg) : null;
+    return `<div class="bw-row"><span>${fmtShort(e.t)}${yr(e.t)}</span><b>${fmtW(e.kg)} ${unit()}</b><span class="faint">${dd == null || Math.abs(dd) < 0.05 ? '' : `${dd > 0 ? '+' : '−'}${fmtNum(Math.abs(dd))}`}</span>
+      <button class="icon-btn" data-a="bw-del" data-id="${e.id}" aria-label="Delete weigh-in from ${fmtShort(e.t)}">${ic('x')}</button></div>`; }).join('');
+  return head + `<div class="wrap">
+    <div class="bw-hero"><b>${fmtW(cur.kg)}<small> ${unit()}</small></b><span>${chg}</span></div>
+    ${L.length > 1 ? `<div class="chart-card">${lineChart('bw', L.map(e => ({x:e.t, y:toU(e.kg), tip:`<b>${fmtW(e.kg)} ${unit()}</b><br>${fmtShort(e.t)}${yr(e.t)}`})))}</div>` : ''}
+    <p class="faint bw-note">Pull-ups, chin-ups and dips count your full bodyweight and push-ups about 65%, using your weigh-in from the day of each workout.</p>
+    <div class="sec-head"><h2>Weigh-ins</h2><span class="faint" style="font-size:14px">${L.length} ${L.length === 1 ? 'entry' : 'entries'}</span></div>
+    <div class="card bw-list">${rows}</div></div>`;
 }
 function closeScreen() { screen = null; renderAll(); }
 function screenSummary() {
@@ -2606,6 +2668,11 @@ const A = {
   appearance: () => { S.settings.appearance = S.settings.appearance === 'light' ? 'dark' : 'light'; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   theme: el => { S.settings.theme = el.dataset.k; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   'bw-edit': () => bwModal(false),
+  'bw-open': () => { screen = {type:'bw'}; renderAll(); },
+  'bw-log': () => weighInModal(),
+  'bw-del': el => { const i = S.bwLog.findIndex(e => e.id === el.dataset.id); if (i < 0) return; const [e] = S.bwLog.splice(i, 1);
+    syncBwSetting(); markDirty('profile'); renderScreenKeep(); renderView();
+    toastUndo(`Deleted ${fmtW(e.kg)} ${unit()} from ${fmtShort(e.t)}`, () => { S.bwLog.push(e); S.bwLog.sort((a, b) => a.t - b.t); syncBwSetting(); markDirty('profile'); renderScreenKeep(); renderView(); }); },
   setting: el => {
     const k = el.dataset.k; let v = el.dataset.v; if (k === 'rest') v = +v;
     S.settings[k] = v; markDirty('profile'); renderAll();
