@@ -1574,8 +1574,8 @@ function viewSettings() {
     <div class="set-group">
       <div class="set-item"><div class="lbl"><b>Units</b><small>Changes every number in the app</small></div>${seg('units',[['lb','lb'],['kg','kg']])}</div>
       <div class="set-item"><div class="lbl"><b>Bodyweight</b><small>Counts toward pull-ups, chin-ups, dips &amp; push-ups</small></div><button class="btn ${S.settings.bw ? 'btn-line' : 'btn-acc'} sm" data-a="bw-edit">${S.settings.bw ? `${fmtW(S.settings.bw)} ${unit()}` : 'Add'}</button></div>
-      <div class="set-item"><div class="lbl"><b>Keep screen on</b><small>${wakeSupported() ? 'While a workout is open, so your phone doesn’t lock between sets' : 'Not supported in this browser'}</small></div><button class="switch ${S.settings.awake !== false && wakeSupported() ? 'on' : ''}" role="switch" aria-checked="${S.settings.awake !== false}" aria-label="Keep screen on" data-a="awake" ${wakeSupported() ? '' : 'disabled'}><span></span></button></div>
       <div class="set-item" style="flex-direction:column;align-items:stretch"><div class="lbl"><b>Rest timer</b><small>Starts when you check off a set</small></div>${seg('rest',[[0,'Off'],[60,'1:00'],[90,'1:30'],[120,'2:00'],[180,'3:00']])}</div>
+      <div class="set-item"><div class="lbl"><b>Keep screen on</b><small>${wakeSupported() ? 'While a workout is open, so your phone doesn’t lock between sets' : 'Not supported in this browser'}</small></div><button class="switch ${S.settings.awake !== false && wakeSupported() ? 'on' : ''}" role="switch" aria-checked="${S.settings.awake !== false}" aria-label="Keep screen on" data-a="awake" ${wakeSupported() ? '' : 'disabled'}><span></span></button></div>
     </div>
     <div class="sec-head"><h2>Theme</h2><span class="faint" style="font-size:14px">${esc((THEMES.find(t => t.id === S.settings.theme) || THEMES[0]).name)}</span></div>
     <div class="card">
@@ -2558,9 +2558,9 @@ const A = {
     el.classList.add('fade');
     setTimeout(() => { el.innerHTML = quoteHTML(); el.classList.remove('fade'); }, 180);
   },
+  awake: () => { S.settings.awake = S.settings.awake === false; if (S.settings.awake) delete S.settings.awake; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); syncWake(); },
   appearance: () => { S.settings.appearance = S.settings.appearance === 'light' ? 'dark' : 'light'; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   theme: el => { S.settings.theme = el.dataset.k; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
-  awake: () => { S.settings.awake = S.settings.awake === false; if (S.settings.awake) delete S.settings.awake; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); syncWake(); },
   'bw-edit': () => bwModal(false),
   setting: el => {
     const k = el.dataset.k; let v = el.dataset.v; if (k === 'rest') v = +v;
