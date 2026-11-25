@@ -197,7 +197,9 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:all .2s;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.has-undo{pointer-events:auto;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 16px;z-index:70}
-.toast.has-undo span{white-space:nowrap}
+.toast.has-undo{width:max-content;max-width:calc(100vw - 24px)}
+.toast.has-undo span{min-width:0;line-height:1.3}
+.toast.has-undo button{flex:none}
 .toast.has-undo button{background:var(--acc-bg);color:var(--acc-ink);font-weight:800;border-radius:9px;padding:8px 14px;font-size:14px}
 .toast.show.has-undo{bottom:calc(84px + env(safe-area-inset-bottom))}
 
@@ -996,7 +998,7 @@ function browseLib() { const u = usedIds(); return Object.values(LIB).filter(x =
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 /* ---------- state ---------- */
-const DEFAULT = () => ({settings:{units:'lb', rest:90, theme:'teal', appearance:'dark'}, routines:[], customExercises:[], workouts:[], active:null, adjust:{}, gyms:[], off:[], imports:[], bwLog:[]});
+const DEFAULT = () => ({settings:{units:'lb', rest:90, theme:'teal', appearance:'dark'}, routines:[], customExercises:[], workouts:[], active:null, adjust:{}, gyms:[], off:[], imports:[], bwLog:[], exAlias:{}});
 let S = DEFAULT();
 let tab = 'home';
 let workoutOpen = false;
@@ -1027,6 +1029,8 @@ function normalize(d) {
   }
   if (Array.isArray(d.gyms)) n.gyms = d.gyms.filter(g => g && +g.at > 0);
   if (Array.isArray(d.imports)) n.imports = d.imports.filter(b => b && b.id);
+  // names you've told Spotter belong to an exercise (from merges and import matches): compact name -> exercise id
+  if (d.exAlias && typeof d.exAlias === 'object') for (const [k, v] of Object.entries(d.exAlias).slice(0, 2000)) if (typeof v === 'string' && k) n.exAlias[k] = v;
   if (Array.isArray(d.bwLog)) n.bwLog = d.bwLog.filter(e => e && e.id && +e.t > 0 && +e.kg >= 20 && +e.kg <= 400).map(e => ({id:e.id, t:+e.t, kg:+e.kg})).sort((a, b) => a.t - b.t);
   if (Array.isArray(d.off)) n.off = d.off.filter(o => o && o.id && Number.isInteger(o.from) && Number.isInteger(o.to) && o.to >= o.from && (o.type === 'sick' || o.type === 'vacation'));
   if (Array.isArray(d.workouts)) n.workouts = d.workouts.filter(w => w && w.id && Array.isArray(w.ex) && w.start);
@@ -1042,6 +1046,7 @@ function remapIds(d, map) {
   for (const w of d.workouts) fix(w.ex);
   for (const r of d.routines) fix(r.ex);
   if (d.active) fix(d.active.ex);
+  for (const k of Object.keys(d.exAlias || {})) if (map[d.exAlias[k]]) { d.exAlias[k] = map[d.exAlias[k]]; changed = true; }
   for (const k of Object.keys(d.adjust)) if (map[k]) { d.adjust[to(k)] = [...(d.adjust[to(k)] || []), ...d.adjust[k]]; delete d.adjust[k]; changed = true; }
   return changed;
 }
@@ -1086,7 +1091,7 @@ function flush() {
   keys.forEach(writeDoc);
 }
 function docBody(k) {
-  if (k === 'profile') return clone({v:1, settings:S.settings, routines:S.routines, customExercises:S.customExercises, adjust:S.adjust, gyms:S.gyms, off:S.off, imports:S.imports, bwLog:S.bwLog});
+  if (k === 'profile') return clone({v:1, settings:S.settings, routines:S.routines, customExercises:S.customExercises, adjust:S.adjust, gyms:S.gyms, off:S.off, imports:S.imports, bwLog:S.bwLog, exAlias:S.exAlias});
   if (k === 'active') return clone({w:S.active || null});
   if (k.startsWith('log-')) { const m = k.slice(4); return clone({month:m, workouts:S.workouts.filter(w => monthKey(w.start) === m)}); }
   return {};
@@ -1181,7 +1186,7 @@ async function boot() {
       } else {
         const p = docs.profile || {};
         S = normalize({
-          settings:p.settings, routines:p.routines, customExercises:p.customExercises, adjust:p.adjust, gyms:p.gyms, off:p.off, imports:p.imports, bwLog:p.bwLog,
+          settings:p.settings, routines:p.routines, customExercises:p.customExercises, adjust:p.adjust, gyms:p.gyms, off:p.off, imports:p.imports, bwLog:p.bwLog, exAlias:p.exAlias,
           active:(docs.active || {}).w || null,
           workouts:logs.flatMap(k => Array.isArray(docs[k].workouts) ? docs[k].workouts : []),
         });
@@ -1626,8 +1631,11 @@ function dupBanner() {
     ${d.map(({c, x}) => `<div class="dupe"><span><b>${esc(c.name)}</b> <span class="faint">(yours)</span> → <b>${esc(x.name)}</b></span><span class="dupe-b"><button class="btn btn-line sm" data-a="dupe-merge" data-id="${esc(c.id)}">Merge</button><button class="icon-btn" data-a="dupe-keep" data-id="${esc(c.id)}" aria-label="Keep ${esc(c.name)} separate">${ic('x')}</button></span></div>`).join('')}</div>`;
 }
 function mergeCustomInto(fromId, toId) {
-  const snap = {workouts:clone(S.workouts), routines:clone(S.routines), customExercises:clone(S.customExercises), active:clone(S.active), adjust:clone(S.adjust)};
+  const snap = {workouts:clone(S.workouts), routines:clone(S.routines), customExercises:clone(S.customExercises), active:clone(S.active), adjust:clone(S.adjust), exAlias:clone(S.exAlias), settings:clone(S.settings)};
   const from = exName(fromId), to = exName(toId);
+  S.exAlias[compactEx(from)] = toId;                           // future imports of this name go to the right exercise
+  for (const a of (exInfo(fromId).aka || [])) S.exAlias[compactEx(a)] = toId;
+  if (S.settings.dupeKeep) S.settings.dupeKeep = S.settings.dupeKeep.filter(x => x !== fromId);
   const months = new Set(S.workouts.filter(w => w.ex.some(e => e.exId === fromId)).map(w => 'log-' + monthKey(w.start)));
   remapIds(S, {[fromId]:toId});
   S.customExercises = S.customExercises.filter(x => x.id !== fromId);
@@ -2353,7 +2361,7 @@ function confirmDeleteCustom(id) {
   modal({title:'Are you sure?', body, actions:[{label:'Delete exercise', cls:'btn-danger-ghost', fn:() => deleteCustom(id)}, {label:'Keep it', cls:'btn-acc'}]});
 }
 function deleteCustom(id) {
-  const snap = {workouts:clone(S.workouts), routines:clone(S.routines), customExercises:clone(S.customExercises), active:clone(S.active), adjust:clone(S.adjust)};
+  const snap = {workouts:clone(S.workouts), routines:clone(S.routines), customExercises:clone(S.customExercises), active:clone(S.active), adjust:clone(S.adjust), exAlias:clone(S.exAlias)};
   const name = exName(id);
   const months = new Set(S.workouts.filter(w => w.ex.some(e => e.exId === id)).map(w => 'log-' + monthKey(w.start)));
   S.workouts = S.workouts.map(w => w.ex.some(e => e.exId === id) ? {...w, ex:w.ex.filter(e => e.exId !== id)} : w).filter(w => w.ex.length);
@@ -2361,10 +2369,11 @@ function deleteCustom(id) {
   if (S.active) S.active.ex = S.active.ex.filter(e => e.exId !== id);
   delete S.adjust[id];
   S.customExercises = S.customExercises.filter(x => x.id !== id);
+  for (const k of Object.keys(S.exAlias)) if (S.exAlias[k] === id) delete S.exAlias[k];
   if (progEx === id) progEx = null;
   markDirty('profile', 'active', ...months); renderAll();
   toastUndo(`${name} deleted`, () => {
-    Object.assign(S, {workouts:snap.workouts, routines:snap.routines, customExercises:snap.customExercises, active:snap.active, adjust:snap.adjust});
+    Object.assign(S, {workouts:snap.workouts, routines:snap.routines, customExercises:snap.customExercises, active:snap.active, adjust:snap.adjust, exAlias:snap.exAlias});
     markDirty('profile', 'active', ...months); renderAll(); toast(`${name} restored`);
   });
 }
@@ -2378,9 +2387,19 @@ function customEditModal(id) {
     actions:[{label:'Save', cls:'btn-acc', validate:v => { if (!v.name.trim()) return false; const hit = catalogueHit(v.name); return hit && compactEx(v.name) !== compactEx(c.name) ? `That’s already here as “${hit.name}”` : true; }, fn:v => {
       c.name = v.name.trim(); c.muscle = v.muscle; c.eq = v.eq;
       c.p = v.prim ? v.prim.split(',') : []; c.s = v.sec ? v.sec.split(',').filter(n => !c.p.includes(n)) : [];
-      markDirty('profile'); renderAll(); toast('Exercise saved'); }}, {label:'Delete exercise', cls:'btn-danger-ghost', fn:() => setTimeout(() => confirmDeleteCustom(id), 0)}, {label:'Cancel', cls:'btn-line'}], col:true});
+      markDirty('profile'); renderAll(); toast('Exercise saved'); }}, {label:'Merge into another exercise…', cls:'btn-ghost', fn:() => setTimeout(() => pickMergeTarget(id), 0)}, {label:'Delete exercise', cls:'btn-danger-ghost', fn:() => setTimeout(() => confirmDeleteCustom(id), 0)}, {label:'Cancel', cls:'btn-line'}], col:true});
 }
 function customMusclesModal(id) { customEditModal(id); }
+// fold a custom exercise into the real one (or another of yours): logs, routines and records move over
+function pickMergeTarget(id) {
+  const c = S.customExercises.find(x => x.id === id); if (!c) return;
+  openPicker(ids => {
+    const to = ids[0]; if (!to || to === id) { if (to === id) toast('Pick a different exercise'); return; }
+    const n = S.workouts.reduce((a, w) => a + w.ex.filter(e => e.exId === id).length, 0);
+    modal({title:`Merge into ${exName(to)}?`, body:`<p>${n ? `Your ${plural(n, 'logged session')} of <b>${esc(c.name)}</b> move to <b>${esc(exName(to))}</b>, so they share one history and one set of records.` : `<b>${esc(c.name)}</b> is replaced by <b>${esc(exName(to))}</b> everywhere it’s used.`} Your custom one is removed, and future imports named “${esc(c.name)}” go to ${esc(exName(to))}.</p>`,
+      actions:[{label:'Cancel'}, {label:'Merge', cls:'btn-acc', fn:() => mergeCustomInto(id, to)}]});
+  }, {single:true, title:`Merge “${c.name}” into…`});
+}
 function muscleChips(name, sel) {
   return `<input type="hidden" name="${name}" value="${esc(sel.join(','))}"><div class="mpick" data-for="${name}">${MUSCLE_NAMES.map(n => `<button type="button" class="mchip pick ${sel.includes(n) ? 'on' : ''}" data-a="mchip" data-m="${esc(n)}">${esc(n)}</button>`).join('')}</div>`;
 }
@@ -2556,6 +2575,8 @@ function exTokens(name) {
 }
 function matchExercise(name) {
   const lower = String(name).trim().toLowerCase();
+  const known = S.exAlias[compactEx(name)];
+  if (known && (LIB[known] || S.customExercises.some(c => c.id === known))) return {id:known, how:'exact'};
   const pool = [...Object.values(LIB), ...S.customExercises];
   const exact = pool.find(x => x.name.toLowerCase() === lower) || pool.find(x => exNames(x).some(n => compactEx(n) === compactEx(name)));
   if (exact) return {id:exact.id, how:'exact'};
@@ -2640,7 +2661,7 @@ function impDoImport() {
   const idFor = {};
   for (const [name, m] of Object.entries(imp.match)) {
     if (!B.exCount[name] || m.how === 'skip') continue;
-    if (m.id) idFor[name] = m.id;
+    if (m.id) { idFor[name] = m.id; if (m.how === 'manual') S.exAlias[compactEx(name)] = m.id; }
     else { const c = {id:'c_' + uid(), name:name.trim().slice(0, 50), muscle:guessMuscle(name)}; S.customExercises.push(c); batch.customs.push(c.id); idFor[name] = c.id; }
   }
   const added = [];
@@ -2845,7 +2866,7 @@ const A = {
     e.exId = el.dataset.id; markDirty('active'); renderWorkout(); },
   'dupe-merge': el => { const c = S.customExercises.find(x => x.id === el.dataset.id), x = c && catalogueHit(c.name); if (!x) return;
     const n = S.workouts.reduce((a, w) => a + w.ex.filter(e => e.exId === c.id).length, 0);
-    modal({title:`Merge into ${x.name}?`, body:`<p>${n ? `Your ${plural(n, 'logged session')} of <b>${esc(c.name)}</b> move to <b>${esc(x.name)}</b>, so they share one history and one set of records.` : `<b>${esc(c.name)}</b> is replaced by <b>${esc(x.name)}</b> everywhere it’s used.`} Your custom one is removed.</p>`,
+    modal({title:`Merge into ${x.name}?`, body:`<p>${n ? `Your ${plural(n, 'logged session')} of <b>${esc(c.name)}</b> move to <b>${esc(x.name)}</b>, so they share one history and one set of records.` : `<b>${esc(c.name)}</b> is replaced by <b>${esc(x.name)}</b> everywhere it’s used.`} Your custom one is removed, and future imports named “${esc(c.name)}” go to ${esc(x.name)}.</p>`,
       actions:[{label:'Cancel'}, {label:'Merge', cls:'btn-acc', fn:() => mergeCustomInto(c.id, x.id)}]}); },
   'exl-by': el => { exv.by = el.dataset.k; exv.filter = 'All'; renderView(); },
   'exl-filter': el => { exv.filter = el.dataset.k; renderView(); },
