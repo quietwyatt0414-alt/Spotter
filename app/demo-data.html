@@ -12,21 +12,21 @@ window.SPOTTER_DEMO = {
     const P = {
       bench_bb:[185,5,6,8,4,1,5], row_bb:[155,5,8,10,4,1,5], press_db:[60,5,8,10,3,0,5], pulldown:[150,10,10,12,3,0,5], lat_db:[25,5,12,15,3,0,5], curl_ez:[75,5,8,12,3,0,5], pushdown:[60,5,10,12,3,0,5],
       squat:[245,5,5,6,4,1,5], rdl:[205,10,8,10,3,1,5], leg_press:[360,20,10,12,3,0,10], seated_curl:[110,5,10,12,3,0,5], calf_stand:[180,10,10,12,4,0,10], hlr:[0,0,10,15,3,0,0],
-      incline_bb:[155,5,6,8,4,1,5], ohp:[115,5,6,8,3,1,5], fly_cable:[30,5,12,15,3,0,5], lat_cable:[15,2.5,12,15,4,0,2.5], dips:[0,10,8,12,3,0,5], oh_ext_cable:[50,5,10,12,3,0,5],
-      deadlift:[315,5,4,5,3,1,5], pullup:[0,10,6,10,4,0,5], row_cable:[160,10,10,12,3,0,5], face_pull:[50,5,12,15,3,0,5], c_kelso:[135,10,10,12,3,0,5], hammer:[40,5,10,12,3,0,5], preacher:[65,5,8,12,3,0,5],
-      hack:[230,10,8,10,4,1,10], bss:[50,5,8,10,3,0,5], leg_ext:[140,10,12,15,3,0,10], lying_curl:[100,5,10,12,3,0,5], hip_thrust:[225,10,8,12,3,0,10], calf_seat:[110,10,12,15,4,0,10],
+      incline_bb:[155,5,6,8,4,1,5], ohp:[115,5,6,8,3,1,5], fly_cable:[30,5,12,15,3,0,5], lat_cable:[15,2.5,12,15,4,0,2.5], dips:[0,10,8,12,3,0,5], french_press:[50,5,10,12,3,0,5],
+      deadlift:[315,5,4,5,3,1,5], pullup:[0,10,6,10,4,0,5], row_cable:[160,10,10,12,3,0,5], rear_fly_cable:[50,5,12,15,3,0,5], c_kelso:[135,10,10,12,3,0,5], hammer:[40,5,10,12,3,0,5], preacher:[65,5,8,12,3,0,5],
+      hack:[230,10,8,10,4,1,10], bss_bb:[95,10,8,10,3,0,5], leg_ext:[140,10,12,15,3,0,10], lying_curl:[100,5,10,12,3,0,5], hip_thrust:[225,10,8,12,3,0,10], calf_seat:[110,10,12,15,4,0,10],
     };
     const DAYS = {
       Upper:['bench_bb','row_bb','press_db','pulldown','lat_db','curl_ez','pushdown'],
       Lower:['squat','rdl','leg_press','seated_curl','calf_stand','hlr'],
-      Push:['incline_bb','ohp','fly_cable','lat_cable','dips','oh_ext_cable'],
-      Pull:['deadlift','pullup','row_cable','face_pull','c_kelso','hammer','preacher'],
-      Legs:['hack','bss','leg_ext','lying_curl','hip_thrust','calf_seat'],
+      Push:['incline_bb','ohp','fly_cable','lat_cable','dips','french_press'],
+      Pull:['deadlift','pullup','row_cable','rear_fly_cable','c_kelso','hammer','preacher'],
+      Legs:['hack','bss_bb','leg_ext','lying_curl','hip_thrust','calf_seat'],
     };
     const NOTES = {squat:'Belt on top sets', hack:'Sled setting 3, feet high', bench_bb:'1 sec pause on first rep', pullup:'Weight is added plates', dips:'Weight is added plates', c_kelso:'Chest on incline bench, squeeze 1 sec'};
     const SPLIT = ['Upper','Lower',null,'Push','Pull','Legs',null];
     // new gym: same effort shows up as a different number on these machines
-    const GYM2 = {leg_press:0.78, hack:0.72, pulldown:1.18, row_cable:1.2, seated_curl:0.88, lying_curl:0.9, leg_ext:1.15, calf_stand:0.8, calf_seat:0.85, fly_cable:1.3, lat_cable:1.35, face_pull:1.2, pushdown:1.25, oh_ext_cable:1.3};
+    const GYM2 = {leg_press:0.78, hack:0.72, pulldown:1.18, row_cable:1.2, seated_curl:0.88, lying_curl:0.9, leg_ext:1.15, calf_stand:0.8, calf_seat:0.85, fly_cable:1.3, lat_cable:1.35, rear_fly_cable:1.2, pushdown:1.25, french_press:1.3};
     const routineIds = {Upper:'r_upper', Lower:'r_lower', Push:'r_push', Pull:'r_pull', Legs:'r_legs'};
 
     const st = {};

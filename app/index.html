@@ -438,6 +438,26 @@ button.ex-name{text-align:left;padding:0}
 .exl{gap:8px}
 .exr{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .exr:active{background:var(--s2)}
+.dupes{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;border-color:var(--acc-mid)}
+.dupes small{color:var(--tx3);font-size:13px;margin-bottom:4px}
+.dupe-b{display:flex;align-items:center;gap:2px;flex:none}
+.dupe{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.eq-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.eqc{position:relative;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--s2);font-size:13px;font-weight:700;color:var(--tx2);white-space:nowrap}
+.eqc.used{color:var(--tx)}
+.eqc.hit{border-color:var(--acc-mid);color:var(--tx)}
+.eqc.on{background:var(--acc-bg);border-color:transparent;color:var(--acc-ink)}
+.eqc:disabled{opacity:1}
+.eq-last{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
+.eqc.on .eq-last{background:var(--acc-ink)}
+.ex-eq{margin-top:6px} .ex-eq .eqc{padding:4px 10px;font-size:12px}
+.pos-tog{display:inline-flex;margin-top:6px;background:var(--s2);border:1px solid var(--line);border-radius:999px;padding:2px}
+.pos-tog button{padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;color:var(--tx2)}
+.pos-tog button.on{background:var(--tx);color:var(--bg)}
+.pk-move{cursor:pointer} .pk-move.on b{color:var(--acc)}
+.exr-move{cursor:default}
+.aka{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--acc);margin-top:1px}
+.aka-list{font-size:14px;color:var(--tx2);line-height:1.4}
 .exr-l{min-width:0;flex:1} .exr-l b{display:block;font-weight:600}
 .exr-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none}
 .exr-r small{color:var(--tx3);font-size:11px;font-weight:600;white-space:nowrap}
@@ -507,73 +527,202 @@ const ICONS = {
 const ic = (n, cls='') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
 
 /* ---------- exercise library ---------- */
-const LIB_RAW = {
-  Chest:[['bench_bb','Bench Press (Barbell)'],['incline_bb','Incline Bench Press (Barbell)'],['decline_bb','Decline Bench Press (Barbell)'],['bench_db','Bench Press (Dumbbell)'],['incline_db','Incline Bench Press (Dumbbell)'],['smith_incline','Incline Bench Press (Smith)'],['press_mach','Chest Press (Machine)'],['incline_mach','Incline Chest Press (Machine)'],['fly_db','Chest Fly (Dumbbell)'],['fly_cable','Cable Crossover'],['pec_deck','Pec Deck'],['dips','Dips'],['pushup','Push Up']],
-  Back:[['deadlift','Deadlift (Barbell)'],['pullup','Pull Up'],['chinup','Chin Up'],['pulldown','Lat Pulldown'],['pulldown_cg','Close-Grip Lat Pulldown'],['row_bb','Bent Over Row (Barbell)'],['pendlay','Pendlay Row'],['row_db','Single-Arm Row (Dumbbell)'],['row_cable','Seated Cable Row'],['row_tbar','T-Bar Row'],['row_chest','Chest-Supported Row'],['row_mach','Machine Row'],['pullover_cable','Straight-Arm Pulldown'],['rack_pull','Rack Pull'],['back_ext','Back Extension']],
-  Shoulders:[['ohp','Overhead Press (Barbell)'],['press_db','Shoulder Press (Dumbbell)'],['press_smach','Shoulder Press (Machine)'],['arnold','Arnold Press'],['lat_db','Lateral Raise (Dumbbell)'],['lat_cable','Lateral Raise (Cable)'],['lat_mach','Lateral Raise (Machine)'],['rear_fly','Rear Delt Fly (Dumbbell)'],['rev_pec','Reverse Pec Deck'],['face_pull','Face Pull'],['front_raise','Front Raise'],['upright','Upright Row']],
-  Traps:[['shrug_db','Shrug (Dumbbell)'],['shrug_bb','Shrug (Barbell)']],
-  Biceps:[['curl_bb','Bicep Curl (Barbell)'],['curl_ez','EZ Bar Curl'],['curl_db','Bicep Curl (Dumbbell)'],['hammer','Hammer Curl'],['preacher','Preacher Curl (EZ Bar)'],['preacher_db','Preacher Curl (Dumbbell)'],['incline_curl','Incline Dumbbell Curl'],['curl_cable','Cable Curl'],['bayesian','Bayesian Cable Curl'],['spider','Spider Curl'],['conc','Concentration Curl']],
-  Triceps:[['pushdown','Triceps Pushdown (Cable)'],['rope_pd','Rope Pushdown'],['oh_ext_cable','Overhead Triceps Extension (Cable)'],['oh_ext_db','Overhead Triceps Extension (Dumbbell)'],['skull','Skull Crusher (EZ Bar)'],['skull_db','Skull Crusher (Dumbbell)'],['cgbp','Close-Grip Bench Press'],['dip_mach','Triceps Dip (Machine)'],['kickback','Triceps Kickback']],
-  Forearms:[['wrist_curl','Wrist Curl (Barbell)'],['wrist_curl_db','Wrist Curl (Dumbbell)'],['rev_curl','Reverse Curl (Barbell)'],['rev_curl_db','Reverse Curl (Dumbbell)']],
-  Quads:[['squat','Squat (Barbell)'],['front_squat','Front Squat'],['hack','Hack Squat'],['leg_press','Leg Press'],['pendulum','Pendulum Squat'],['smith_squat','Squat (Smith)'],['goblet','Goblet Squat'],['bss','Bulgarian Split Squat'],['lunge','Walking Lunge'],['step_up','Step Up'],['leg_ext','Leg Extension']],
-  Hamstrings:[['rdl','Romanian Deadlift (Barbell)'],['rdl_db','Romanian Deadlift (Dumbbell)'],['sldl','Stiff-Leg Deadlift'],['lying_curl','Lying Leg Curl'],['seated_curl','Seated Leg Curl'],['good_morning','Good Morning'],['nordic','Nordic Curl']],
-  Glutes:[['hip_thrust','Hip Thrust (Barbell)'],['glute_bridge','Glute Bridge'],['abductor','Hip Abduction (Machine)'],['kickback_cable','Cable Glute Kickback']],
-  Adductors:[['adductor','Hip Adduction (Machine)']],
-  Calves:[['calf_stand','Standing Calf Raise'],['calf_seat','Seated Calf Raise'],['calf_press','Calf Press (Leg Press)']],
-  Core:[['hlr','Hanging Leg Raise'],['cable_crunch','Cable Crunch'],['ab_wheel','Ab Wheel Rollout'],['ab_mach','Ab Crunch (Machine)'],['crunch','Crunch'],['decline_situp','Decline Sit Up'],['russian','Russian Twist']],
+// Exercise catalogue (Wyatt's list from simplyfitness.com exercise guides). Row: [id, name, equipment, primary, secondary, also called]
+// Ids of exercises that existed before are kept, so logged history carries over.
+const CAT = {
+  Chest:[
+    ['bench_bb','Barbell Bench Press','Barbell','Chest','Front delts,Triceps','Bench Press (Barbell)|Bench Press|Flat Bench Press|Flat Barbell Bench'],
+    ['incline_db','Incline Dumbbell Bench Press','Dumbbell','Upper chest','Front delts,Triceps','Incline Bench Press (Dumbbell)|Incline Dumbbell Press|Incline DB Press'],
+    ['pec_deck','Pec Deck','Machine','Chest','Front delts','Machine Fly|Chest Fly Machine|Machine Chest Fly|Butterfly|Pec Fly|Seated Machine Fly'],
+    ['fly_cable','Cable Crossover','Cable','Chest','Front delts','Cable Fly|Cable Chest Fly|Standing Cable Fly|Cable Crossovers'],
+    ['incline_bb','Incline Barbell Bench Press','Barbell','Upper chest','Front delts,Triceps','Incline Bench Press (Barbell)|Incline Bench Press|Incline Barbell Press'],
+    ['bench_db','Dumbbell Bench Press','Dumbbell','Chest','Front delts,Triceps','Bench Press (Dumbbell)|Dumbbell Press|Flat Dumbbell Press|DB Bench Press'],
+    ['fly_db','Dumbbell Fly','Dumbbell','Chest','Front delts','Chest Fly (Dumbbell)|Dumbbell Chest Fly|Flat Dumbbell Fly|Dumbbell Flyes|Chest Fly'],
+    ['incline_fly_db','Incline Dumbbell Fly','Dumbbell','Upper chest','Front delts','Incline Chest Fly|Incline Fly|Incline Dumbbell Flyes'],
+    ['press_iso','Iso-Lateral Chest Press','Machine','Chest','Front delts,Triceps','Hammer Strength Chest Press|Plate Loaded Chest Press|Iso Lateral Chest Press|Iso-Lateral Bench Press'],
+    ['press_mach','Chest Press Machine','Machine','Chest','Front delts,Triceps','Chest Press (Machine)|Machine Chest Press|Seated Chest Press|Machine Press'],
+    ['decline_bb','Decline Barbell Bench Press','Barbell','Lower chest','Triceps,Front delts','Barbell Declined Bench Press|Decline Bench Press (Barbell)|Decline Bench Press|Decline Barbell Bench Press|Decline Barbell Press'],
+    ['decline_db','Decline Dumbbell Bench Press','Dumbbell','Lower chest','Triceps,Front delts','Dumbbell Declined Bench Press|Decline Dumbbell Bench Press|Decline Dumbbell Press'],
+    ['pushup','Push Up','Bodyweight','Chest','Front delts,Triceps,Abs','Push Ups|Push Up|Pushup|Press Up'],
+    ['incline_mach','Incline Chest Press Machine','Machine','Upper chest','Front delts,Triceps','Incline Chest Press (Machine)'],
+    ['incline_iso','Iso-Lateral Incline Press','Machine','Upper chest','Front delts,Triceps','Hammer Strength Incline Press|Plate Loaded Incline Press'],
+    ['decline_mach','Decline Chest Press Machine','Machine','Lower chest','Triceps,Front delts','Machine Decline Press|Decline Machine Press'],
+    ['decline_iso','Iso-Lateral Decline Press','Machine','Lower chest','Triceps,Front delts','Hammer Strength Decline Press|Plate Loaded Decline Press'],
+  ],
+  Back:[
+    ['row_db','Single-Arm Dumbbell Row','Dumbbell','Lats,Upper back','Rear delts,Biceps','Dumbbell Bent-Over Row (Single Arm)|Single-Arm Row (Dumbbell)|One-Arm Dumbbell Row|Single Arm Dumbbell Row|Dumbbell Row|One Arm Row'],
+    ['pulldown','Wide-Grip Pulldown','Cable','Lats','Upper back,Biceps','Lat Pulldown|Wide Grip Lat Pulldown|Pulldown|Lat Pull Down'],
+    ['row_cable','Seated Cable Row','Cable','Upper back,Lats','Biceps,Rear delts','Cable Row|Seated Row|Low Row'],
+    ['pulldown_cg','Close-Grip Pulldown','Cable','Lats','Upper back,Biceps','Close-Grip Lat Pulldown|Close Grip Lat Pulldown|V-Bar Pulldown'],
+    ['row_bb','Barbell Row','Barbell','Upper back,Lats','Rear delts,Biceps,Lower back','Bent Over Row (Barbell)|Bent Over Row|Barbell Bent Over Row|Bent-Over Barbell Row'],
+    ['pulldown_rev','Reverse-Grip Pulldown','Cable','Lats','Biceps,Upper back','Underhand Pulldown|Supinated Pulldown|Reverse Grip Lat Pulldown'],
+    ['row_tbar','T-Bar Row','Machine','Upper back,Lats','Rear delts,Biceps,Lower back','T-Bar Rows|T-Bar Row|Landmine Row'],
+    ['pullup','Pull Up','Bodyweight','Lats','Upper back,Biceps','Pull-Up|Pullup|Wide Grip Pull Up'],
+    ['chinup','Chin Up','Bodyweight','Lats','Biceps,Upper back','Pull Up with a Supinated Grip|Chin Up|Chin-Up|Chinup|Underhand Pull Up'],
+    ['pullover_cable','Straight Arm Lat Pulldown','Cable','Lats','Upper back,Triceps','Straight-Arm Pulldown|Straight Arm Pulldown|Cable Pullover'],
+    ['row_db2','Dumbbell Bent Over Row','Dumbbell','Upper back,Lats','Rear delts,Biceps,Lower back','Dumbbell Bent Over Rows|Two-Arm Dumbbell Row|Bent Over Dumbbell Row'],
+    ['pullover_db','Dumbbell Pullover','Dumbbell','Lats,Chest','Triceps','Pullover'],
+    ['pullover_bb','Barbell Pullover','Barbell','Lats,Chest','Triceps','Bent-Arm Barbell Pullover'],
+    ['deadlift','Barbell Deadlift','Barbell','Lower back,Glutes,Hamstrings','Quads,Traps,Forearms,Upper back','Deadlift (Barbell)|Deadlift|Conventional Deadlift'],
+    ['sumo_dl','Barbell Sumo Deadlift','Barbell','Glutes,Quads,Adductors','Hamstrings,Lower back,Traps','Sumo Deadlift'],
+    ['trapbar_dl','Trap Bar Deadlift','Other','Quads,Glutes','Hamstrings,Lower back,Traps','Hex Bar Deadlift'],
+    ['dl_db','Dumbbell Deadlift','Dumbbell','Glutes,Hamstrings','Lower back,Quads,Forearms','DB Deadlift'],
+    ['row_mach','Seated Row Machine','Machine','Upper back,Lats','Rear delts,Biceps','Machine Row'],
+    ['row_iso','Iso-Lateral Row','Machine','Upper back,Lats','Biceps,Rear delts','Hammer Strength Row|Plate Loaded Row|Iso Lateral Row'],
+    ['pulldown_mach','Lat Pulldown Machine','Machine','Lats','Upper back,Biceps','Machine Pulldown|Machine Lat Pulldown'],
+    ['pulldown_iso','Iso-Lateral Pulldown','Machine','Lats','Upper back,Biceps','Hammer Strength Pulldown|Plate Loaded Pulldown|Iso Lateral Pulldown'],
+  ],
+  Shoulders:[
+    ['press_db','Dumbbell Shoulder Press','Dumbbell','Front delts','Side delts,Triceps','Shoulder Press (Dumbbell)|Seated Dumbbell Press|Dumbbell Overhead Press|DB Shoulder Press'],
+    ['lat_db','Dumbbell Lateral Raise','Dumbbell','Side delts','Traps','Lateral Raise (Dumbbell)|Lateral Raise|Side Raise|Side Lateral Raise|Lateral Raises'],
+    ['front_raise','Dumbbell Front Raise','Dumbbell','Front delts','Upper chest','Front Raise|Front Raises'],
+    ['rear_fly_cable','Cable Rear Delt Fly','Cable','Rear delts','Upper back','High Cable Rear Delt Fly|Cable Rear Delt Fly|Reverse Cable Fly|Cable Reverse Fly'],
+    ['press_smith','Smith Machine Shoulder Press','Smith machine','Front delts','Side delts,Triceps','Smith Shoulder Press|Smith Overhead Press'],
+    ['upright','Barbell Upright Row','Barbell','Side delts,Traps','Front delts,Biceps','Upright Row'],
+    ['rear_fly','Dumbbell Rear Delt Fly','Dumbbell','Rear delts','Upper back','Bent-Over Lateral Raise|Rear Delt Fly (Dumbbell)|Rear Delt Fly|Reverse Fly|Bent Over Reverse Fly|Rear Lateral Raise|Dumbbell Rear Delt Fly'],
+    ['lat_cable','Cable Lateral Raise','Cable','Side delts','','Cable One-Arm Lateral Raise|Lateral Raise (Cable)|Cable Lateral Raise|Single Arm Cable Lateral Raise'],
+    ['push_press_db','Dumbbell Push Press','Dumbbell','Front delts','Side delts,Triceps,Quads','DB Push Press'],
+    ['push_press_bb','Barbell Push Press','Barbell','Front delts','Side delts,Triceps,Quads,Traps','Push Press'],
+    ['front_raise_cable','Cable Front Raise','Cable','Front delts','','Single-Arm Cable Front Raise|Cable Front Raise'],
+    ['front_raise_bb','Barbell Front Raise','Barbell','Front delts','Upper chest,Side delts',''],
+    ['ohp_seated','Seated Barbell Shoulder Press','Barbell','Front delts','Side delts,Triceps','Seated Overhead Press|Seated Military Press'],
+    ['ohp','Standing Barbell Shoulder Press','Barbell','Front delts','Side delts,Triceps,Upper chest','Overhead Press (Barbell)|Overhead Press|OHP|Military Press|Standing Overhead Press|Barbell Overhead Press'],
+    ['press_smach','Shoulder Press Machine','Machine','Front delts','Side delts,Triceps','Shoulder Press (Machine)'],
+    ['press_iso_sh','Iso-Lateral Shoulder Press','Machine','Front delts','Side delts,Triceps','Hammer Strength Shoulder Press|Plate Loaded Shoulder Press'],
+    ['press_db_stand','Standing Dumbbell Shoulder Press','Dumbbell','Front delts','Side delts,Triceps,Abs','Standing Dumbbell Press'],
+    ['lat_db_seat','Seated Dumbbell Lateral Raise','Dumbbell','Side delts','','Seated Lateral Raise'],
+  ],
+  Traps:[
+    ['shrug_bb','Barbell Shrug','Barbell','Traps','Forearms','Shrug (Barbell)|Barbell Shrugs|Shrug|Shrugs'],
+    ['shrug_db','Dumbbell Shrug','Dumbbell','Traps','Forearms','Dumbbell Shrugs|Shrug (Dumbbell)|Dumbbell Shrug'],
+  ],
+  Biceps:[
+    ['curl_bb','Barbell Curl','Barbell','Biceps','Forearms','Bicep Curl (Barbell)|Barbell Bicep Curl|Standing Barbell Curl|Bicep Curl'],
+    ['curl_db','Dumbbell Curl','Dumbbell','Biceps','Forearms','Alternating Dumbbell Curl|Bicep Curl (Dumbbell)|Dumbbell Curl|Dumbbell Bicep Curl|Alternate Dumbbell Curl|DB Curl'],
+    ['curl_rope','Rope Cable Curl','Cable','Biceps,Brachialis','Forearms','Rope Curl|Cable Rope Hammer Curl|Rope Hammer Curl'],
+    ['curl_ez','EZ Barbell Curl','EZ bar','Biceps','Forearms','EZ Bar Curl|EZ Curl'],
+    ['preacher','EZ Barbell Preacher Curl','EZ bar','Biceps','Brachialis','Preacher Curl (EZ Bar)|Preacher Curl|EZ Bar Preacher Curl'],
+    ['preacher_db','Dumbbell Preacher Curl','Dumbbell','Biceps','Brachialis','Preacher Curl (Dumbbell)|Single-Arm Preacher Curl|One-Arm Preacher Curl'],
+    ['hammer','Hammer Curl','Dumbbell','Brachialis,Forearms','Biceps','Dumbbell Hammer Curl|Hammer Curls'],
+    ['incline_curl','Incline Dumbbell Curl','Dumbbell','Biceps','','Incline Curl'],
+    ['conc','Dumbbell Concentration Curl','Dumbbell','Biceps','','Concentration Curl'],
+    ['curl_cable','Cable Curl','Cable','Biceps','Forearms','Straight Bar Low Pulley Cable Curl|Cable Curl|Cable Bicep Curl|Straight Bar Cable Curl'],
+    ['curl_db_seat','Seated Dumbbell Curl','Dumbbell','Biceps','Forearms','Seated Bicep Curl|Seated Alternating Dumbbell Curl'],
+    ['hammer_seat','Seated Hammer Curl','Dumbbell','Brachialis,Forearms','Biceps','Seated Dumbbell Hammer Curl'],
+  ],
+  Triceps:[
+    ['skull','Lying Triceps Extension','EZ bar','Triceps','','Skull Crusher (EZ Bar)|Skull Crusher|Skullcrusher|EZ Bar Skull Crusher|Lying Barbell Triceps Extension'],
+    ['pushdown','Triceps Pressdown','Cable','Triceps','','Triceps Pushdown (Cable)|Triceps Pushdown|Tricep Pushdown|Cable Pushdown|Bar Pushdown|Straight Bar Pushdown'],
+    ['rope_pd','Cable Rope Pushdown','Cable','Triceps','','Rope Pushdown|Rope Triceps Pushdown|Rope Pressdown|Tricep Rope Pushdown'],
+    ['oh_ext_db','Dumbbell Overhead Triceps Extension','Dumbbell','Triceps','','Overhead Triceps Extension (Dumbbell)|Overhead Triceps Extension|Overhead Dumbbell Extension|Seated Dumbbell Triceps Extension'],
+    ['cgbp','Close Grip Bench Press','Barbell','Triceps','Chest,Front delts','Close-Grip Bench Press|CGBP|Close Grip Bench'],
+    ['kickback','Kickback','Dumbbell','Triceps','','Triceps Kickback|Tricep Kickback|Dumbbell Kickback'],
+    ['pushdown_1a','Single-Arm Cable Pushdown','Cable','Triceps','','Single-Arm Cable Triceps Extension|Single-Arm Pushdown|One-Arm Pushdown|Single Arm Tricep Pushdown'],
+    ['skull_db','Lying Dumbbell Triceps Extension','Dumbbell','Triceps','','Skull Crusher (Dumbbell)|Dumbbell Skull Crusher|Dumbbell Lying Triceps Extension'],
+    ['french_press','Barbell French Press','Barbell','Triceps','','Seated Barbell French Press|French Press|Seated Overhead Barbell Extension|Overhead Barbell Triceps Extension'],
+    ['bench_dip','Bench Dip','Bodyweight','Triceps','Front delts,Chest','Bench Dips|Bench Dip|Bench Triceps Dip'],
+    ['dips','Dips','Bodyweight','Triceps,Lower chest','Front delts','Parallel Dip Bar|Dips|Dip|Parallel Bar Dips|Chest Dips|Triceps Dips'],
+    ['oh_ext_db_stand','Standing Dumbbell Overhead Triceps Extension','Dumbbell','Triceps','','Standing Overhead Dumbbell Extension'],
+  ],
+  Forearms:[
+    ['wrist_curl','Barbell Wrist Curl','Barbell','Forearms','','Seated Barbell Wrist Curl|Wrist Curl (Barbell)|Wrist Curl|Barbell Wrist Curl'],
+    ['wrist_curl_db','Dumbbell Wrist Curl','Dumbbell','Forearms','','Wrist Curl (Dumbbell)|DB Wrist Curl'],
+    ['wrist_ext','Barbell Wrist Extension','Barbell','Forearms','','Seated Barbell Wrist Extension|Reverse Wrist Curl|Wrist Extension'],
+    ['rev_curl','Reverse Barbell Curl','Barbell','Brachialis,Forearms','Biceps','Reverse Curl (Barbell)|Reverse Curl|Reverse Grip Curl|Reverse Grip Barbell Curl'],
+    ['rev_curl_db','Reverse Dumbbell Curl','Dumbbell','Brachialis,Forearms','Biceps','Reverse Curl (Dumbbell)|Reverse Grip Dumbbell Curl'],
+  ],
+  Quads:[
+    ['squat','Squat','Barbell','Quads,Glutes','Adductors,Lower back,Hamstrings','Squat (Barbell)|Back Squat|Barbell Squat|Barbell Back Squat'],
+    ['leg_press','Leg Press','Machine','Quads,Glutes','Adductors,Hamstrings','Machine Leg Press|45 Degree Leg Press'],
+    ['leg_ext','Leg Extension','Machine','Quads','','Leg Extensions|Machine Leg Extension|Quad Extension'],
+    ['lunge','Lunge','Dumbbell','Quads,Glutes','Adductors,Hamstrings','Walking Lunge|Lunges|Dumbbell Lunge|Forward Lunge'],
+    ['hack','Hack Squat','Machine','Quads','Glutes,Adductors','Machine Hack Squat'],
+    ['leg_ext_1','Single Leg Extension','Machine','Quads','','One-Leg Extension|Single-Leg Leg Extension'],
+    ['front_squat','Front Squat','Barbell','Quads','Glutes,Abs,Upper back','Barbell Front Squat'],
+    ['goblet','Dumbbell Goblet Squat','Dumbbell','Quads,Glutes','Adductors,Abs','Goblet Squat'],
+    ['tuck_jump','Tuck Jump','Bodyweight','Quads,Calves','Glutes,Hip flexors','Knee Tuck Jumps|Tuck Jump|Tuck Jumps'],
+    ['burpee','Burpee','Bodyweight','Quads,Chest','Glutes,Front delts,Triceps,Abs','Burpees|Burpee'],
+    ['squat_bw','Bodyweight Squat','Bodyweight','Quads,Glutes','Adductors','Air Squat|Air Squats'],
+    ['bss_bb','Barbell Bulgarian Split Squat','Barbell','Quads,Glutes','Adductors,Hamstrings','Barbell Rear Foot Elevated Split Squat'],
+    ['bss_bw','Bodyweight Bulgarian Split Squat','Bodyweight','Quads,Glutes','Adductors','Bodyweight Split Squat'],
+    ['squat_jump','Jump Squat','Bodyweight','Quads,Glutes','Calves,Hamstrings','Squat Jump|Squat Jumps'],
+    ['wall_sit','Wall Sit','Bodyweight','Quads','Glutes','Wall Squat'],
+    ['step_up','Dumbbell Step Up','Dumbbell','Quads,Glutes','Hamstrings','Step Up|Step-Up|Step Ups'],
+  ],
+  Hamstrings:[
+    ['lying_curl','Lying Leg Curl','Machine','Hamstrings','Calves','Lying Hamstring Curl|Prone Leg Curl'],
+    ['seated_curl','Seated Leg Curl','Machine','Hamstrings','','Seated Hamstring Curl'],
+    ['rdl_db','Dumbbell Stiff-Leg Deadlift','Dumbbell','Hamstrings,Glutes','Lower back','Romanian Deadlift (Dumbbell)|Dumbbell RDL|Dumbbell Romanian Deadlift|Dumbbell Stiff Leg Deadlift'],
+    ['rdl','Barbell Stiff-Leg Deadlift','Barbell','Hamstrings,Glutes','Lower back,Forearms','Romanian Deadlift (Barbell)|Romanian Deadlift|RDL|Stiff-Leg Deadlift|Stiff Leg Deadlift|Barbell RDL|Stiff Legged Deadlift'],
+    ['good_morning','Good Morning','Barbell','Hamstrings,Lower back','Glutes','Barbell Good Morning|Good Mornings'],
+    ['ghr','Glute Ham Raise','Bodyweight','Hamstrings','Glutes,Calves','GHR|Glute-Ham Raise'],
+    ['sl_dl_bw','Single-Leg Deadlift','Bodyweight','Hamstrings,Glutes','Lower back','Single Leg Bodyweight Deadlift|Single Leg RDL|Single-Leg Deadlift'],
+    ['kb_swing','Kettlebell Swing','Kettlebell','Glutes,Hamstrings','Lower back,Front delts,Abs','Kettlebell Swings|Kettlebell Swing|KB Swing'],
+    ['sumo_dl_kb','Kettlebell Sumo Deadlift','Kettlebell','Glutes,Quads,Adductors','Hamstrings,Lower back','Kettlebell Deadlift|KB Sumo Deadlift'],
+  ],
+  Glutes:[
+    ['glute_bridge','Glute Bridge','Bodyweight','Glutes','Hamstrings','Bodyweight Glute Bridge|Glute Bridge|Hip Bridge'],
+    ['bridge_1','Single Leg Glute Bridge','Bodyweight','Glutes','Hamstrings,Abs','One-Leg Glute Bridge'],
+    ['bridge_band','Banded Glute Bridge','Band','Glutes','Abductors,Hamstrings','Band Glute Bridge'],
+    ['hip_thrust_smith','Smith Machine Hip Thrust','Smith machine','Glutes','Hamstrings,Quads','Smith Hip Thrust'],
+    ['hip_thrust','Barbell Hip Thrust','Barbell','Glutes','Hamstrings,Quads','Hip Thrust (Barbell)|Hip Thrust|Hip Thrusts'],
+    ['abd_band','Band Seated Hip Abduction','Band','Abductors,Glutes','','Banded Hip Abduction|Seated Band Abduction'],
+    ['abductor','Seated Hip Abduction Machine','Machine','Abductors,Glutes','','Hip Abduction (Machine)|Hip Abduction|Abductor Machine|Outer Thigh Machine|Hip Abductor'],
+    ['abd_cable','Standing Cable Abduction','Cable','Abductors,Glutes','','Cable Hip Abduction|Cable Abduction'],
+    ['frog_pump','Frog Pump','Bodyweight','Glutes','Adductors','Bodyweight Frog Pump|Frog Pump|Frog Pumps'],
+    ['clams','Banded Clamshell','Band','Abductors,Glutes','','Banded Clams|Clamshell|Clam Shells|Banded Clamshell'],
+    ['side_leg_raise','Side Lying Leg Raise','Bodyweight','Abductors,Glutes','Obliques','Side Leg Raise|Lying Hip Abduction'],
+    ['band_walk','Lateral Mini-Band Walk','Band','Abductors,Glutes','Quads','Lateral Band Walk|Monster Walk|Banded Side Steps'],
+    ['kickback_cable','Standing Cable Kickback','Cable','Glutes','Hamstrings','Cable Glute Kickback|Glute Kickback|Cable Kickback'],
+    ['donkey_kick','Donkey Kick','Bodyweight','Glutes','Hamstrings','Donkey Kicks|Donkey Kick|Quadruped Kickback'],
+    ['fire_hydrant','Fire Hydrant','Bodyweight','Abductors,Glutes','','Fire Hydrants|Fire Hydrant'],
+  ],
+  Calves:[
+    ['calf_seat','Seated Calf Raise','Machine','Calves','','Seated Calf Raises|Seated Calf Machine'],
+    ['calf_stand','Standing Calf Raise','Machine','Calves','','Calf Raise|Standing Calf Raises|Standing Calf Machine'],
+  ],
+  Core:[
+    ['crunch','Crunch','Bodyweight','Abs','','Ab Crunch|Floor Crunch|Crunches'],
+    ['crunch_obl','Oblique Crunch','Bodyweight','Obliques','Abs','Side Crunch|Oblique Crunches'],
+    ['ab_mach','Crunch Machine','Machine','Abs','','Ab Crunch (Machine)|Ab Machine|Machine Crunch|Ab Crunch Machine'],
+    ['cable_crunch','Rope Ab Pulldown','Cable','Abs','Obliques','Cable Crunch|Kneeling Cable Crunch|Rope Crunch'],
+    ['plank','Plank','Bodyweight','Abs','Obliques,Lower back','Front Plank|Forearm Plank'],
+    ['hlr','Hanging Leg Raise','Bodyweight','Abs,Hip flexors','Obliques','Hanging Knee Raise|Leg Raise|Hanging Leg Raises'],
+    ['rev_crunch','Reverse Crunch','Bodyweight','Abs','Hip flexors','Bent Knee Reverse Crunch|Reverse Crunch|Reverse Crunches'],
+    ['plank_up','Plank Up-Down','Bodyweight','Abs','Triceps,Front delts,Obliques','Plank Get Ups|Plank Up Downs|Up-Down Plank|Commando Plank'],
+    ['bird_dog','Bird Dog','Bodyweight','Lower back,Glutes','Abs','Bird Dogs'],
+    ['knee_raise','Standing Knee Raise','Bodyweight','Hip flexors,Abs','','Standing Knee Raises'],
+  ],
 };
+// No longer in the catalogue. Kept so older logs and routines still read right; they show up once you've used them.
+const RETIRED_EX = {
+  Chest:[['smith_incline','Incline Bench Press (Smith)','Smith machine','Upper chest','Front delts,Triceps','']],
+  Back:[['pendlay','Pendlay Row','Barbell','Upper back,Lats','Rear delts,Biceps,Lower back',''], ['row_chest','Chest-Supported Row','Machine','Upper back','Lats,Rear delts,Biceps',''], ['rack_pull','Rack Pull','Barbell','Upper back,Traps,Lower back','Glutes,Hamstrings,Forearms',''], ['back_ext','Back Extension','Bodyweight','Lower back','Glutes,Hamstrings',''], ['pulldown_bn','Behind-Neck Pulldown','Cable','Lats','Upper back,Biceps,Rear delts','Behind the Neck Lat Pulldown|Behind Neck Pulldown'], ['pullup_bn','Behind the Neck Pull Up','Bodyweight','Lats','Upper back,Rear delts,Biceps','Behind Neck Pull-Up'], ['row_bb_sup','Barbell Bent Over Rows Supinated Grip','Barbell','Lats,Upper back','Biceps,Rear delts,Lower back','Underhand Barbell Row|Reverse Grip Barbell Row|Yates Row'], ['pulldown_rope','Rope Pulldown','Cable','Lats','Upper back,Biceps','Rope Lat Pulldown']],
+  Shoulders:[['arnold','Arnold Press','Dumbbell','Front delts','Side delts,Triceps',''], ['lat_mach','Lateral Raise (Machine)','Machine','Side delts','Traps',''], ['rev_pec','Reverse Pec Deck','Machine','Rear delts','Upper back',''], ['face_pull','Face Pull','Cable','Rear delts','Upper back,Traps',''], ['front_raise_cable_n','One-Arm Low-Pulley Front Raise Neutral Grip','Cable','Front delts','','Neutral Grip Cable Front Raise'], ['ohp_bn_seated','Seated Behind the Neck Barbell Shoulder Press','Barbell','Front delts,Side delts','Triceps,Traps','Seated Behind the Neck Press'], ['ohp_bn','Standing Behind the Neck Barbell Shoulder Press','Barbell','Front delts,Side delts','Triceps,Traps','Behind the Neck Press|Behind the Neck Overhead Press'], ['front_raise_alt','Alternate Dumbbell Front Raise Neutral Grip','Dumbbell','Front delts','','Alternating Front Raise|Neutral Grip Front Raise'], ['front_raise_2h','Two-Handed Dumbbell Front Raise','Dumbbell','Front delts','Upper chest','Two Hand Front Raise']],
+  Biceps:[['bayesian','Bayesian Cable Curl','Cable','Biceps','Forearms',''], ['spider','Spider Curl','Dumbbell','Biceps','Brachialis',''], ['curl_cable_1a','Single-Arm Low Pulley Cable Curl','Cable','Biceps','Forearms','One-Arm Cable Curl|Single Arm Cable Curl'], ['curl_high_cable','Standing High Pulley Cable Curl','Cable','Biceps','','High Cable Curl|Overhead Cable Curl']],
+  Triceps:[['oh_ext_cable','Overhead Triceps Extension (Cable)','Cable','Triceps','',''], ['dip_mach','Triceps Dip (Machine)','Machine','Triceps','Chest,Front delts',''], ['pushdown_1a_sup','Single-Arm Cable Triceps Extension with Supinated Grip','Cable','Triceps','','Single-Arm Reverse Grip Pushdown|One-Arm Underhand Pushdown'], ['rev_pushdown','Reverse Grip Cable Triceps Extension with Barbell','Cable','Triceps','Forearms','Reverse Grip Pushdown|Underhand Pushdown|Reverse Grip Triceps Pushdown']],
+  Quads:[['pendulum','Pendulum Squat','Machine','Quads','Glutes',''], ['smith_squat','Squat (Smith)','Smith machine','Quads,Glutes','Adductors',''], ['bss','Bulgarian Split Squat','Dumbbell','Quads,Glutes','Adductors,Hamstrings',''], ['squat_bw15','1.5 Rep Bodyweight Squats','Bodyweight','Quads,Glutes','Adductors','One and a Half Squat'], ['squat_mb','Medicine Ball Squat','Other','Quads,Glutes','Abs,Adductors',''], ['squat_band','Mini-Band Air Squat','Band','Quads,Glutes','Abductors','Banded Squat|Band Squat'], ['squat_reach','Squat Sit to Reach','Bodyweight','Quads,Glutes','Adductors,Upper back',''], ['duck_walk','Duck Walk','Bodyweight','Quads,Glutes','Adductors','']],
+  Hamstrings:[['nordic','Nordic Curl','Bodyweight','Hamstrings','',''], ['dl_mb','Medicine Ball Deadlift','Other','Hamstrings,Glutes','Lower back','']],
+  Glutes:[['adductor','Hip Adduction (Machine)','Machine','Adductors','',''], ['frog_pump_smith','Smith Machine Frog Pump','Smith machine','Glutes','Adductors','Smith Frog Pump'], ['side_hip_raise','Side Lying Hip Raise','Bodyweight','Obliques,Abductors','Glutes','Side Plank Hip Raise|Side Plank Dips']],
+  Calves:[['calf_press','Calf Press (Leg Press)','Machine','Calves','','']],
+  Core:[['ab_wheel','Ab Wheel Rollout','Bodyweight','Abs','Lats,Obliques',''], ['decline_situp','Decline Sit Up','Bodyweight','Abs','Hip flexors',''], ['russian','Russian Twist','Bodyweight','Obliques','Abs',''], ['groiner','Groiners','Bodyweight','Hip flexors,Adductors','Abs','Groiner'], ['crunch_long','Long Arm Crunch','Bodyweight','Abs','','Long-Arm Crunch']],
+};
+const EX_MERGE = {'sldl': 'rdl'};
 const LIB = {};
-const MUSCLES = Object.keys(LIB_RAW);
-for (const m of MUSCLES) for (const [id,name] of LIB_RAW[m]) LIB[id] = {id,name,muscle:m};
-// muscles worked: id -> [primary, secondary] (comma-separated)
+const MUSCLES = Object.keys(CAT);
+const splitList = v => v ? v.split(',').filter(Boolean) : [];
+for (const [src, retired] of [[CAT, false], [RETIRED_EX, true]]) for (const [m, rows] of Object.entries(src)) for (const [id, name, eq, p, s2, aka] of rows)
+  LIB[id] = {id, name, muscle:m, eq, p:splitList(p), s:splitList(s2), aka:aka ? aka.split('|') : [], ...(retired ? {retired:true} : {})};
 const MUSCLE_NAMES = ['Chest','Upper chest','Lower chest','Front delts','Side delts','Rear delts','Lats','Upper back','Lower back','Traps','Biceps','Brachialis','Triceps','Forearms','Abs','Obliques','Hip flexors','Quads','Hamstrings','Glutes','Abductors','Adductors','Calves'];
-const MW = {
-  bench_bb:['Chest','Front delts,Triceps'], incline_bb:['Upper chest','Front delts,Triceps'], decline_bb:['Lower chest','Triceps,Front delts'],
-  bench_db:['Chest','Front delts,Triceps'], incline_db:['Upper chest','Front delts,Triceps'], smith_incline:['Upper chest','Front delts,Triceps'],
-  press_mach:['Chest','Front delts,Triceps'], incline_mach:['Upper chest','Front delts,Triceps'], fly_db:['Chest','Front delts'], fly_cable:['Chest','Front delts'],
-  pec_deck:['Chest','Front delts'], dips:['Lower chest,Triceps','Front delts'], pushup:['Chest','Front delts,Triceps,Abs'],
-  deadlift:['Glutes,Hamstrings,Lower back','Quads,Traps,Lats,Forearms'], pullup:['Lats','Biceps,Upper back,Rear delts,Forearms'], chinup:['Lats,Biceps','Upper back,Forearms'],
-  pulldown:['Lats','Biceps,Upper back,Rear delts'], pulldown_cg:['Lats','Biceps,Upper back'], row_bb:['Upper back,Lats','Rear delts,Biceps,Lower back'],
-  pendlay:['Upper back,Lats','Rear delts,Biceps,Lower back'], row_db:['Lats,Upper back','Rear delts,Biceps'], row_cable:['Upper back,Lats','Rear delts,Biceps'],
-  row_tbar:['Upper back,Lats','Rear delts,Biceps,Lower back'], row_chest:['Upper back','Lats,Rear delts,Biceps'], row_mach:['Upper back,Lats','Rear delts,Biceps'],
-  pullover_cable:['Lats','Triceps'], rack_pull:['Upper back,Traps,Lower back','Glutes,Hamstrings,Forearms'], back_ext:['Lower back','Glutes,Hamstrings'],
-  ohp:['Front delts','Side delts,Triceps,Upper chest'], press_db:['Front delts','Side delts,Triceps'], press_smach:['Front delts','Side delts,Triceps'], arnold:['Front delts','Side delts,Triceps'],
-  lat_db:['Side delts','Traps'], lat_cable:['Side delts','Traps'], lat_mach:['Side delts','Traps'], rear_fly:['Rear delts','Upper back'], rev_pec:['Rear delts','Upper back'],
-  face_pull:['Rear delts','Upper back,Traps'], front_raise:['Front delts','Upper chest'], upright:['Side delts,Traps','Front delts,Biceps'],
-  shrug_db:['Traps','Forearms'], shrug_bb:['Traps','Forearms'],
-  curl_bb:['Biceps','Brachialis,Forearms'], curl_ez:['Biceps','Brachialis,Forearms'], curl_db:['Biceps','Brachialis,Forearms'], hammer:['Brachialis,Biceps','Forearms'],
-  preacher:['Biceps','Brachialis'], preacher_db:['Biceps','Brachialis'], incline_curl:['Biceps','Forearms'], curl_cable:['Biceps','Forearms'], bayesian:['Biceps','Forearms'], spider:['Biceps','Brachialis'], conc:['Biceps','Brachialis'],
-  pushdown:['Triceps',''], rope_pd:['Triceps',''], oh_ext_cable:['Triceps',''], oh_ext_db:['Triceps',''], skull:['Triceps',''], skull_db:['Triceps',''], cgbp:['Triceps,Chest','Front delts'],
-  dip_mach:['Triceps','Chest,Front delts'], kickback:['Triceps',''], wrist_curl:['Forearms',''], wrist_curl_db:['Forearms',''], rev_curl:['Forearms,Brachialis','Biceps'], rev_curl_db:['Forearms,Brachialis','Biceps'],
-  squat:['Quads,Glutes','Adductors,Hamstrings,Lower back,Abs'], front_squat:['Quads','Glutes,Upper back,Abs'], hack:['Quads','Glutes'], leg_press:['Quads,Glutes','Hamstrings,Adductors'],
-  pendulum:['Quads','Glutes'], smith_squat:['Quads,Glutes','Adductors'], goblet:['Quads,Glutes','Adductors,Abs'], bss:['Quads,Glutes','Adductors,Hamstrings'],
-  lunge:['Quads,Glutes','Hamstrings,Adductors'], step_up:['Quads,Glutes','Hamstrings'], leg_ext:['Quads',''],
-  rdl:['Hamstrings,Glutes','Lower back,Forearms'], rdl_db:['Hamstrings,Glutes','Lower back,Forearms'], sldl:['Hamstrings','Glutes,Lower back'],
-  lying_curl:['Hamstrings','Calves'], seated_curl:['Hamstrings','Calves'], good_morning:['Hamstrings,Lower back','Glutes'], nordic:['Hamstrings',''],
-  hip_thrust:['Glutes','Hamstrings,Adductors'], glute_bridge:['Glutes','Hamstrings'], abductor:['Abductors','Glutes'], kickback_cable:['Glutes','Hamstrings'], adductor:['Adductors',''],
-  calf_stand:['Calves',''], calf_seat:['Calves',''], calf_press:['Calves',''],
-  hlr:['Abs','Hip flexors,Obliques'], cable_crunch:['Abs','Obliques'], ab_wheel:['Abs','Lats,Obliques'], ab_mach:['Abs',''], crunch:['Abs',''], decline_situp:['Abs','Hip flexors'], russian:['Obliques','Abs'],
-};
-const EQUIPMENT = ['Barbell','Dumbbell','EZ bar','Cable','Machine','Smith machine','Bodyweight','Other'];
-const EQ = {
-  Barbell:'bench_bb incline_bb decline_bb deadlift row_bb pendlay rack_pull ohp upright shrug_bb curl_bb cgbp wrist_curl rev_curl squat front_squat rdl sldl good_morning hip_thrust',
-  Dumbbell:'bench_db incline_db fly_db row_db press_db arnold lat_db rear_fly front_raise shrug_db curl_db hammer incline_curl spider conc oh_ext_db kickback rdl_db preacher_db skull_db wrist_curl_db rev_curl_db goblet bss lunge step_up',
-  'EZ bar':'curl_ez preacher skull',
-  Cable:'fly_cable pulldown pulldown_cg row_cable pullover_cable lat_cable face_pull curl_cable bayesian pushdown rope_pd oh_ext_cable kickback_cable cable_crunch',
-  Machine:'press_mach incline_mach pec_deck row_chest row_mach row_tbar press_smach lat_mach rev_pec dip_mach hack leg_press pendulum leg_ext lying_curl seated_curl abductor adductor calf_stand calf_seat calf_press ab_mach',
-  'Smith machine':'smith_incline smith_squat',
-  Bodyweight:'dips pushup pullup chinup back_ext nordic glute_bridge hlr ab_wheel crunch decline_situp russian',
-};
-for (const [eq, ids] of Object.entries(EQ)) for (const id of ids.split(' ')) if (LIB[id]) LIB[id].eq = eq;
-for (const [id, [p, s2]] of Object.entries(MW)) if (LIB[id]) { LIB[id].p = p.split(',').filter(Boolean); LIB[id].s = s2.split(',').filter(Boolean); }
+const EQUIPMENT = ['Barbell','Dumbbell','EZ bar','Cable','Machine','Smith machine','Kettlebell','Band','Bodyweight','Other'];
 
 const TEMPLATES = [
-  {name:'Push', ex:[['bench_bb',4],['incline_db',3],['press_db',3],['lat_db',4],['pushdown',3],['oh_ext_cable',3]]},
-  {name:'Pull', ex:[['pullup',3],['row_bb',4],['pulldown',3],['row_cable',3],['face_pull',3],['curl_ez',3],['hammer',3]]},
+  {name:'Push', ex:[['bench_bb',4],['incline_db',3],['press_db',3],['lat_db',4],['pushdown',3],['oh_ext_db',3]]},
+  {name:'Pull', ex:[['pullup',3],['row_bb',4],['pulldown',3],['row_cable',3],['rear_fly_cable',3],['curl_ez',3],['hammer',3]]},
   {name:'Legs', ex:[['squat',4],['rdl',3],['leg_press',3],['lying_curl',3],['leg_ext',3],['calf_stand',4]]},
   {name:'Upper', ex:[['bench_bb',4],['row_bb',4],['press_db',3],['pulldown',3],['lat_db',3],['curl_db',3],['pushdown',3]]},
   {name:'Lower', ex:[['squat',4],['rdl',3],['leg_press',3],['seated_curl',3],['leg_ext',3],['calf_seat',4],['hlr',3]]},
-  {name:'Shoulders & Arms', ex:[['press_db',3],['lat_cable',4],['rev_pec',3],['curl_ez',3],['oh_ext_cable',3],['incline_curl',3],['rope_pd',3]]},
+  {name:'Shoulders & Arms', ex:[['press_db',3],['lat_cable',4],['rear_fly',3],['curl_ez',3],['oh_ext_db',3],['incline_curl',3],['rope_pd',3]]},
   {name:'Full Body', ex:[['squat',3],['bench_bb',3],['row_cable',3],['ohp',3],['rdl',3],['curl_db',2],['pushdown',2]]},
 ];
 
@@ -733,7 +882,7 @@ const fmtClock = ms => { const t = Math.max(0, Math.floor(ms / 1000)); const h =
 const monthKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
 const weekStart = ts => { const d = new Date(ts); d.setHours(0,0,0,0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); };
 // bodyweight moves: share of bodyweight lifted each rep (custom bodyweight exercises count it all)
-const BW_FRAC = {pullup:1, chinup:1, dips:1, pushup:.65};
+const BW_FRAC = {pullup:1, pullup_bn:1, chinup:1, dips:1, pushup:.65};
 const bwFrac = id => BW_FRAC[id] != null ? BW_FRAC[id] : (String(id).startsWith('c_') && exInfo(id).eq === 'Bodyweight' ? 1 : 0);
 const curBW = () => { const L = S.bwLog; return (L && L.length ? L[L.length - 1].kg : +S.settings.bw) || 0; };   // kg, latest weigh-in
 // weigh-in in effect on a day: the latest one on or before it (before your first weigh-in, the first one)
@@ -753,6 +902,97 @@ const musclesOf = id => { const x = exInfo(id); return {p:(x.p && x.p.length) ? 
 const musLine = id => { const m = musclesOf(id); return m.p.join(', ') + (m.s.length ? ' + ' + m.s.join(', ') : ''); };
 const musHTML = id => { const m = musclesOf(id); return `<span class="mus-p">${esc(m.p.join(', '))}</span>${m.s.length ? `<span class="mus-s"> + ${esc(m.s.join(', '))}</span>` : ''}`; };
 const exName = id => exInfo(id).name;
+/* ---------- movements: one lift, several kinds of equipment ----------
+   Picking a movement asks which equipment you used. Each equipment is still its own exercise with its own
+   history and records; the movement only groups them when you're choosing. */
+const MOVES = [
+  ['flat_press', 'Flat Chest Press', {Barbell:'bench_bb', Dumbbell:'bench_db', Machine:'press_mach', 'Iso-Lateral':'press_iso'}],
+  ['incline_press', 'Incline Chest Press', {Barbell:'incline_bb', Dumbbell:'incline_db', Machine:'incline_mach', 'Iso-Lateral':'incline_iso', Smith:'smith_incline'}],
+  ['decline_press', 'Decline Chest Press', {Barbell:'decline_bb', Dumbbell:'decline_db', Machine:'decline_mach', 'Iso-Lateral':'decline_iso'}],
+  ['chest_fly', 'Chest Fly', {Dumbbell:'fly_db', Cable:'fly_cable', Machine:'pec_deck'}],
+  ['shoulder_press', 'Shoulder Press', {Barbell:'ohp', Dumbbell:'press_db', Machine:'press_smach', 'Iso-Lateral':'press_iso_sh', Smith:'press_smith'}],
+  ['seated_row', 'Seated Row', {Cable:'row_cable', Machine:'row_mach', 'Iso-Lateral':'row_iso'}],
+  ['lat_pulldown', 'Lat Pulldown', {Cable:'pulldown', Machine:'pulldown_mach', 'Iso-Lateral':'pulldown_iso'}],
+  ['push_press', 'Push Press', {Barbell:'push_press_bb', Dumbbell:'push_press_db'}],
+  ['lateral_raise', 'Lateral Raise', {Dumbbell:'lat_db', Cable:'lat_cable', Machine:'lat_mach'}],
+  ['front_raise_m', 'Front Raise', {Dumbbell:'front_raise', Barbell:'front_raise_bb', Cable:'front_raise_cable'}],
+  ['rear_delt_fly', 'Rear Delt Fly', {Dumbbell:'rear_fly', Cable:'rear_fly_cable', Machine:'rev_pec'}],
+  ['shrug_m', 'Shrug', {Barbell:'shrug_bb', Dumbbell:'shrug_db'}],
+  ['biceps_curl', 'Biceps Curl', {Barbell:'curl_bb', 'EZ bar':'curl_ez', Dumbbell:'curl_db', Cable:'curl_cable'}],
+  ['preacher_m', 'Preacher Curl', {'EZ bar':'preacher', Dumbbell:'preacher_db'}],
+  ['wrist_curl_m', 'Wrist Curl', {Barbell:'wrist_curl', Dumbbell:'wrist_curl_db'}],
+  ['reverse_curl_m', 'Reverse Curl', {Barbell:'rev_curl', Dumbbell:'rev_curl_db'}],
+  ['pushdown_m', 'Triceps Pushdown', {Bar:'pushdown', Rope:'rope_pd', 'Single-arm':'pushdown_1a'}],
+  ['lying_ext_m', 'Lying Triceps Extension', {'EZ bar':'skull', Dumbbell:'skull_db'}],
+  ['overhead_ext_m', 'Overhead Triceps Extension', {Dumbbell:'oh_ext_db', Barbell:'french_press', Cable:'oh_ext_cable'}],
+  ['bent_row', 'Bent Over Row', {Barbell:'row_bb', Dumbbell:'row_db2', 'T-Bar':'row_tbar'}],
+  ['pullover_m', 'Pullover', {Dumbbell:'pullover_db', Barbell:'pullover_bb'}],
+  ['deadlift_m', 'Deadlift', {Barbell:'deadlift', Dumbbell:'dl_db', 'Trap bar':'trapbar_dl'}],
+  ['sumo_m', 'Sumo Deadlift', {Barbell:'sumo_dl', Kettlebell:'sumo_dl_kb'}],
+  ['stiff_leg_m', 'Stiff-Leg Deadlift', {Barbell:'rdl', Dumbbell:'rdl_db'}],
+  ['squat_m', 'Squat', {Barbell:'squat', Smith:'smith_squat', Bodyweight:'squat_bw', Band:'squat_band', 'Medicine ball':'squat_mb'}],
+  ['bss_m', 'Bulgarian Split Squat', {Barbell:'bss_bb', Dumbbell:'bss', Bodyweight:'bss_bw'}],
+  ['hip_thrust_m', 'Hip Thrust', {Barbell:'hip_thrust', Smith:'hip_thrust_smith'}],
+  ['glute_bridge_m', 'Glute Bridge', {Bodyweight:'glute_bridge', Band:'bridge_band'}],
+  ['frog_pump_m', 'Frog Pump', {Bodyweight:'frog_pump', Smith:'frog_pump_smith'}],
+  ['abduction_m', 'Hip Abduction', {Machine:'abductor', Cable:'abd_cable', Band:'abd_band'}],
+  ['crunch_m', 'Crunch', {Bodyweight:'crunch', Machine:'ab_mach', Cable:'cable_crunch'}],
+];
+// done standing or seated: each position is its own exercise; the first listed is the usual one
+const POS = [
+  ['ohp', 'ohp_seated', 'Standing'], ['press_db_stand', 'press_db', 'Seated'], ['curl_db', 'curl_db_seat', 'Standing'], ['hammer', 'hammer_seat', 'Standing'],
+  ['lat_db', 'lat_db_seat', 'Standing'], ['oh_ext_db_stand', 'oh_ext_db', 'Seated'], ['calf_stand', 'calf_seat', 'Standing'],
+];
+const POS_OF = {};
+for (const [st, se, d] of POS) if (LIB[st] && LIB[se]) { const o = {st, se, def:d === 'Standing' ? st : se}; o.alt = o.def === st ? se : st; POS_OF[st] = {...o, pos:'Standing'}; POS_OF[se] = {...o, pos:'Seated'}; }
+const posPair = id => POS_OF[id] ? [POS_OF[id].st, POS_OF[id].se] : [id];
+const isPosAlt = id => POS_OF[id] && POS_OF[id].alt === id;
+// for a pair: the position you did most recently (or the usual one)
+function posPick(id) { const o = POS_OF[id]; if (!o) return id; for (const w of S.workouts) for (const e of w.ex) if (e.exId === o.st || e.exId === o.se) return e.exId; return o.def; }
+// same equipment in the position you're already in, when there is one
+const samePos = (v, cur) => POS_OF[cur] && POS_OF[v] ? (POS_OF[cur].pos === 'Standing' ? POS_OF[v].st : POS_OF[v].se) : v;
+const MOVE = {}, MOVE_OF = {};
+for (const [id, name, v] of MOVES) { MOVE[id] = {id, name, v:Object.entries(v).filter(([, ex]) => LIB[ex])}; for (const [eq, ex] of MOVE[id].v) for (const x of posPair(ex)) MOVE_OF[x] = {move:id, eq}; }
+// variants you can pick: catalogue ones, plus retired ones you've used, plus whatever is already in front of you
+const moveVariants = (mid, keep) => { const u = usedIds(); return MOVE[mid].v.filter(([, ex]) => !LIB[ex].retired || posPair(ex).some(x => u.has(x) || x === keep)); };
+// turn a list of exercises into rows: movements grouped (one row each), everything else as-is
+function groupMoves(list, poolIds) {
+  const rows = [], seen = {};
+  for (const x of list) {
+    const mo = MOVE_OF[x.id];
+    if (!mo) { rows.push({x, name:x.name}); continue; }
+    if (!seen[mo.move]) { const vars = MOVE[mo.move].v.filter(([, ex]) => poolIds.has(ex)); seen[mo.move] = {m:MOVE[mo.move], vars, hits:[], name:MOVE[mo.move].name}; rows.push(seen[mo.move]); }
+    seen[mo.move].hits.push(x.id);
+  }
+  return rows.sort((a, b) => a.name.localeCompare(b.name));
+}
+// name matching: case, punctuation and spacing don't matter ("pull-up" = "pullup" = "Pull Up")
+const normEx = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const compactEx = t => normEx(t).replace(/ /g, '');
+const exNames = x => [x.name, ...(x.aka || [])];
+// does every search word appear in the name, an also-called name, or the muscles? `via` = the other name that matched
+function exMatch(x, q, extra = '') {
+  const terms = normEx(q).split(' ').filter(Boolean); if (!terms.length) return {ok:true};
+  const hit = txt => { const h = normEx(txt + ' ' + extra), c = h.replace(/ /g, ''); return terms.every(t => h.includes(t) || c.includes(t)); };
+  if (hit(x.name)) return {ok:true};
+  const via = (x.aka || []).find(a => hit(a) && !/\(/.test(a)) || (x.aka || []).find(a => hit(a));
+  return via ? {ok:true, via} : {ok:false};
+}
+// catalogue exercise this name already belongs to (exact name or also-called, ignoring case/spacing)
+function catalogueHit(name) {
+  const c = compactEx(name); if (!c) return null;
+  return Object.values(LIB).find(x => !x.retired && exNames(x).some(n => compactEx(n) === c)) || null;
+}
+// retired exercises only show up if you've used them (logs, routines or the current workout)
+function usedIds() {
+  const u = new Set();
+  for (const w of S.workouts) for (const e of w.ex) u.add(e.exId);
+  for (const r of S.routines) for (const e of r.ex) u.add(e.exId);
+  if (S.active) for (const e of S.active.ex) u.add(e.exId);
+  return u;
+}
+const customGroup = c => MUSCLES.includes(c.muscle) ? c.muscle : c.muscle === 'Adductors' ? 'Glutes' : 'Other';
+function browseLib() { const u = usedIds(); return Object.values(LIB).filter(x => (!x.retired || u.has(x.id)) && !isPosAlt(x.id)); }
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 /* ---------- state ---------- */
@@ -776,6 +1016,7 @@ function normalize(d) {
     if (+d.settings.bw > 0 && +d.settings.bw < 400) n.settings.bw = +d.settings.bw;
     if (d.settings.bwAsked) n.settings.bwAsked = true;
     if (d.settings.awake === false) n.settings.awake = false;
+    if (Array.isArray(d.settings.dupeKeep)) n.settings.dupeKeep = d.settings.dupeKeep.filter(x => typeof x === 'string').slice(0, 500);
     n.settings.appearance = d.settings.appearance === 'light' || d.settings.appearance === 'dark' ? d.settings.appearance : (OLD_LIGHT[d.settings.theme] ? 'light' : 'dark');
   }
   if (Array.isArray(d.routines)) n.routines = d.routines.filter(r => r && r.id && Array.isArray(r.ex));
@@ -791,7 +1032,18 @@ function normalize(d) {
   if (Array.isArray(d.workouts)) n.workouts = d.workouts.filter(w => w && w.id && Array.isArray(w.ex) && w.start);
   if (d.active && d.active.id && Array.isArray(d.active.ex)) n.active = d.active;
   n.workouts.sort((a,b) => b.start - a.start);
+  remapIds(n, EX_MERGE);
   return n;
+}
+// move every reference from one exercise id to another (logs, routines, current workout, gear changes)
+function remapIds(d, map) {
+  const to = id => map[id] || id; let changed = false;
+  const fix = list => { for (const e of list) if (map[e.exId]) { e.exId = map[e.exId]; changed = true; } };
+  for (const w of d.workouts) fix(w.ex);
+  for (const r of d.routines) fix(r.ex);
+  if (d.active) fix(d.active.ex);
+  for (const k of Object.keys(d.adjust)) if (map[k]) { d.adjust[to(k)] = [...(d.adjust[to(k)] || []), ...d.adjust[k]]; delete d.adjust[k]; changed = true; }
+  return changed;
 }
 const hasData = d => d && (d.workouts.length || d.routines.length || d.customExercises.length || d.active);
 
@@ -989,8 +1241,8 @@ function bwModal(first) {
 /* Equipment changes: weights logged on different gear are never rewritten. Each exercise can have
    breaks {at, mode}: 'fresh' = sessions before `at` stop counting toward PRs/overload/records;
    'scale' = sessions before `at` are read as weight × ratio so they line up with the new gear. */
-const MACHINE_RE = /machine|cable|pulldown|leg press|hack|pec deck|pendulum|smith|leg extension|leg curl|calf|crossover|face pull|pushdown|kickback|straight-arm|hip (ab|ad)duction|t-bar|chest-supported|assisted|row \(machine\)/i;
-const isMachine = id => MACHINE_RE.test(exName(id));
+const MACHINE_RE = /machine|cable|pulley|pressdown|pulldown|leg press|hack|pec deck|pendulum|smith|leg extension|leg curl|calf|crossover|face pull|pushdown|kickback|straight-arm|hip (ab|ad)duction|t-bar|chest-supported|assisted|row \(machine\)/i;
+const isMachine = id => ['Machine', 'Cable', 'Smith machine'].includes(exInfo(id).eq) || MACHINE_RE.test(exName(id));
 const breaksFor = exId => (S.adjust[exId] || []).slice().sort((a,b) => a.at - b.at);
 function adjAt(exId, ts) {
   let f = 1, old = false;
@@ -1335,33 +1587,83 @@ function exUsage() {
   return u;
 }
 function viewExercises() {
+  if (exv.by === 'custom') return viewCustomList();
   const groups = exv.by === 'muscle' ? [...MUSCLES, 'Other'] : EQUIPMENT;
   const all = allExercises();
   const present = groups.filter(g => all.some(x => (exv.by === 'muscle' ? x.muscle : equipOf(x.id)) === g));
   if (exv.filter !== 'All' && !present.includes(exv.filter)) exv.filter = 'All';
   return `<header class="top"><h1 class="h1" style="margin:0">Exercises</h1><button class="btn btn-ghost sm" data-a="exl-new">${ic('plus')}New</button></header>
     <div class="search" style="margin:0 0 10px">${ic('search')}<input id="exSearch" placeholder="Search ${all.length} exercises or muscles" autocomplete="off" value="${esc(exv.q)}"></div>
-    <div class="seg" style="margin-bottom:10px">${[['muscle','By muscle group'],['equipment','By equipment']].map(([k,l]) => `<button class="${exv.by===k?'on':''}" data-a="exl-by" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="seg" style="margin-bottom:10px">${EXL_SEG.map(([k,l]) => `<button class="${exv.by===k?'on':''}" data-a="exl-by" data-k="${k}">${l}</button>`).join('')}</div>
     <div class="chips" style="padding:0 0 10px">${['All', ...present].map(g => `<button class="chip ${exv.filter===g?'on':''}" data-a="exl-filter" data-k="${esc(g)}">${esc(g)}</button>`).join('')}<button class="chip ${exv.done?'on':''}" data-a="exl-done">${ic('check')} Done before</button></div>
-    <div id="exList"></div>`;
+    ${dupBanner()}<div id="exList"></div>`;
+}
+const EXL_SEG = [['muscle','Muscle'],['equipment','Equipment'],['custom','Custom']];
+// your own exercises in one place: tap to edit
+function viewCustomList() {
+  const n = S.customExercises.length;
+  return `<header class="top"><h1 class="h1" style="margin:0">Exercises</h1><button class="btn btn-ghost sm" data-a="exl-new">${ic('plus')}New</button></header>
+    <div class="search" style="margin:0 0 10px">${ic('search')}<input id="exSearch" placeholder="Search your ${n === 1 ? 'custom exercise' : n + ' custom exercises'}" autocomplete="off" value="${esc(exv.q)}"></div>
+    <div class="seg" style="margin-bottom:12px">${EXL_SEG.map(([k,l]) => `<button class="${exv.by===k?'on':''}" data-a="exl-by" data-k="${k}">${l}</button>`).join('')}</div>
+    ${dupBanner()}<div id="exList"></div>`;
+}
+function renderCustomList() {
+  const box = $('#exList'); if (!box) return;
+  const use = exUsage();
+  const list = S.customExercises.map(c => ({...c, muscle:customGroup(c), custom:true})).filter(x => exMatch(x, exv.q, musLine(x.id) + ' ' + equipOf(x.id) + ' ' + x.muscle).ok)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  if (!S.customExercises.length) { box.innerHTML = `<div class="empty"><b>No custom exercises yet</b>Make one for anything that isn’t in the catalogue.<div><button class="btn btn-acc" data-a="exl-new">${ic('plus')}New custom exercise</button></div></div>`; return; }
+  if (!list.length) { box.innerHTML = `<div class="empty"><b>No matches</b></div>`; return; }
+  box.innerHTML = `<div class="list exl">${list.map(x => { const u = use[x.id];
+    return `<button class="exr" data-a="custom-edit" data-id="${esc(x.id)}"><span class="exr-l"><b>${esc(x.name)}</b><small class="ex-mus">${musHTML(x.id)}</small></span>
+      <span class="exr-r"><span class="tag">${esc(equipOf(x.id))}</span><small>${u ? `${u.n}× · ${fmtShort(u.last)}` : 'Not logged yet'}</small></span></button>`; }).join('')}</div>`;
+}
+// your custom exercises that are really a catalogue exercise under another name
+const customDupes = () => S.customExercises.filter(c => !(S.settings.dupeKeep || []).includes(c.id)).map(c => ({c, x:catalogueHit(c.name)})).filter(d => d.x);
+function dupBanner() {
+  const d = customDupes(); if (!d.length) return '';
+  return `<div class="card dupes"><b>Same exercise, different name</b><small>Merge to keep one history for each, or tap ✕ to keep yours separate.</small>
+    ${d.map(({c, x}) => `<div class="dupe"><span><b>${esc(c.name)}</b> <span class="faint">(yours)</span> → <b>${esc(x.name)}</b></span><span class="dupe-b"><button class="btn btn-line sm" data-a="dupe-merge" data-id="${esc(c.id)}">Merge</button><button class="icon-btn" data-a="dupe-keep" data-id="${esc(c.id)}" aria-label="Keep ${esc(c.name)} separate">${ic('x')}</button></span></div>`).join('')}</div>`;
+}
+function mergeCustomInto(fromId, toId) {
+  const snap = {workouts:clone(S.workouts), routines:clone(S.routines), customExercises:clone(S.customExercises), active:clone(S.active), adjust:clone(S.adjust)};
+  const from = exName(fromId), to = exName(toId);
+  const months = new Set(S.workouts.filter(w => w.ex.some(e => e.exId === fromId)).map(w => 'log-' + monthKey(w.start)));
+  remapIds(S, {[fromId]:toId});
+  S.customExercises = S.customExercises.filter(x => x.id !== fromId);
+  if (progEx === fromId) progEx = toId;
+  markDirty('profile', 'active', ...months); renderAll();
+  toastUndo(`${from} merged into ${to}`, () => {
+    Object.assign(S, snap); if (progEx === toId) progEx = fromId;
+    markDirty('profile', 'active', ...months); renderAll(); toast('Merge undone');
+  });
 }
 function allExercises() {
-  return [...Object.values(LIB), ...S.customExercises.map(c => ({...c, muscle:MUSCLES.includes(c.muscle) ? c.muscle : 'Other', custom:true}))];
+  return [...browseLib(), ...S.customExercises.map(c => ({...c, muscle:customGroup(c), custom:true}))];
 }
 function renderExList() {
+  if (exv.by === 'custom') return renderCustomList();
   const box = $('#exList'); if (!box) return;
   const use = exUsage(), q = exv.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const key = x => exv.by === 'muscle' ? x.muscle : equipOf(x.id);
   const groups = exv.by === 'muscle' ? [...MUSCLES, 'Other'] : EQUIPMENT;
-  const list = allExercises().filter(x => (exv.filter === 'All' || key(x) === exv.filter) && (!exv.done || use[x.id])
-    && q.every(t => (x.name + ' ' + musLine(x.id) + ' ' + equipOf(x.id) + ' ' + x.muscle).toLowerCase().includes(t)));
+  const via = {}, poolIds = new Set(allExercises().filter(x => !exv.done || use[x.id]).map(x => x.id));
+  const list = allExercises().filter(x => { if (!((exv.filter === 'All' || key(x) === exv.filter) && (!exv.done || use[x.id]))) return false;
+    const m = exMatch(x, exv.q, musLine(x.id) + ' ' + equipOf(x.id) + ' ' + x.muscle); if (m.via) via[x.id] = m.via; return m.ok; });
   if (!list.length) { box.innerHTML = `<div class="empty"><b>No matches</b>${exv.q ? `<button class="btn btn-ghost" data-a="exl-new">Create “${esc(exv.q)}”</button>` : ''}</div>`; return; }
   box.innerHTML = groups.map(g => {
     const items = list.filter(x => key(x) === g).sort((a,b) => a.name.localeCompare(b.name));
     if (!items.length) return '';
-    return `<div class="exg"><div class="mhead">${esc(g)} <span class="faint">· ${items.length}</span></div><div class="list exl">${items.map(x => {
+    const rows = exv.by === 'muscle' ? groupMoves(items, poolIds) : items.map(x => ({x, name:x.name}));
+    return `<div class="exg"><div class="mhead">${esc(g)} <span class="faint">· ${rows.length}</span></div><div class="list exl">${rows.map(r => {
+      if (r.m) { const ids = r.vars.flatMap(([, id]) => posPair(id)), n = ids.reduce((a, id) => a + (use[id] ? use[id].n : 0), 0), lastT = Math.max(0, ...ids.map(id => use[id] ? use[id].last : 0));
+        const named = normEx(r.name).includes(normEx(exv.q)), hitNames = exv.q && !named ? r.hits.map(id => exName(id)) : [];
+        return `<div class="exr exr-move"><span class="exr-l"><b>${esc(r.name)}</b>${hitNames.length ? `<em class="aka">${esc(hitNames.join(' · '))}</em>` : ''}<small class="ex-mus">${musHTML(r.vars[0][1])}</small>
+          <span class="eq-chips">${r.vars.map(([eq, id]) => `<button class="eqc ${posPair(id).some(x => use[x]) ? 'used' : ''} ${exv.q && !named && posPair(id).some(x => r.hits.includes(x)) ? 'hit' : ''}" data-a="ex-info" data-id="${esc(id)}">${esc(eq)}</button>`).join('')}</span></span>
+          <span class="exr-r">${n ? `<small>${n}× · ${fmtShort(lastT)}</small>` : ''}</span></div>`; }
+      const x = r.x;
       const u = use[x.id], tag = exv.by === 'muscle' ? equipOf(x.id) : x.muscle;
-      return `<button class="exr" data-a="ex-info" data-id="${esc(x.id)}"><span class="exr-l"><b>${esc(x.name)}</b><small class="ex-mus">${musHTML(x.id)}</small></span>
+      return `<button class="exr" data-a="ex-info" data-id="${esc(x.id)}"><span class="exr-l"><b>${esc(x.name)}</b>${via[x.id] ? `<em class="aka">aka ${esc(via[x.id])}</em>` : ''}<small class="ex-mus">${musHTML(x.id)}</small></span>
         <span class="exr-r"><span class="tag">${esc(tag)}</span>${x.custom ? '<span class="tag">Custom</span>' : ''}${u ? `<small>${u.n}× · ${fmtShort(u.last)}</small>` : ''}</span></button>`;
     }).join('')}</div></div>`;
   }).join('');
@@ -1732,7 +2034,8 @@ function exCard(e, i) {
     </div>`;
   }).join('');
   return `<section class="ex" data-card="${i}">
-    <div class="ex-head"><div><button class="ex-name" data-a="ex-info" data-id="${esc(e.exId)}">${esc(exName(e.exId))}</button><div class="ex-mus">${musHTML(e.exId)}</div>${rec ? `<div class="ex-best">${ic('trophy')}<span>Record <b>${fmtSet(rec.s)}</b>${rec.e1 > 0 ? ` · ${fmtW(rec.e1)} ${unit()} e1RM` : ''} · ${fmtShort(rec.ts)}</span></div>` : ''}${bwFrac(e.exId) && !bwNow ? `<button class="ex-bw" data-a="bw-edit">Add your bodyweight so these sets count</button>` : ''}</div>
+    <div class="ex-head"><div><button class="ex-name" data-a="ex-info" data-id="${esc(e.exId)}">${esc(exName(e.exId))}</button><div class="ex-mus">${musHTML(e.exId)}</div>${MOVE_OF[e.exId] ? `<div class="eq-chips ex-eq">${moveVariants(MOVE_OF[e.exId].move, e.exId).map(([eq, v]) => { const on = posPair(v).includes(e.exId), id = on ? e.exId : samePos(v, e.exId);
+      return `<button class="eqc ${on ? 'on' : ''}" data-a="ex-variant" data-ei="${i}" data-id="${esc(id)}" aria-pressed="${on}">${esc(eq)}</button>`; }).join('')}</div>` : ''}${POS_OF[e.exId] ? `<div class="pos-tog" role="group" aria-label="Position">${[['Standing', POS_OF[e.exId].st], ['Seated', POS_OF[e.exId].se]].map(([l, id]) => `<button class="${id === e.exId ? 'on' : ''}" data-a="ex-variant" data-ei="${i}" data-id="${esc(id)}" aria-pressed="${id === e.exId}">${l}</button>`).join('')}</div>` : ''}${rec ? `<div class="ex-best">${ic('trophy')}<span>Record <b>${fmtSet(rec.s)}</b>${rec.e1 > 0 ? ` · ${fmtW(rec.e1)} ${unit()} e1RM` : ''} · ${fmtShort(rec.ts)}</span></div>` : ''}${bwFrac(e.exId) && !bwNow ? `<button class="ex-bw" data-a="bw-edit">Add your bodyweight so these sets count</button>` : ''}</div>
       <button class="icon-btn" data-a="ex-menu" data-ei="${i}" aria-label="Exercise options">${ic('dots')}</button></div>
     ${e.note ? `<div class="ex-note">${esc(e.note)}</div>` : ''}
     <div class="set-row hdr"><span>Set</span><span>Previous</span><span>${isBW ? '+' + unit() : unit()}</span><span>Reps</span><span>${ic('check')}</span></div>
@@ -1965,23 +2268,34 @@ function renderPicker() {
   renderPkList();
 }
 function pkPool() {
-  const all = [...Object.values(LIB), ...S.customExercises.map(c => ({...c, muscle:MUSCLES.includes(c.muscle) ? c.muscle : 'Other', custom:true}))];
+  const all = [...browseLib(), ...S.customExercises.map(c => ({...c, muscle:customGroup(c), custom:true}))];
   return pk.only ? pk.only.map(id => all.find(x => x.id === id) || {...exInfo(id), muscle:'Other'}) : all;
 }
+// the equipment you picked most recently for each movement
+function lastUsedVariant() { const o = {}; for (const w of S.workouts) for (const e of w.ex) { const mo = MOVE_OF[e.exId]; if (mo && !o[mo.move]) o[mo.move] = e.exId; } return o; }
 function renderPkList() {
   const all = pkPool();
   const q = pk.q.trim().toLowerCase();
   const terms = q.split(/\s+/).filter(Boolean);
-  let list = all.filter(x => (pk.mus === 'All' || x.muscle === pk.mus) && terms.every(t => (x.name + ' ' + x.muscle + ' ' + musLine(x.id)).toLowerCase().includes(t)));
+  const via = {};
+  let list = all.filter(x => { if (!(pk.mus === 'All' || x.muscle === pk.mus)) return false; const m = exMatch(x, q, x.muscle + ' ' + musLine(x.id)); if (m.via) via[x.id] = m.via; return m.ok; });
   list.sort((a,b) => a.name.localeCompare(b.name));
-  const item = x => { const st = pk.meta ? pk.meta(x.id) : null; return `<button class="pk-item ${pk.sel.includes(x.id)?'on':''}" data-a="pk-toggle" data-id="${esc(x.id)}"><span><b>${esc(x.name)}</b><small class="${st ? 'st-' + st.cls : ''}">${st ? esc(musclesOf(x.id).p.join(', ')) + ' · ' + esc(st.text) : esc(musLine(x.id)) + (x.custom ? ' · custom' : '')}</small></span><span class="tick">${ic('check')}</span></button>`; };
+  const poolIds = new Set(all.map(x => x.id)), last = lastUsedVariant();
+  const moveItem = r => { const on = r.vars.some(([, id]) => pk.sel.includes(id)), named = normEx(r.name).includes(normEx(q));
+    const hitNames = q && !named ? r.hits.map(id => exName(id)) : [];
+    const dflt = last[r.m.id] || posPick(r.vars[0][1]);
+    return `<div class="pk-item pk-move ${on ? 'on' : ''}" data-a="pk-move" data-id="${esc(dflt)}" data-move="${r.m.id}" role="button" tabindex="0"><span><b>${esc(r.name)}</b>${hitNames.length ? `<em class="aka">${esc(hitNames.join(' · '))}</em>` : ''}<small>${esc(musLine(r.vars[0][1]))}</small>
+      <span class="eq-chips">${r.vars.map(([eq, v]) => { const pair = posPair(v), selId = pair.find(x => pk.sel.includes(x)), id = selId || posPick(v);
+        return `<button class="eqc ${selId ? 'on' : ''} ${q && pair.some(x => r.hits.includes(x)) && !named ? 'hit' : ''}" data-a="pk-toggle" data-id="${esc(id)}">${esc(eq)}${POS_OF[id] && id !== POS_OF[id].def ? ` · ${POS_OF[id].pos}` : ''}${pair.includes(last[r.m.id]) ? '<i class="eq-last" title="Last used"></i>' : ''}</button>`; }).join('')}</span></span></div>`; };
+  const item = x0 => { const pid = pk.only ? x0.id : (posPair(x0.id).find(y => pk.sel.includes(y)) || posPick(x0.id)), x = pid === x0.id ? x0 : {...x0, ...exInfo(pid), id:pid};
+    const st = pk.meta ? pk.meta(x.id) : null; return `<button class="pk-item ${pk.sel.includes(x.id)?'on':''}" data-a="pk-toggle" data-id="${esc(x.id)}"><span><b>${esc(x.name)}</b>${via[x.id] ? `<em class="aka">aka ${esc(via[x.id])}</em>` : ''}<small class="${st ? 'st-' + st.cls : ''}">${st ? esc(musclesOf(x.id).p.join(', ')) + ' · ' + esc(st.text) : esc(musLine(x.id)) + (x.custom ? ' · custom' : '')}</small></span><span class="tick">${ic('check')}</span></button>`; };
   let html = '';
   if (!q && pk.mus === 'All') {
     const recent = []; for (const w of S.workouts) for (const e of w.ex) if (!recent.includes(e.exId) && recent.length < 8) recent.push(e.exId);
     const rec = recent.map(id => all.find(x => x.id === id)).filter(Boolean);
     if (rec.length) html += `<div class="pk-group">Recent</div>${rec.map(item).join('')}<div class="pk-group">All exercises</div>`;
   }
-  html += list.length ? list.map(item).join('') : pk.only ? `<div class="empty" style="margin:16px 8px">No logged exercise matches.</div>` : `<div class="empty" style="margin:16px 8px">No match. <button class="link" data-a="pk-new">Create “${esc(pk.q)}”</button></div>`;
+  html += list.length ? groupMoves(list, poolIds).map(r => r.m ? moveItem(r) : item(r.x)).join('') : pk.only ? `<div class="empty" style="margin:16px 8px">No logged exercise matches.</div>` : `<div class="empty" style="margin:16px 8px">No match. <button class="link" data-a="pk-new">Create “${esc(pk.q)}”</button></div>`;
   $('#pkList').innerHTML = html;
 }
 function updatePkAdd() {
@@ -1999,7 +2313,10 @@ function exInfoModal(id) {
   const canAdd = S.active && !S.active.ex.some(e => e.exId === id);
   modal({title:x.name, body:`<div class="mrow"><span class="mlbl">Primary</span><div>${chips(m.p, 'p')}</div></div>
     <div class="mrow"><span class="mlbl">Secondary</span><div>${chips(m.s, 's')}</div></div>
+    ${(x.aka || []).some(a => !/\(/.test(a)) ? `<div class="mrow"><span class="mlbl">Also called</span><div class="aka-list">${esc(x.aka.filter(a => !/\(/.test(a)).slice(0, 5).join(' · '))}</div></div>` : ''}
     <div class="mrow"><span class="mlbl">Equipment</span><div><span class="mchip s">${esc(equipOf(id))}</span></div></div>
+    ${MOVE_OF[id] && moveVariants(MOVE_OF[id].move, id).length > 1 ? `<div class="mrow"><span class="mlbl">${esc(MOVE[MOVE_OF[id].move].name)}</span><div class="eq-chips">${moveVariants(MOVE_OF[id].move, id).map(([eq, v]) => { const on = posPair(v).includes(id), to = samePos(v, id); return `<button class="eqc ${on ? 'on' : ''}" ${on ? 'disabled' : `data-a="ex-info" data-id="${esc(to)}"`}>${esc(eq)}</button>`; }).join('')}</div></div>` : ''}
+    ${POS_OF[id] ? `<div class="mrow"><span class="mlbl">Position</span><div class="eq-chips">${[['Standing', POS_OF[id].st], ['Seated', POS_OF[id].se]].map(([l, v]) => `<button class="eqc ${v === id ? 'on' : ''}" ${v === id ? 'disabled' : `data-a="ex-info" data-id="${esc(v)}"`}>${l}</button>`).join('')}</div></div>` : ''}
     <div class="mrow"><span class="mlbl">Group</span><div><span class="mchip s">${esc(x.muscle)}</span>${isCustom ? '<span class="mchip s">Custom</span>' : ''}</div></div>
     ${u ? `<div class="ex-stats"><div><b>${u.n}</b><span>Sessions</span></div><div><b>${best ? fmtW(best) : '—'}</b><span>Best e1RM</span></div><div><b>${heavy ? fmtW(heavy) : 'BW'}</b><span>Heaviest</span></div><div><b>${fmtShort(u.last)}</b><span>Last done</span></div></div>`
       : '<p class="faint" style="margin-top:12px;font-size:14px">You haven’t logged this one yet.</p>'}`,
@@ -2058,10 +2375,10 @@ function customEditModal(id) {
   modal({title:'Edit exercise', body:`<label class="field"><span>Name</span><input name="name" value="${esc(c.name)}" maxlength="50"></label>
     <div class="eq-pair" style="grid-template-columns:1fr 1fr"><label class="field"><span>Group</span><select name="muscle">${groupOpts}</select></label><label class="field"><span>Equipment</span><select name="eq">${eqOpts}</select></label></div>
     <div class="field"><span>Primary muscles</span>${muscleChips('prim', c.p || [])}</div><div class="field"><span>Secondary muscles</span>${muscleChips('sec', c.s || [])}</div>`,
-    actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc', validate:v => !!v.name.trim(), fn:v => {
+    actions:[{label:'Save', cls:'btn-acc', validate:v => { if (!v.name.trim()) return false; const hit = catalogueHit(v.name); return hit && compactEx(v.name) !== compactEx(c.name) ? `That’s already here as “${hit.name}”` : true; }, fn:v => {
       c.name = v.name.trim(); c.muscle = v.muscle; c.eq = v.eq;
       c.p = v.prim ? v.prim.split(',') : []; c.s = v.sec ? v.sec.split(',').filter(n => !c.p.includes(n)) : [];
-      markDirty('profile'); renderAll(); toast('Exercise saved'); }}]});
+      markDirty('profile'); renderAll(); toast('Exercise saved'); }}, {label:'Delete exercise', cls:'btn-danger-ghost', fn:() => setTimeout(() => confirmDeleteCustom(id), 0)}, {label:'Cancel', cls:'btn-line'}], col:true});
 }
 function customMusclesModal(id) { customEditModal(id); }
 function muscleChips(name, sel) {
@@ -2075,7 +2392,7 @@ function customMusclesModal(id) {
 function newCustomExercise(prefill = '') {
   const opts = [...MUSCLES, 'Other'].map(m => `<option ${m === (pk && pk.mus !== 'All' ? pk.mus : 'Chest') ? 'selected' : ''}>${m}</option>`).join('');
   modal({title:'Custom exercise', body:`<label class="field"><span>Name</span><input name="name" value="${esc(prefill)}" placeholder="e.g. Machine Preacher Curl" maxlength="50"></label><div class="eq-pair" style="grid-template-columns:1fr 1fr"><label class="field"><span>Group</span><select name="muscle">${opts}</select></label><label class="field"><span>Equipment</span><select name="eq">${EQUIPMENT.map(e => `<option ${e === 'Other' ? 'selected' : ''}>${e}</option>`).join('')}</select></label></div><div class="field"><span>Primary muscles (optional)</span>${muscleChips('prim', [])}</div><div class="field"><span>Secondary muscles (optional)</span>${muscleChips('sec', [])}</div>`,
-    actions:[{label:'Cancel'}, {label:'Create', cls:'btn-acc', validate:v => !!v.name.trim(), fn:v => {
+    actions:[{label:'Cancel'}, {label:'Create', cls:'btn-acc', validate:v => { if (!v.name.trim()) return false; const hit = catalogueHit(v.name); return hit ? `That’s already here as “${hit.name}”` : true; }, fn:v => {
       const c = {id:'c_' + uid(), name:v.name.trim(), muscle:v.muscle, eq:v.eq || 'Other'};
       if (v.prim) c.p = v.prim.split(','); if (v.sec) c.s = v.sec.split(',').filter(n => !(c.p || []).includes(n));
       S.customExercises.push(c); markDirty('profile');
@@ -2240,12 +2557,12 @@ function exTokens(name) {
 function matchExercise(name) {
   const lower = String(name).trim().toLowerCase();
   const pool = [...Object.values(LIB), ...S.customExercises];
-  const exact = pool.find(x => x.name.toLowerCase() === lower);
+  const exact = pool.find(x => x.name.toLowerCase() === lower) || pool.find(x => exNames(x).some(n => compactEx(n) === compactEx(name)));
   if (exact) return {id:exact.id, how:'exact'};
   const A = exTokens(name), aEq = A.filter(t => EQUIP.includes(t));
   let best = null, bs = 0;
-  for (const x of pool) {
-    const B = exTokens(x.name), bEq = B.filter(t => EQUIP.includes(t));
+  for (const x of pool) for (const nm of exNames(x)) {
+    const B = exTokens(nm), bEq = B.filter(t => EQUIP.includes(t));
     const inter = A.filter(t => B.includes(t)).length, uni = new Set([...A, ...B]).size;
     let sc = uni ? inter / uni : 0;
     if (aEq.length && bEq.length && !aEq.some(t => bEq.includes(t))) sc *= 0.4;
@@ -2258,7 +2575,7 @@ function matchExercise(name) {
 }
 function guessMuscle(name) {
   const n = name.toLowerCase();
-  const rules = [[/calf|calves/,'Calves'],[/leg curl|hamstring|rdl|romanian|stiff|good morning|nordic/,'Hamstrings'],[/hip thrust|glute|bridge|abduct/,'Glutes'],[/adduct/,'Adductors'],[/squat|leg press|lunge|leg extension|split|step up|hack/,'Quads'],
+  const rules = [[/calf|calves/,'Calves'],[/leg curl|hamstring|rdl|romanian|stiff|good morning|nordic/,'Hamstrings'],[/hip thrust|glute|bridge|abduct/,'Glutes'],[/adduct/,'Glutes'],[/squat|leg press|lunge|leg extension|split|step up|hack/,'Quads'],
     [/tricep|pushdown|skull|kickback|dip/,'Triceps'],[/curl/,'Biceps'],[/shrug/,'Traps'],[/lateral|shoulder|overhead|military|delt|face pull|upright|arnold/,'Shoulders'],[/bench|chest|fly|pec|push ?up|crossover/,'Chest'],
     [/row|pull|lat|deadlift|chin|back/,'Back'],[/ab|crunch|plank|core|oblique|leg raise|sit ?up|twist/,'Core'],[/wrist|forearm|grip/,'Forearms']];
   for (const [re, m] of rules) if (re.test(n)) return m;
@@ -2519,6 +2836,17 @@ const A = {
   },
   'ex-info': el => exInfoModal(el.dataset.id),
   'exl-new': () => newCustomExercise(exv.q.trim()),
+  'dupe-keep': el => { const id = el.dataset.id, c = S.customExercises.find(x => x.id === id); if (!c) return;
+    S.settings.dupeKeep = [...(S.settings.dupeKeep || []), id]; markDirty('profile'); renderView();
+    toastUndo(`Keeping ${c.name} separate`, () => { S.settings.dupeKeep = (S.settings.dupeKeep || []).filter(x => x !== id); markDirty('profile'); renderView(); }); },
+  'custom-edit': el => customEditModal(el.dataset.id),
+  // same movement, different equipment: the sets stay, they just count toward the other exercise
+  'ex-variant': el => { const e = S.active && S.active.ex[+el.dataset.ei]; if (!e || e.exId === el.dataset.id) return;
+    e.exId = el.dataset.id; markDirty('active'); renderWorkout(); },
+  'dupe-merge': el => { const c = S.customExercises.find(x => x.id === el.dataset.id), x = c && catalogueHit(c.name); if (!x) return;
+    const n = S.workouts.reduce((a, w) => a + w.ex.filter(e => e.exId === c.id).length, 0);
+    modal({title:`Merge into ${x.name}?`, body:`<p>${n ? `Your ${plural(n, 'logged session')} of <b>${esc(c.name)}</b> move to <b>${esc(x.name)}</b>, so they share one history and one set of records.` : `<b>${esc(c.name)}</b> is replaced by <b>${esc(x.name)}</b> everywhere it’s used.`} Your custom one is removed.</p>`,
+      actions:[{label:'Cancel'}, {label:'Merge', cls:'btn-acc', fn:() => mergeCustomInto(c.id, x.id)}]}); },
   'exl-by': el => { exv.by = el.dataset.k; exv.filter = 'All'; renderView(); },
   'exl-filter': el => { exv.filter = el.dataset.k; renderView(); },
   'exl-done': () => { exv.done = !exv.done; renderView(); },
@@ -2709,11 +3037,19 @@ const A = {
 
   'pk-close': closePicker,
   'pk-mus': el => { pk.mus = el.dataset.k; renderPicker(); },
+  // tapping a movement's name: picks the equipment you used last (or the first one); tapping again clears it
+  'pk-move': el => {
+    const vars = MOVE[el.dataset.move].v.flatMap(([, id]) => posPair(id)), picked = vars.filter(id => pk.sel.includes(id));
+    if (pk.single) { const cb = pk.cb; closePicker(); cb([el.dataset.id]); return; }
+    if (picked.length) { pk.sel = pk.sel.filter(id => !vars.includes(id)); renderPkList(); updatePkAdd(); return; }
+    A['pk-toggle'](el);
+  },
   'pk-toggle': el => {
     const id = el.dataset.id;
     if (pk.single) { const cb = pk.cb; closePicker(); cb([id]); return; }
     const k = pk.sel.indexOf(id); if (k >= 0) pk.sel.splice(k, 1); else pk.sel.push(id);
-    document.querySelectorAll(`#pkList .pk-item[data-id="${CSS.escape(id)}"]`).forEach(x => x.classList.toggle('on', k < 0));
+    document.querySelectorAll(`#pkList [data-id="${CSS.escape(id)}"]`).forEach(x => x.classList.toggle('on', k < 0));
+    document.querySelectorAll('#pkList .pk-move').forEach(r => r.classList.toggle('on', !!r.querySelector('.eqc.on')));
     updatePkAdd();
   },
   'pk-add': () => { if (!pk.sel.length) return; const ids = pk.sel.slice(), cb = pk.cb; closePicker(); cb(ids); },
