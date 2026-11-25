@@ -442,6 +442,17 @@ button.ex-name{text-align:left;padding:0}
 .dupes small{color:var(--tx3);font-size:13px;margin-bottom:4px}
 .dupe-b{display:flex;align-items:center;gap:2px;flex:none}
 .dupe{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.eq-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.eqc{position:relative;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--s2);font-size:13px;font-weight:700;color:var(--tx2);white-space:nowrap}
+.eqc.used{color:var(--tx)}
+.eqc.hit{border-color:var(--acc-mid);color:var(--tx)}
+.eqc.on{background:var(--acc-bg);border-color:transparent;color:var(--acc-ink)}
+.eqc:disabled{opacity:1}
+.eq-last{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
+.eqc.on .eq-last{background:var(--acc-ink)}
+.ex-eq{margin-top:6px} .ex-eq .eqc{padding:4px 10px;font-size:12px}
+.pk-move{cursor:pointer} .pk-move.on b{color:var(--acc)}
+.exr-move{cursor:default}
 .aka{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--acc);margin-top:1px}
 .aka-list{font-size:14px;color:var(--tx2);line-height:1.4}
 .exr-l{min-width:0;flex:1} .exr-l b{display:block;font-weight:600}
@@ -525,6 +536,7 @@ const CAT = {
     ['bench_db','Dumbbell Bench Press','Dumbbell','Chest','Front delts,Triceps','Bench Press (Dumbbell)|Dumbbell Press|Flat Dumbbell Press|DB Bench Press'],
     ['fly_db','Dumbbell Fly','Dumbbell','Chest','Front delts','Chest Fly (Dumbbell)|Dumbbell Chest Fly|Flat Dumbbell Fly|Dumbbell Flyes|Chest Fly'],
     ['incline_fly_db','Incline Dumbbell Fly','Dumbbell','Upper chest','Front delts','Incline Chest Fly|Incline Fly|Incline Dumbbell Flyes'],
+    ['press_iso','Iso-Lateral Chest Press','Machine','Chest','Front delts,Triceps','Hammer Strength Chest Press|Plate Loaded Chest Press|Iso Lateral Chest Press|Iso-Lateral Bench Press'],
     ['press_mach','Chest Press Machine','Machine','Chest','Front delts,Triceps','Chest Press (Machine)|Machine Chest Press|Seated Chest Press|Machine Press'],
     ['decline_bb','Barbell Declined Bench Press','Barbell','Lower chest','Triceps,Front delts','Decline Bench Press (Barbell)|Decline Bench Press|Decline Barbell Bench Press|Decline Barbell Press'],
     ['decline_db','Dumbbell Declined Bench Press','Dumbbell','Lower chest','Triceps,Front delts','Decline Dumbbell Bench Press|Decline Dumbbell Press'],
@@ -896,6 +908,55 @@ const musclesOf = id => { const x = exInfo(id); return {p:(x.p && x.p.length) ? 
 const musLine = id => { const m = musclesOf(id); return m.p.join(', ') + (m.s.length ? ' + ' + m.s.join(', ') : ''); };
 const musHTML = id => { const m = musclesOf(id); return `<span class="mus-p">${esc(m.p.join(', '))}</span>${m.s.length ? `<span class="mus-s"> + ${esc(m.s.join(', '))}</span>` : ''}`; };
 const exName = id => exInfo(id).name;
+/* ---------- movements: one lift, several kinds of equipment ----------
+   Picking a movement asks which equipment you used. Each equipment is still its own exercise with its own
+   history and records; the movement only groups them when you're choosing. */
+const MOVES = [
+  ['flat_press', 'Flat Chest Press', {Barbell:'bench_bb', Dumbbell:'bench_db', Machine:'press_mach', 'Iso-Lateral':'press_iso'}],
+  ['incline_press', 'Incline Chest Press', {Barbell:'incline_bb', Dumbbell:'incline_db', Smith:'smith_incline', Machine:'incline_mach'}],
+  ['decline_press', 'Decline Chest Press', {Barbell:'decline_bb', Dumbbell:'decline_db'}],
+  ['chest_fly', 'Chest Fly', {Dumbbell:'fly_db', Cable:'fly_cable', Machine:'pec_deck'}],
+  ['shoulder_press', 'Shoulder Press', {Barbell:'ohp', Dumbbell:'press_db', Smith:'press_smith', Machine:'press_smach'}],
+  ['push_press', 'Push Press', {Barbell:'push_press_bb', Dumbbell:'push_press_db'}],
+  ['lateral_raise', 'Lateral Raise', {Dumbbell:'lat_db', Cable:'lat_cable', Machine:'lat_mach'}],
+  ['front_raise_m', 'Front Raise', {Dumbbell:'front_raise', Barbell:'front_raise_bb', Cable:'front_raise_cable'}],
+  ['rear_delt_fly', 'Rear Delt Fly', {Dumbbell:'rear_fly', Cable:'rear_fly_cable', Machine:'rev_pec'}],
+  ['shrug_m', 'Shrug', {Barbell:'shrug_bb', Dumbbell:'shrug_db'}],
+  ['biceps_curl', 'Biceps Curl', {Barbell:'curl_bb', 'EZ bar':'curl_ez', Dumbbell:'curl_db', Cable:'curl_cable'}],
+  ['preacher_m', 'Preacher Curl', {'EZ bar':'preacher', Dumbbell:'preacher_db'}],
+  ['wrist_curl_m', 'Wrist Curl', {Barbell:'wrist_curl', Dumbbell:'wrist_curl_db'}],
+  ['reverse_curl_m', 'Reverse Curl', {Barbell:'rev_curl', Dumbbell:'rev_curl_db'}],
+  ['pushdown_m', 'Triceps Pushdown', {Bar:'pushdown', Rope:'rope_pd'}],
+  ['lying_ext_m', 'Lying Triceps Extension', {'EZ bar':'skull', Dumbbell:'skull_db'}],
+  ['overhead_ext_m', 'Overhead Triceps Extension', {Dumbbell:'oh_ext_db', Barbell:'french_press', Cable:'oh_ext_cable'}],
+  ['bent_row', 'Bent Over Row', {Barbell:'row_bb', Dumbbell:'row_db2', 'T-Bar':'row_tbar'}],
+  ['pullover_m', 'Pullover', {Dumbbell:'pullover_db', Barbell:'pullover_bb'}],
+  ['deadlift_m', 'Deadlift', {Barbell:'deadlift', Dumbbell:'dl_db', 'Trap bar':'trapbar_dl'}],
+  ['sumo_m', 'Sumo Deadlift', {Barbell:'sumo_dl', Kettlebell:'sumo_dl_kb'}],
+  ['stiff_leg_m', 'Stiff-Leg Deadlift', {Barbell:'rdl', Dumbbell:'rdl_db'}],
+  ['squat_m', 'Squat', {Barbell:'squat', Smith:'smith_squat', Bodyweight:'squat_bw', Band:'squat_band', 'Medicine ball':'squat_mb'}],
+  ['bss_m', 'Bulgarian Split Squat', {Barbell:'bss_bb', Dumbbell:'bss', Bodyweight:'bss_bw'}],
+  ['hip_thrust_m', 'Hip Thrust', {Barbell:'hip_thrust', Smith:'hip_thrust_smith'}],
+  ['glute_bridge_m', 'Glute Bridge', {Bodyweight:'glute_bridge', Band:'bridge_band'}],
+  ['frog_pump_m', 'Frog Pump', {Bodyweight:'frog_pump', Smith:'frog_pump_smith'}],
+  ['abduction_m', 'Hip Abduction', {Machine:'abductor', Cable:'abd_cable', Band:'abd_band'}],
+  ['crunch_m', 'Crunch', {Bodyweight:'crunch', Machine:'ab_mach', Cable:'cable_crunch'}],
+];
+const MOVE = {}, MOVE_OF = {};
+for (const [id, name, v] of MOVES) { MOVE[id] = {id, name, v:Object.entries(v).filter(([, ex]) => LIB[ex])}; for (const [eq, ex] of MOVE[id].v) MOVE_OF[ex] = {move:id, eq}; }
+// variants you can pick: catalogue ones, plus retired ones you've used, plus whatever is already in front of you
+const moveVariants = (mid, keep) => { const u = usedIds(); return MOVE[mid].v.filter(([, ex]) => !LIB[ex].retired || u.has(ex) || ex === keep); };
+// turn a list of exercises into rows: movements grouped (one row each), everything else as-is
+function groupMoves(list, poolIds) {
+  const rows = [], seen = {};
+  for (const x of list) {
+    const mo = MOVE_OF[x.id];
+    if (!mo) { rows.push({x, name:x.name}); continue; }
+    if (!seen[mo.move]) { const vars = MOVE[mo.move].v.filter(([, ex]) => poolIds.has(ex)); seen[mo.move] = {m:MOVE[mo.move], vars, hits:[], name:MOVE[mo.move].name}; rows.push(seen[mo.move]); }
+    seen[mo.move].hits.push(x.id);
+  }
+  return rows.sort((a, b) => a.name.localeCompare(b.name));
+}
 // name matching: case, punctuation and spacing don't matter ("pull-up" = "pullup" = "Pull Up")
 const normEx = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const compactEx = t => normEx(t).replace(/ /g, '');
@@ -1577,14 +1638,21 @@ function renderExList() {
   const use = exUsage(), q = exv.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const key = x => exv.by === 'muscle' ? x.muscle : equipOf(x.id);
   const groups = exv.by === 'muscle' ? [...MUSCLES, 'Other'] : EQUIPMENT;
-  const via = {};
+  const via = {}, poolIds = new Set(allExercises().filter(x => !exv.done || use[x.id]).map(x => x.id));
   const list = allExercises().filter(x => { if (!((exv.filter === 'All' || key(x) === exv.filter) && (!exv.done || use[x.id]))) return false;
     const m = exMatch(x, exv.q, musLine(x.id) + ' ' + equipOf(x.id) + ' ' + x.muscle); if (m.via) via[x.id] = m.via; return m.ok; });
   if (!list.length) { box.innerHTML = `<div class="empty"><b>No matches</b>${exv.q ? `<button class="btn btn-ghost" data-a="exl-new">Create “${esc(exv.q)}”</button>` : ''}</div>`; return; }
   box.innerHTML = groups.map(g => {
     const items = list.filter(x => key(x) === g).sort((a,b) => a.name.localeCompare(b.name));
     if (!items.length) return '';
-    return `<div class="exg"><div class="mhead">${esc(g)} <span class="faint">· ${items.length}</span></div><div class="list exl">${items.map(x => {
+    const rows = exv.by === 'muscle' ? groupMoves(items, poolIds) : items.map(x => ({x, name:x.name}));
+    return `<div class="exg"><div class="mhead">${esc(g)} <span class="faint">· ${rows.length}</span></div><div class="list exl">${rows.map(r => {
+      if (r.m) { const n = r.vars.reduce((a, [, id]) => a + (use[id] ? use[id].n : 0), 0), lastT = Math.max(0, ...r.vars.map(([, id]) => use[id] ? use[id].last : 0));
+        const named = normEx(r.name).includes(normEx(exv.q)), hitNames = exv.q && !named ? r.hits.map(id => exName(id)) : [];
+        return `<div class="exr exr-move"><span class="exr-l"><b>${esc(r.name)}</b>${hitNames.length ? `<em class="aka">${esc(hitNames.join(' · '))}</em>` : ''}<small class="ex-mus">${musHTML(r.vars[0][1])}</small>
+          <span class="eq-chips">${r.vars.map(([eq, id]) => `<button class="eqc ${use[id] ? 'used' : ''} ${exv.q && !named && r.hits.includes(id) ? 'hit' : ''}" data-a="ex-info" data-id="${esc(id)}">${esc(eq)}</button>`).join('')}</span></span>
+          <span class="exr-r">${n ? `<small>${n}× · ${fmtShort(lastT)}</small>` : ''}</span></div>`; }
+      const x = r.x;
       const u = use[x.id], tag = exv.by === 'muscle' ? equipOf(x.id) : x.muscle;
       return `<button class="exr" data-a="ex-info" data-id="${esc(x.id)}"><span class="exr-l"><b>${esc(x.name)}</b>${via[x.id] ? `<em class="aka">aka ${esc(via[x.id])}</em>` : ''}<small class="ex-mus">${musHTML(x.id)}</small></span>
         <span class="exr-r"><span class="tag">${esc(tag)}</span>${x.custom ? '<span class="tag">Custom</span>' : ''}${u ? `<small>${u.n}× · ${fmtShort(u.last)}</small>` : ''}</span></button>`;
@@ -1957,7 +2025,7 @@ function exCard(e, i) {
     </div>`;
   }).join('');
   return `<section class="ex" data-card="${i}">
-    <div class="ex-head"><div><button class="ex-name" data-a="ex-info" data-id="${esc(e.exId)}">${esc(exName(e.exId))}</button><div class="ex-mus">${musHTML(e.exId)}</div>${rec ? `<div class="ex-best">${ic('trophy')}<span>Record <b>${fmtSet(rec.s)}</b>${rec.e1 > 0 ? ` · ${fmtW(rec.e1)} ${unit()} e1RM` : ''} · ${fmtShort(rec.ts)}</span></div>` : ''}${bwFrac(e.exId) && !bwNow ? `<button class="ex-bw" data-a="bw-edit">Add your bodyweight so these sets count</button>` : ''}</div>
+    <div class="ex-head"><div><button class="ex-name" data-a="ex-info" data-id="${esc(e.exId)}">${esc(exName(e.exId))}</button><div class="ex-mus">${musHTML(e.exId)}</div>${MOVE_OF[e.exId] ? `<div class="eq-chips ex-eq">${moveVariants(MOVE_OF[e.exId].move, e.exId).map(([eq, id]) => `<button class="eqc ${id === e.exId ? 'on' : ''}" data-a="ex-variant" data-ei="${i}" data-id="${esc(id)}" aria-pressed="${id === e.exId}">${esc(eq)}</button>`).join('')}</div>` : ''}${rec ? `<div class="ex-best">${ic('trophy')}<span>Record <b>${fmtSet(rec.s)}</b>${rec.e1 > 0 ? ` · ${fmtW(rec.e1)} ${unit()} e1RM` : ''} · ${fmtShort(rec.ts)}</span></div>` : ''}${bwFrac(e.exId) && !bwNow ? `<button class="ex-bw" data-a="bw-edit">Add your bodyweight so these sets count</button>` : ''}</div>
       <button class="icon-btn" data-a="ex-menu" data-ei="${i}" aria-label="Exercise options">${ic('dots')}</button></div>
     ${e.note ? `<div class="ex-note">${esc(e.note)}</div>` : ''}
     <div class="set-row hdr"><span>Set</span><span>Previous</span><span>${isBW ? '+' + unit() : unit()}</span><span>Reps</span><span>${ic('check')}</span></div>
@@ -2193,6 +2261,8 @@ function pkPool() {
   const all = [...browseLib(), ...S.customExercises.map(c => ({...c, muscle:customGroup(c), custom:true}))];
   return pk.only ? pk.only.map(id => all.find(x => x.id === id) || {...exInfo(id), muscle:'Other'}) : all;
 }
+// the equipment you picked most recently for each movement
+function lastUsedVariant() { const o = {}; for (const w of S.workouts) for (const e of w.ex) { const mo = MOVE_OF[e.exId]; if (mo && !o[mo.move]) o[mo.move] = e.exId; } return o; }
 function renderPkList() {
   const all = pkPool();
   const q = pk.q.trim().toLowerCase();
@@ -2200,6 +2270,12 @@ function renderPkList() {
   const via = {};
   let list = all.filter(x => { if (!(pk.mus === 'All' || x.muscle === pk.mus)) return false; const m = exMatch(x, q, x.muscle + ' ' + musLine(x.id)); if (m.via) via[x.id] = m.via; return m.ok; });
   list.sort((a,b) => a.name.localeCompare(b.name));
+  const poolIds = new Set(all.map(x => x.id)), last = lastUsedVariant();
+  const moveItem = r => { const on = r.vars.some(([, id]) => pk.sel.includes(id)), named = normEx(r.name).includes(normEx(q));
+    const hitNames = q && !named ? r.hits.map(id => exName(id)) : [];
+    const dflt = (r.vars.find(([, id]) => id === last[r.m.id]) || r.vars[0])[1];
+    return `<div class="pk-item pk-move ${on ? 'on' : ''}" data-a="pk-move" data-id="${esc(dflt)}" data-move="${r.m.id}" role="button" tabindex="0"><span><b>${esc(r.name)}</b>${hitNames.length ? `<em class="aka">${esc(hitNames.join(' · '))}</em>` : ''}<small>${esc(musLine(r.vars[0][1]))}</small>
+      <span class="eq-chips">${r.vars.map(([eq, id]) => `<button class="eqc ${pk.sel.includes(id) ? 'on' : ''} ${q && r.hits.includes(id) && !named ? 'hit' : ''}" data-a="pk-toggle" data-id="${esc(id)}">${esc(eq)}${last[r.m.id] === id ? '<i class="eq-last" title="Last used"></i>' : ''}</button>`).join('')}</span></span></div>`; };
   const item = x => { const st = pk.meta ? pk.meta(x.id) : null; return `<button class="pk-item ${pk.sel.includes(x.id)?'on':''}" data-a="pk-toggle" data-id="${esc(x.id)}"><span><b>${esc(x.name)}</b>${via[x.id] ? `<em class="aka">aka ${esc(via[x.id])}</em>` : ''}<small class="${st ? 'st-' + st.cls : ''}">${st ? esc(musclesOf(x.id).p.join(', ')) + ' · ' + esc(st.text) : esc(musLine(x.id)) + (x.custom ? ' · custom' : '')}</small></span><span class="tick">${ic('check')}</span></button>`; };
   let html = '';
   if (!q && pk.mus === 'All') {
@@ -2207,7 +2283,7 @@ function renderPkList() {
     const rec = recent.map(id => all.find(x => x.id === id)).filter(Boolean);
     if (rec.length) html += `<div class="pk-group">Recent</div>${rec.map(item).join('')}<div class="pk-group">All exercises</div>`;
   }
-  html += list.length ? list.map(item).join('') : pk.only ? `<div class="empty" style="margin:16px 8px">No logged exercise matches.</div>` : `<div class="empty" style="margin:16px 8px">No match. <button class="link" data-a="pk-new">Create “${esc(pk.q)}”</button></div>`;
+  html += list.length ? groupMoves(list, poolIds).map(r => r.m ? moveItem(r) : item(r.x)).join('') : pk.only ? `<div class="empty" style="margin:16px 8px">No logged exercise matches.</div>` : `<div class="empty" style="margin:16px 8px">No match. <button class="link" data-a="pk-new">Create “${esc(pk.q)}”</button></div>`;
   $('#pkList').innerHTML = html;
 }
 function updatePkAdd() {
@@ -2227,6 +2303,7 @@ function exInfoModal(id) {
     <div class="mrow"><span class="mlbl">Secondary</span><div>${chips(m.s, 's')}</div></div>
     ${(x.aka || []).some(a => !/\(/.test(a)) ? `<div class="mrow"><span class="mlbl">Also called</span><div class="aka-list">${esc(x.aka.filter(a => !/\(/.test(a)).slice(0, 5).join(' · '))}</div></div>` : ''}
     <div class="mrow"><span class="mlbl">Equipment</span><div><span class="mchip s">${esc(equipOf(id))}</span></div></div>
+    ${MOVE_OF[id] && moveVariants(MOVE_OF[id].move, id).length > 1 ? `<div class="mrow"><span class="mlbl">${esc(MOVE[MOVE_OF[id].move].name)}</span><div class="eq-chips">${moveVariants(MOVE_OF[id].move, id).map(([eq, v]) => `<button class="eqc ${v === id ? 'on' : ''}" ${v === id ? 'disabled' : `data-a="ex-info" data-id="${esc(v)}"`}>${esc(eq)}</button>`).join('')}</div></div>` : ''}
     <div class="mrow"><span class="mlbl">Group</span><div><span class="mchip s">${esc(x.muscle)}</span>${isCustom ? '<span class="mchip s">Custom</span>' : ''}</div></div>
     ${u ? `<div class="ex-stats"><div><b>${u.n}</b><span>Sessions</span></div><div><b>${best ? fmtW(best) : '—'}</b><span>Best e1RM</span></div><div><b>${heavy ? fmtW(heavy) : 'BW'}</b><span>Heaviest</span></div><div><b>${fmtShort(u.last)}</b><span>Last done</span></div></div>`
       : '<p class="faint" style="margin-top:12px;font-size:14px">You haven’t logged this one yet.</p>'}`,
@@ -2750,6 +2827,9 @@ const A = {
     S.settings.dupeKeep = [...(S.settings.dupeKeep || []), id]; markDirty('profile'); renderView();
     toastUndo(`Keeping ${c.name} separate`, () => { S.settings.dupeKeep = (S.settings.dupeKeep || []).filter(x => x !== id); markDirty('profile'); renderView(); }); },
   'custom-edit': el => customEditModal(el.dataset.id),
+  // same movement, different equipment: the sets stay, they just count toward the other exercise
+  'ex-variant': el => { const e = S.active && S.active.ex[+el.dataset.ei]; if (!e || e.exId === el.dataset.id) return;
+    e.exId = el.dataset.id; markDirty('active'); renderWorkout(); },
   'dupe-merge': el => { const c = S.customExercises.find(x => x.id === el.dataset.id), x = c && catalogueHit(c.name); if (!x) return;
     const n = S.workouts.reduce((a, w) => a + w.ex.filter(e => e.exId === c.id).length, 0);
     modal({title:`Merge into ${x.name}?`, body:`<p>${n ? `Your ${plural(n, 'logged session')} of <b>${esc(c.name)}</b> move to <b>${esc(x.name)}</b>, so they share one history and one set of records.` : `<b>${esc(c.name)}</b> is replaced by <b>${esc(x.name)}</b> everywhere it’s used.`} Your custom one is removed.</p>`,
@@ -2944,11 +3024,19 @@ const A = {
 
   'pk-close': closePicker,
   'pk-mus': el => { pk.mus = el.dataset.k; renderPicker(); },
+  // tapping a movement's name: picks the equipment you used last (or the first one); tapping again clears it
+  'pk-move': el => {
+    const vars = MOVE[el.dataset.move].v.map(([, id]) => id), picked = vars.filter(id => pk.sel.includes(id));
+    if (pk.single) { const cb = pk.cb; closePicker(); cb([el.dataset.id]); return; }
+    if (picked.length) { pk.sel = pk.sel.filter(id => !vars.includes(id)); renderPkList(); updatePkAdd(); return; }
+    A['pk-toggle'](el);
+  },
   'pk-toggle': el => {
     const id = el.dataset.id;
     if (pk.single) { const cb = pk.cb; closePicker(); cb([id]); return; }
     const k = pk.sel.indexOf(id); if (k >= 0) pk.sel.splice(k, 1); else pk.sel.push(id);
-    document.querySelectorAll(`#pkList .pk-item[data-id="${CSS.escape(id)}"]`).forEach(x => x.classList.toggle('on', k < 0));
+    document.querySelectorAll(`#pkList [data-id="${CSS.escape(id)}"]`).forEach(x => x.classList.toggle('on', k < 0));
+    document.querySelectorAll('#pkList .pk-move').forEach(r => r.classList.toggle('on', !!r.querySelector('.eqc.on')));
     updatePkAdd();
   },
   'pk-add': () => { if (!pk.sel.length) return; const ids = pk.sel.slice(), cb = pk.cb; closePicker(); cb(ids); },
