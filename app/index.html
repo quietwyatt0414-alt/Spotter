@@ -2470,6 +2470,7 @@ const A = {
     S.routines.push(r); markDirty('profile'); renderAll(); toast(`“${t.name}” added — tap ⋯ to edit it`);
   }}))),
   'routine-new': () => openRoutineEditor(null),
+  'upnext-skip': () => { try { localStorage.setItem(UPNEXT_KEY, JSON.stringify({base:upNextAnchor(), n:upNextSkips() + 1})); } catch {} const y = window.scrollY; renderView(); window.scrollTo(0, y); },
   'routine-start': el => { const r = S.routines.find(x => x.id === el.dataset.id); if (r) startWorkout({name:r.name, routineId:r.id, ex:r.ex}); },
   'routine-menu': el => {
     const r = S.routines.find(x => x.id === el.dataset.id); if (!r) return;
@@ -2584,7 +2585,6 @@ const A = {
   },
   appearance: () => { S.settings.appearance = S.settings.appearance === 'light' ? 'dark' : 'light'; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
   theme: el => { S.settings.theme = el.dataset.k; markDirty('profile'); const y = window.scrollY; renderAll(); window.scrollTo(0, y); },
-  'upnext-skip': () => { try { localStorage.setItem(UPNEXT_KEY, JSON.stringify({base:upNextAnchor(), n:upNextSkips() + 1})); } catch {} const y = window.scrollY; renderView(); window.scrollTo(0, y); },
   'bw-edit': () => bwModal(false),
   setting: el => {
     const k = el.dataset.k; let v = el.dataset.v; if (k === 'rest') v = +v;
