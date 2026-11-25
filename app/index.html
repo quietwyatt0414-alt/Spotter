@@ -440,6 +440,7 @@ button.ex-name{text-align:left;padding:0}
 .exr:active{background:var(--s2)}
 .dupes{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;border-color:var(--acc-mid)}
 .dupes small{color:var(--tx3);font-size:13px;margin-bottom:4px}
+.dupe-b{display:flex;align-items:center;gap:2px;flex:none}
 .dupe{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
 .aka{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--acc);margin-top:1px}
 .aka-list{font-size:14px;color:var(--tx2);line-height:1.4}
@@ -945,6 +946,7 @@ function normalize(d) {
     if (+d.settings.bw > 0 && +d.settings.bw < 400) n.settings.bw = +d.settings.bw;
     if (d.settings.bwAsked) n.settings.bwAsked = true;
     if (d.settings.awake === false) n.settings.awake = false;
+    if (Array.isArray(d.settings.dupeKeep)) n.settings.dupeKeep = d.settings.dupeKeep.filter(x => typeof x === 'string').slice(0, 500);
     n.settings.appearance = d.settings.appearance === 'light' || d.settings.appearance === 'dark' ? d.settings.appearance : (OLD_LIGHT[d.settings.theme] ? 'light' : 'dark');
   }
   if (Array.isArray(d.routines)) n.routines = d.routines.filter(r => r && r.id && Array.isArray(r.ex));
@@ -1515,22 +1517,43 @@ function exUsage() {
   return u;
 }
 function viewExercises() {
+  if (exv.by === 'custom') return viewCustomList();
   const groups = exv.by === 'muscle' ? [...MUSCLES, 'Other'] : EQUIPMENT;
   const all = allExercises();
   const present = groups.filter(g => all.some(x => (exv.by === 'muscle' ? x.muscle : equipOf(x.id)) === g));
   if (exv.filter !== 'All' && !present.includes(exv.filter)) exv.filter = 'All';
   return `<header class="top"><h1 class="h1" style="margin:0">Exercises</h1><button class="btn btn-ghost sm" data-a="exl-new">${ic('plus')}New</button></header>
     <div class="search" style="margin:0 0 10px">${ic('search')}<input id="exSearch" placeholder="Search ${all.length} exercises or muscles" autocomplete="off" value="${esc(exv.q)}"></div>
-    <div class="seg" style="margin-bottom:10px">${[['muscle','By muscle group'],['equipment','By equipment']].map(([k,l]) => `<button class="${exv.by===k?'on':''}" data-a="exl-by" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="seg" style="margin-bottom:10px">${EXL_SEG.map(([k,l]) => `<button class="${exv.by===k?'on':''}" data-a="exl-by" data-k="${k}">${l}</button>`).join('')}</div>
     <div class="chips" style="padding:0 0 10px">${['All', ...present].map(g => `<button class="chip ${exv.filter===g?'on':''}" data-a="exl-filter" data-k="${esc(g)}">${esc(g)}</button>`).join('')}<button class="chip ${exv.done?'on':''}" data-a="exl-done">${ic('check')} Done before</button></div>
     ${dupBanner()}<div id="exList"></div>`;
 }
+const EXL_SEG = [['muscle','Muscle'],['equipment','Equipment'],['custom','Custom']];
+// your own exercises in one place: tap to edit
+function viewCustomList() {
+  const n = S.customExercises.length;
+  return `<header class="top"><h1 class="h1" style="margin:0">Exercises</h1><button class="btn btn-ghost sm" data-a="exl-new">${ic('plus')}New</button></header>
+    <div class="search" style="margin:0 0 10px">${ic('search')}<input id="exSearch" placeholder="Search your ${n === 1 ? 'custom exercise' : n + ' custom exercises'}" autocomplete="off" value="${esc(exv.q)}"></div>
+    <div class="seg" style="margin-bottom:12px">${EXL_SEG.map(([k,l]) => `<button class="${exv.by===k?'on':''}" data-a="exl-by" data-k="${k}">${l}</button>`).join('')}</div>
+    ${dupBanner()}<div id="exList"></div>`;
+}
+function renderCustomList() {
+  const box = $('#exList'); if (!box) return;
+  const use = exUsage();
+  const list = S.customExercises.map(c => ({...c, muscle:customGroup(c), custom:true})).filter(x => exMatch(x, exv.q, musLine(x.id) + ' ' + equipOf(x.id) + ' ' + x.muscle).ok)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  if (!S.customExercises.length) { box.innerHTML = `<div class="empty"><b>No custom exercises yet</b>Make one for anything that isn’t in the catalogue.<div><button class="btn btn-acc" data-a="exl-new">${ic('plus')}New custom exercise</button></div></div>`; return; }
+  if (!list.length) { box.innerHTML = `<div class="empty"><b>No matches</b></div>`; return; }
+  box.innerHTML = `<div class="list exl">${list.map(x => { const u = use[x.id];
+    return `<button class="exr" data-a="custom-edit" data-id="${esc(x.id)}"><span class="exr-l"><b>${esc(x.name)}</b><small class="ex-mus">${musHTML(x.id)}</small></span>
+      <span class="exr-r"><span class="tag">${esc(equipOf(x.id))}</span><small>${u ? `${u.n}× · ${fmtShort(u.last)}` : 'Not logged yet'}</small></span></button>`; }).join('')}</div>`;
+}
 // your custom exercises that are really a catalogue exercise under another name
-const customDupes = () => S.customExercises.map(c => ({c, x:catalogueHit(c.name)})).filter(d => d.x);
+const customDupes = () => S.customExercises.filter(c => !(S.settings.dupeKeep || []).includes(c.id)).map(c => ({c, x:catalogueHit(c.name)})).filter(d => d.x);
 function dupBanner() {
   const d = customDupes(); if (!d.length) return '';
-  return `<div class="card dupes"><b>Same exercise, different name</b><small>Merge to keep one history for each.</small>
-    ${d.map(({c, x}) => `<div class="dupe"><span><b>${esc(c.name)}</b> <span class="faint">(yours)</span> → <b>${esc(x.name)}</b></span><button class="btn btn-line sm" data-a="dupe-merge" data-id="${esc(c.id)}">Merge</button></div>`).join('')}</div>`;
+  return `<div class="card dupes"><b>Same exercise, different name</b><small>Merge to keep one history for each, or tap ✕ to keep yours separate.</small>
+    ${d.map(({c, x}) => `<div class="dupe"><span><b>${esc(c.name)}</b> <span class="faint">(yours)</span> → <b>${esc(x.name)}</b></span><span class="dupe-b"><button class="btn btn-line sm" data-a="dupe-merge" data-id="${esc(c.id)}">Merge</button><button class="icon-btn" data-a="dupe-keep" data-id="${esc(c.id)}" aria-label="Keep ${esc(c.name)} separate">${ic('x')}</button></span></div>`).join('')}</div>`;
 }
 function mergeCustomInto(fromId, toId) {
   const snap = {workouts:clone(S.workouts), routines:clone(S.routines), customExercises:clone(S.customExercises), active:clone(S.active), adjust:clone(S.adjust)};
@@ -1549,6 +1572,7 @@ function allExercises() {
   return [...browseLib(), ...S.customExercises.map(c => ({...c, muscle:customGroup(c), custom:true}))];
 }
 function renderExList() {
+  if (exv.by === 'custom') return renderCustomList();
   const box = $('#exList'); if (!box) return;
   const use = exUsage(), q = exv.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const key = x => exv.by === 'muscle' ? x.muscle : equipOf(x.id);
@@ -2261,10 +2285,10 @@ function customEditModal(id) {
   modal({title:'Edit exercise', body:`<label class="field"><span>Name</span><input name="name" value="${esc(c.name)}" maxlength="50"></label>
     <div class="eq-pair" style="grid-template-columns:1fr 1fr"><label class="field"><span>Group</span><select name="muscle">${groupOpts}</select></label><label class="field"><span>Equipment</span><select name="eq">${eqOpts}</select></label></div>
     <div class="field"><span>Primary muscles</span>${muscleChips('prim', c.p || [])}</div><div class="field"><span>Secondary muscles</span>${muscleChips('sec', c.s || [])}</div>`,
-    actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc', validate:v => { if (!v.name.trim()) return false; const hit = catalogueHit(v.name); return hit && compactEx(v.name) !== compactEx(c.name) ? `That’s already here as “${hit.name}”` : true; }, fn:v => {
+    actions:[{label:'Save', cls:'btn-acc', validate:v => { if (!v.name.trim()) return false; const hit = catalogueHit(v.name); return hit && compactEx(v.name) !== compactEx(c.name) ? `That’s already here as “${hit.name}”` : true; }, fn:v => {
       c.name = v.name.trim(); c.muscle = v.muscle; c.eq = v.eq;
       c.p = v.prim ? v.prim.split(',') : []; c.s = v.sec ? v.sec.split(',').filter(n => !c.p.includes(n)) : [];
-      markDirty('profile'); renderAll(); toast('Exercise saved'); }}]});
+      markDirty('profile'); renderAll(); toast('Exercise saved'); }}, {label:'Delete exercise', cls:'btn-danger-ghost', fn:() => setTimeout(() => confirmDeleteCustom(id), 0)}, {label:'Cancel', cls:'btn-line'}], col:true});
 }
 function customMusclesModal(id) { customEditModal(id); }
 function muscleChips(name, sel) {
@@ -2722,6 +2746,10 @@ const A = {
   },
   'ex-info': el => exInfoModal(el.dataset.id),
   'exl-new': () => newCustomExercise(exv.q.trim()),
+  'dupe-keep': el => { const id = el.dataset.id, c = S.customExercises.find(x => x.id === id); if (!c) return;
+    S.settings.dupeKeep = [...(S.settings.dupeKeep || []), id]; markDirty('profile'); renderView();
+    toastUndo(`Keeping ${c.name} separate`, () => { S.settings.dupeKeep = (S.settings.dupeKeep || []).filter(x => x !== id); markDirty('profile'); renderView(); }); },
+  'custom-edit': el => customEditModal(el.dataset.id),
   'dupe-merge': el => { const c = S.customExercises.find(x => x.id === el.dataset.id), x = c && catalogueHit(c.name); if (!x) return;
     const n = S.workouts.reduce((a, w) => a + w.ex.filter(e => e.exId === c.id).length, 0);
     modal({title:`Merge into ${x.name}?`, body:`<p>${n ? `Your ${plural(n, 'logged session')} of <b>${esc(c.name)}</b> move to <b>${esc(x.name)}</b>, so they share one history and one set of records.` : `<b>${esc(c.name)}</b> is replaced by <b>${esc(x.name)}</b> everywhere it’s used.`} Your custom one is removed.</p>`,
