@@ -2066,10 +2066,8 @@ function viewSettings() {
 const PRO_SITE = 'https://spotter-6d902.web.app';
 const proState = () => (HOST && typeof HOST.pro === 'function' && HOST.pro()) || null;
 const isPro = () => !!DEMO || !!(proState() && proState().pro);
-/* The Progress tab is Pro, but only where Pro can be bought (the website, once it's on sale). Before that, and on
-   Claude where Pro isn't sold, it stays open. */
-const proSellable = () => !!(HOST && typeof HOST.buyPro === 'function' && HOST.proOnSale);
-const progressOpen = () => isPro() || !proSellable();
+// The Progress tab is Pro (open in the demo, where Pro is unlocked).
+const progressOpen = () => isPro();
 const proPrice = () => (HOST && HOST.proPrice) || '$19.99';
 const PRO_FEATURES = [
   ['chart', 'Progress', 'Charts for every exercise, estimated 1-rep max trends, and a check that tells you if you’re progressively overloading.'],
