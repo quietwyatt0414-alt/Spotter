@@ -1,0 +1,59 @@
+# Deploys the parts the hosting workflow doesn't: Firestore security rules and, once Stripe is set up, the
+# Spotter Pro payment functions. Runs when firestore.rules or functions/ change on main, or by hand:
+# GitHub → Actions → "Deploy backend" → Run workflow (works from the GitHub app or a phone browser).
+#
+# One-time setup (see PAYMENTS.md): the Firebase service account needs extra roles, and functions need the
+# Blaze plan plus the STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET repository secrets.
+name: Deploy backend
+on:
+  push:
+    branches: [main]
+    paths: ['firestore.rules', 'functions/**', 'firebase.json', '.github/workflows/deploy-backend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency: deploy-backend
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPOTTER_6D902 }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      PRO_PRICE_CENTS: ${{ vars.PRO_PRICE_CENTS }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Not connected to Firebase yet
+        if: env.FIREBASE_SA == ''
+        run: echo "::notice::Skipping — the Firebase service account secret isn't set up yet (see SETUP.md step 6)."
+      - name: Sign in to Firebase
+        if: env.FIREBASE_SA != ''
+        run: |
+          printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+      - name: Deploy Firestore rules
+        if: env.FIREBASE_SA != ''
+        run: npx --yes firebase-tools@15 deploy --only firestore:rules --project spotter-6d902 --non-interactive
+      - name: Payments not set up yet
+        if: env.FIREBASE_SA != '' && (env.STRIPE_SECRET_KEY == '' || env.STRIPE_WEBHOOK_SECRET == '')
+        run: echo "::notice::Rules deployed. Skipping the Pro payment functions — add the STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET secrets first (see PAYMENTS.md)."
+      - name: Test and deploy payment functions
+        if: env.FIREBASE_SA != '' && env.STRIPE_SECRET_KEY != '' && env.STRIPE_WEBHOOK_SECRET != ''
+        run: |
+          cd functions
+          npm ci
+          npm test
+          # the functions read these as environment variables; the file only exists on this runner
+          {
+            echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY"
+            echo "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET"
+            if [ -n "$PRO_PRICE_CENTS" ]; then echo "PRO_PRICE_CENTS=$PRO_PRICE_CENTS"; fi
+          } > .env
+          cd ..
+          npx --yes firebase-tools@15 deploy --only functions --project spotter-6d902 --non-interactive --force
+      - name: Explain a failed deploy
+        if: failure()
+        run: echo "::error::The deploy was refused. Most often the Firebase service account is missing a role, or the project isn't on the Blaze plan yet. PAYMENTS.md lists both; the step above says which permission was missing."

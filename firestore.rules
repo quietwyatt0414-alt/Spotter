@@ -5,9 +5,11 @@ rules_version = '2';
 //
 // Analytics and feedback (see firebase/host.html and /stats/):
 //   metrics/{YYYY-MM-DD}  anonymous daily totals. Signed-in people can only add 1 to one known counter at a time.
-//   usermeta/{uid}        each person's own "already counted" flags.
+//   usermeta/{uid}        each person's own "already counted" flags, name and email (the owner's People list).
 //   feedback/{id}         messages from the in-app feedback form. Anyone can send one; nobody can edit them.
 //   deletions/{uid}       accounts deleted in the app; their log is kept 30 days for a restore, then deleted.
+//   entitlements/{uid}    Spotter Pro. Written only by the Stripe webhook (functions/, which bypasses these rules)
+//                         and the owner. People can read their own, so nobody can unlock Pro from their browser.
 // Only the owner (the uid below) can read metrics and feedback, on the /stats/ page.
 // To find your uid: Firebase console → Authentication → Users → copy the "User UID" of your Google account.
 service cloud.firestore {
@@ -52,10 +54,15 @@ service cloud.firestore {
     }
 
     match /usermeta/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+      allow read: if (request.auth != null && request.auth.uid == uid) || isOwner();
       allow write: if request.auth != null && request.auth.uid == uid
-                   && request.resource.data.keys().hasOnly(['since', 'last', 'w1']);
+                   && request.resource.data.keys().hasOnly(['since', 'last', 'w1', 'name', 'email']);
       allow delete: if (request.auth != null && request.auth.uid == uid) || isOwner();
+    }
+
+    match /entitlements/{uid} {
+      allow read: if (request.auth != null && request.auth.uid == uid) || isOwner();
+      allow write: if isOwner();
     }
 
     match /feedback/{id} {
