@@ -56,7 +56,7 @@ Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `
   `usermeta/<uid>` holds each person's own "already counted" flags. The code is in `firebase/host.html`.
 - **Send feedback** in Settings saves to `feedback/` (anyone can send; nobody can edit or read others').
 - See it all at **`/stats/`**. One-time setup: Firebase console → Authentication → Users → copy your **User UID**, paste it
-  over `PASTE_YOUR_UID_HERE` in `firestore.rules`, then `firebase deploy --only firestore:rules`.
+  into the owner list in `firestore.rules` (already set to the current owner), then `firebase deploy --only firestore:rules`.
   Until the rules are deployed, nothing is counted and feedback can't be sent.
 
 ## Deleting accounts
