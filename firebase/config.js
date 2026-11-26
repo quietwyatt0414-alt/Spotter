@@ -16,3 +16,11 @@ window.SPOTTER_PRO = {
   price: "$19.99",
   onSale: false,
 };
+
+// Sign-in options shown on the sign-in screen. Google is always on.
+// email: needs Email/Password switched on in Firebase console → Authentication → Sign-in method.
+// apple: needs an Apple Developer account and the Apple steps in SETUP.md; leave false until those are done.
+window.SPOTTER_SIGNIN = {
+  email: true,
+  apple: false,
+};

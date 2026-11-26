@@ -30,6 +30,46 @@ It's all free. Firebase's free plan needs no credit card, so it can never charge
 4. Switch **Enable** on. Set the **public-facing name** to `Spotter` (people see it on the Google sign-in screen) and pick
    your email as the **support email**. Click **Save**. Google should now show as **Enabled** in the list.
 
+## 3b. Email and Apple sign-in (optional, do these any time)
+
+### Email sign-in (2 minutes, free)
+
+1. Firebase console → **Security → Authentication** (or **Build → Authentication**) → **Sign-in method** tab →
+   **Add new provider** → **Email/Password**.
+2. Switch on **Email/Password** (leave **Email link** off) → **Save**.
+3. Optional: **Templates** tab → **Password reset** → pencil → set **Sender name** to `Spotter` → **Save**.
+
+`firebase/config.js` has `email: true`, so the **Continue with email** button shows. Until step 2 is done, using it
+says "That sign-in option isn't switched on yet."
+
+### Sign in with Apple (about 20 minutes, needs the Apple Developer Program: $99/year)
+
+Enroll at **developer.apple.com/programs/enroll** first (Apple can take up to 2 days to approve). Then, at
+**developer.apple.com/account** → **Certificates, Identifiers & Profiles**:
+
+1. **Identifiers → +** → **App IDs** → **App** → Description `Spotter`, Bundle ID (Explicit) `com.witwire.spotter`
+   → tick **Sign In with Apple** → **Continue → Register**.
+2. **Identifiers → +** → **Services IDs** → Description `Spotter web`, Identifier `com.witwire.spotter.web` →
+   **Continue → Register**. Open it again, tick **Sign In with Apple** → **Configure**:
+   - Primary App ID: `com.witwire.spotter`
+   - Domains: `spotter-6d902.web.app`
+   - Return URLs: `https://spotter-6d902.web.app/__/auth/handler`
+
+   **Next → Done → Continue → Save**.
+3. **Keys → +** → name `Spotter sign-in`, tick **Sign In with Apple** → **Configure** → pick `com.witwire.spotter`
+   → **Save → Continue → Register** → **Download** the `.p8` file (Apple lets you download it only once). Note the
+   **Key ID**, and your **Team ID** (top right of the page, or under **Membership details**).
+4. Firebase console → Authentication → **Sign-in method → Add new provider → Apple** → **Enable**:
+   - Services ID: `com.witwire.spotter.web`
+   - Apple team ID, Key ID, and Private key (open the `.p8` file in a text editor and paste all of it)
+
+   **Save**.
+5. Tell Claude "Apple is set up", or on GitHub change `apple: false` to `apple: true` in `firebase/config.js`.
+   The **Sign in with Apple** button then appears.
+
+People who pick **Hide My Email** show up in your /stats/ People list with an `@privaterelay.appleid.com` address.
+Their Stripe receipts may not arrive (Apple only forwards mail from registered senders); Pro still unlocks.
+
 ## 4. Create the database
 
 In the left menu: **Databases & Storage → Firestore** (older consoles: **Build → Firestore Database**) → **Create database** →
@@ -101,6 +141,7 @@ Claude pushes the final touches, GitHub deploys, and your site is live at `https
 | What you see | Fix |
 |---|---|
 | "Almost set up. Paste your Firebase config…" | `firebase/config.js` still has placeholders (step 2). |
+| "That sign-in option isn't switched on yet" | Turn on that provider in Firebase → Authentication → **Sign-in method** (step 3b). |
 | "This address isn't on the Firebase project's allowed list" | Firebase → Authentication → **Settings → Authorized domains** → add the address. |
 | Toast: "Cloud sync is off for you here" | Privacy rules aren't deployed. Re-run the rules command in step 6. |
 | GitHub Actions says "Skipping deploy — secret isn't set up yet" | Finish step 6 and send Claude the project ID. |

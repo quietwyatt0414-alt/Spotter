@@ -1,4 +1,4 @@
-<!-- SPOTTER-FIREBASE-HOST:START — inserted before the app script by build_firebase.py. Adds Google sign-in
+<!-- SPOTTER-FIREBASE-HOST:START — inserted before the app script by build_firebase.py. Adds sign-in (Google, Apple, email)
      and saves to Firestore by giving the app the same small storage interface it uses on Claude. -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-title" content="Spotter">
 <style>
 #gate{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
-#gate[hidden]{display:none}
+#gate[hidden],#gate [hidden]{display:none!important}
 #gate .g-in{width:min(400px,100%);display:flex;flex-direction:column;align-items:stretch;gap:12px;text-align:center}
 #gate .g-brand{justify-content:center;font-size:30px;margin-bottom:6px}
 #gate .g-brand .brand-dot{width:14px;height:14px}
@@ -17,6 +17,16 @@
 #gate .g-warn{background:color-mix(in srgb,var(--warm) 14%,transparent);border:1px solid color-mix(in srgb,var(--warm) 40%,transparent);color:var(--tx);border-radius:12px;padding:12px;font-size:14px;text-align:left}
 #gate .g-err{color:var(--danger);font-size:14px;min-height:1em}
 #gate .g-feats{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;text-align:left;font-size:14px;color:var(--tx2);margin:6px 0 4px}
+#gate .g-apple{background:#fff;color:#000;border:1px solid #000;display:flex;align-items:center;justify-content:center;gap:8px}
+#gate .g-apple svg{width:17px;height:17px;margin-top:-2px}
+#gate .g-or{display:flex;align-items:center;gap:10px;color:var(--tx3);font-size:13px}
+#gate .g-or::before,#gate .g-or::after{content:"";flex:1;border-top:1px solid var(--line)}
+#gate form{display:flex;flex-direction:column;gap:8px;text-align:left}
+#gate form[hidden]{display:none}
+#gate form .field{margin:0}
+#gate .g-row{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+#gate .g-row .link{padding:0;font-size:14px}
+#gate .g-ok{color:var(--tx2);font-size:14px}
 #gate .g-feats span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--acc);transform:rotate(45deg);margin-right:8px;vertical-align:1px}
 </style>
 <div id="gate" hidden>
@@ -28,6 +38,16 @@
     <div id="gateWarn" class="g-warn" hidden></div>
     <div id="gateSetup" class="g-warn" hidden></div>
     <button class="btn btn-acc block lg" id="gateSignIn">Sign in with Google</button>
+    <button class="btn block lg g-apple" id="gateApple" hidden><svg viewBox="0 0 17 20" aria-hidden="true"><path fill="currentColor" d="M14.1 10.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9C3.6 4.8 2 5.8 1.1 7.4c-1.8 3.2-.5 7.9 1.3 10.5.9 1.3 1.9 2.7 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.6 1-1.5 1.4-2.9 1.4-3-.1 0-2.7-1-2.7-4.3zM11.6 3c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>Sign in with Apple</button>
+    <div class="g-or" id="gateOr" hidden>or</div>
+    <button class="btn btn-line block lg" id="gateEmailBtn" hidden>Continue with email</button>
+    <form id="gateEmail" hidden novalidate>
+      <label class="field"><input id="gateEm" type="email" name="email" autocomplete="username" inputmode="email" placeholder="Email" aria-label="Email" required></label>
+      <label class="field"><input id="gatePw" type="password" name="password" autocomplete="current-password" placeholder="Password" aria-label="Password" required minlength="6"></label>
+      <button class="btn btn-acc block lg" id="gateEmGo" type="submit">Sign in</button>
+      <div class="g-row"><button class="link" type="button" id="gateMode">New here? Create an account</button><button class="link" type="button" id="gateForgot">Forgot password?</button></div>
+      <div id="gateOk" class="g-ok" role="status"></div>
+    </form>
     <div id="gateErr" class="g-err" role="alert"></div>
     <button class="btn btn-line block" id="gateLocal">Use without an account</button>
     <div class="g-small">Without an account, your log stays on this device only. You can sign in later from Settings and it moves over.</div>
@@ -41,18 +61,20 @@
   let settle;
   const state = {user:null, api:null, done:false, pro:null};
   const PRO = window.SPOTTER_PRO || {};
+  const viaOf = u => { const ids = (u.providerData || []).map(p => p.providerId); return ids.includes('google.com') ? 'google' : ids.includes('apple.com') ? 'apple' : ids.includes('password') ? 'password' : 'google'; };
   const wait = new Promise(r => { settle = r; });
   window.__spotter = {state, settle:user => { if (state.done) return; state.done = true; settle(user); }};
   window.SPOTTER_HOST = {
-    cloudName:'your Google account',
+    cloudName:'your Spotter account',
     privacyNote:'Your log syncs between your phone and laptop. Other people using this app can’t see it. Spotter only counts anonymous totals (like how many workouts get logged each day) to see what’s working.',
     wait,
-    account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || ''} : null,
+    // via: how this account signs in ('google' | 'apple' | 'password'); the app asks for the password to delete a 'password' account
+    account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || '', via:viaOf(state.user)} : null,
     signIn:() => { try { localStorage.removeItem('spotter.noaccount'); } catch {} location.reload(); },
     signOut:() => window.__spotter.signOut ? window.__spotter.signOut() : location.reload(),
     track:ev => { if (window.__spotter.track) window.__spotter.track(ev); },
     contact:'quietwyatt0414@gmail.com',
-    deleteAccount:() => window.__spotter.deleteAccount ? window.__spotter.deleteAccount() : Promise.reject({code:'unavailable'}),
+    deleteAccount:password => window.__spotter.deleteAccount ? window.__spotter.deleteAccount(password) : Promise.reject({code:'unavailable'}),
     sendFeedback:fb => window.__spotter.feedback ? window.__spotter.feedback(fb) : Promise.reject(new Error('offline')),
     // Spotter Pro: entitlements/{uid} is written only by the Stripe webhook (functions/index.js)
     pro:() => state.pro,
@@ -76,16 +98,22 @@ try {
   if (sessionStorage.getItem('spotter.deleted')) {
     sessionStorage.removeItem('spotter.deleted');
     const w = $g('gateWarn'); w.hidden = false;
-    w.innerHTML = '<b>Your account is deleted.</b> Your workout log is kept for 30 days in case you change your mind. To get it back, sign in again and email <a href="mailto:' + window.SPOTTER_HOST.contact + '">' + window.SPOTTER_HOST.contact + '</a> from the same Google address. After 30 days it’s deleted for good.';
+    w.innerHTML = '<b>Your account is deleted.</b> Your workout log is kept for 30 days in case you change your mind. To get it back, sign in again and email <a href="mailto:' + window.SPOTTER_HOST.contact + '">' + window.SPOTTER_HOST.contact + '</a> with the email address of your old account. After 30 days it’s deleted for good.';
   }
 } catch {}
 const goLocal = () => { gate.hidden = true; document.getElementById('loading').style.display = ''; settle(null); };
 $g('gateLocal').onclick = () => { try { localStorage.setItem('spotter.noaccount', '1'); } catch {} goLocal(); };
 
+// which sign-in buttons to show (config.js): Google always; Apple once it's set up in Apple's and Firebase's consoles
+const SIGNIN = Object.assign({email:true, apple:false}, window.SPOTTER_SIGNIN || {});
+if (SIGNIN.apple) $g('gateApple').hidden = false;
+if (SIGNIN.email) { $g('gateOr').hidden = false; $g('gateEmailBtn').hidden = false; }
+
 // Google blocks its sign-in inside other apps' built-in browsers
 if (/FBAN|FBAV|Instagram|Line\/|Snapchat|musical_ly|TikTok|Bytedance|; wv\)/i.test(navigator.userAgent)) {
   const w = $g('gateWarn'); w.hidden = false;
-  w.innerHTML = '<b>Open this in Safari or Chrome to sign in.</b> Google blocks sign-in inside other apps. Tap the ••• or share button and choose “Open in browser”, or <button class="link" id="gateCopy" style="padding:0">copy the link</button>.';
+  w.innerHTML = (SIGNIN.email ? '<b>Google sign-in doesn’t work inside other apps.</b> Use <b>Continue with email</b> below, or open this in Safari or Chrome: ' : '<b>Open this in Safari or Chrome to sign in.</b> Google blocks sign-in inside other apps. ')
+    + 'tap the ••• or share button and choose “Open in browser”, or <button class="link" id="gateCopy" style="padding:0">copy the link</button>.';
   document.getElementById('gateCopy').onclick = () => navigator.clipboard.writeText(location.href).then(() => err.textContent = 'Link copied — paste it into Safari or Chrome.').catch(() => err.textContent = location.href);
 }
 
@@ -93,7 +121,7 @@ const cfg = window.SPOTTER_FIREBASE_CONFIG || {};
 if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
   const s = $g('gateSetup'); s.hidden = false;
   s.innerHTML = '<b>Almost set up.</b> Paste your Firebase config into <code>config.js</code> and deploy again (see README). Until then, you can use Spotter without an account.';
-  $g('gateSignIn').disabled = true; $g('gateSignIn').style.opacity = .4;
+  ['gateSignIn', 'gateApple', 'gateEmailBtn'].forEach(id => { $g(id).disabled = true; $g(id).style.opacity = .4; });
   if (noAccount()) goLocal(); else showGate();
 } else {
   try {
@@ -161,10 +189,15 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
 
     /* Delete account: the sign-in is deleted right away, the log is kept 30 days so the owner can restore it
        (deletions/{uid} tells the owner whose it was), then the owner deletes it for good from /stats/. */
-    window.__spotter.deleteAccount = async () => {
+    window.__spotter.deleteAccount = async password => {
       const user = auth.currentUser; if (!user) throw {code:'auth/no-current-user'};
-      // Firebase only deletes an account signed in the last few minutes, so confirm with Google first
-      if (!(Date.now() - Date.parse(user.metadata.lastSignInTime) < 4 * 60e3)) await A.reauthenticateWithPopup(user, provider);
+      // Firebase only deletes an account signed in the last few minutes, so confirm it's them first:
+      // the password for an email account, otherwise Google's or Apple's sign-in window
+      if (!(Date.now() - Date.parse(user.metadata.lastSignInTime) < 4 * 60e3)) {
+        const via = window.SPOTTER_HOST.account().via;
+        if (via === 'password') { if (!password) throw {code:'auth/missing-password'}; await A.reauthenticateWithCredential(user, A.EmailAuthProvider.credential(user.email, password)); }
+        else await A.reauthenticateWithPopup(user, via === 'apple' ? apple : provider);
+      }
       const rec = F.doc(fs, 'deletions', user.uid);
       const timeout = new Promise((_, no) => setTimeout(() => no({code:'unavailable'}), 8000));
       await Promise.race([F.setDoc(rec, {email:user.email || '', name:user.displayName || '', at:F.serverTimestamp()}), timeout]);
@@ -205,21 +238,74 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     };
     const provider = new A.GoogleAuthProvider();
     provider.setCustomParameters({prompt:'select_account'});
+    const apple = new A.OAuthProvider('apple.com');
+    apple.addScope('email'); apple.addScope('name');
     const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    $g('gateSignIn').onclick = async () => {
-      err.textContent = '';
+    const busy = on => ['gateSignIn', 'gateApple', 'gateEmGo'].forEach(id => { $g(id).disabled = on; });
+    const others = SIGNIN.apple ? 'Google or Apple' : 'Google';
+    const authMsg = (c, e) =>
+        c === 'auth/unauthorized-domain' ? 'This address isn’t on the Firebase project’s allowed list yet. Add it under Authentication → Settings → Authorized domains.'
+      : c === 'auth/network-request-failed' ? 'No connection. Try again, or use without an account for now.'
+      : c === 'auth/account-exists-with-different-credential' ? 'You already have a Spotter account with that email. Sign in the way you did before (' + others + ' or email).'
+      : c === 'auth/operation-not-allowed' ? 'That sign-in option isn’t switched on yet. Try another one.'
+      : c === 'auth/too-many-requests' ? 'Too many tries. Wait a few minutes, or reset your password.'
+      : 'Sign-in didn’t work (' + (c || (e && e.message)) + ').';
+    const signInWith = async prov => {
+      err.textContent = ''; $g('gateOk').textContent = '';
       try {
         // popup first everywhere (works with any authDomain); redirect only if popups aren't possible
-        if (standalone && cfg.authDomain === location.hostname) await A.signInWithRedirect(auth, provider);
-        else await A.signInWithPopup(auth, provider);
+        if (standalone && cfg.authDomain === location.hostname) await A.signInWithRedirect(auth, prov);
+        else await A.signInWithPopup(auth, prov);
       } catch (e) {
         const c = (e && e.code) || '';
-        if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment' || c === 'auth/cancelled-popup-request') { try { await A.signInWithRedirect(auth, provider); } catch (e2) { err.textContent = 'Sign-in didn’t work: ' + (e2.code || e2.message); } }
-        else if (c === 'auth/popup-closed-by-user') {}
-        else if (c === 'auth/unauthorized-domain') err.textContent = 'This address isn’t on the Firebase project’s allowed list yet. Add it under Authentication → Settings → Authorized domains.';
-        else if (c === 'auth/network-request-failed') err.textContent = 'No connection. Try again, or use without an account for now.';
-        else err.textContent = 'Sign-in didn’t work (' + (c || e.message) + ').';
+        if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment' || c === 'auth/cancelled-popup-request') { try { await A.signInWithRedirect(auth, prov); } catch (e2) { err.textContent = 'Sign-in didn’t work: ' + (e2.code || e2.message); } }
+        else if (c === 'auth/popup-closed-by-user' || c === 'auth/user-cancelled') {}
+        else err.textContent = authMsg(c, e);
       }
+    };
+    $g('gateSignIn').onclick = () => signInWith(provider);
+    $g('gateApple').onclick = () => signInWith(apple);
+
+    /* Email + password (works in home-screen apps and inside Instagram/TikTok, where Google's sign-in is blocked).
+       One form with two modes: sign in, or create an account. */
+    const form = $g('gateEmail'), em = $g('gateEm'), pw = $g('gatePw'), ok = $g('gateOk');
+    let creating = false;
+    const setMode = c => {
+      creating = c;
+      $g('gateEmGo').textContent = c ? 'Create account' : 'Sign in';
+      $g('gateMode').textContent = c ? 'Have an account? Sign in' : 'New here? Create an account';
+      $g('gateForgot').hidden = c;
+      pw.placeholder = c ? 'Password (6+ characters)' : 'Password';
+      pw.autocomplete = c ? 'new-password' : 'current-password';
+    };
+    $g('gateEmailBtn').onclick = () => { $g('gateEmailBtn').hidden = true; form.hidden = false; em.focus(); };
+    $g('gateMode').onclick = () => { setMode(!creating); err.textContent = ''; ok.textContent = ''; };
+    form.onsubmit = async ev => {
+      ev.preventDefault(); err.textContent = ''; ok.textContent = '';
+      const email = em.value.trim(), password = pw.value;
+      if (!/^\S+@\S+\.\S+$/.test(email)) { err.textContent = 'Enter your email address.'; em.focus(); return; }
+      if (password.length < (creating ? 6 : 1)) { err.textContent = creating ? 'Pick a password with at least 6 characters.' : 'Enter your password.'; pw.focus(); return; }
+      busy(true);
+      try {
+        if (creating) await A.createUserWithEmailAndPassword(auth, email, password);
+        else await A.signInWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        const c = (e && e.code) || '';
+        if (c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found' || c === 'auth/invalid-login-credentials')
+          err.textContent = 'Wrong email or password. If you signed up with ' + others + ', use that button instead. New here? Tap “Create an account”.';
+        else if (c === 'auth/email-already-in-use') { err.textContent = 'There’s already an account with that email. Sign in instead (or use ' + others + ' if that’s how you signed up).'; setMode(false); }
+        else if (c === 'auth/invalid-email') err.textContent = 'That email address doesn’t look right.';
+        else if (c === 'auth/weak-password') err.textContent = 'Pick a password with at least 6 characters.';
+        else err.textContent = authMsg(c, e);
+      }
+      busy(false);
+    };
+    $g('gateForgot').onclick = async () => {
+      err.textContent = ''; ok.textContent = '';
+      const email = em.value.trim();
+      if (!/^\S+@\S+\.\S+$/.test(email)) { err.textContent = 'Type your email above first, then tap Forgot password.'; em.focus(); return; }
+      try { await A.sendPasswordResetEmail(auth, email); ok.textContent = 'If there’s an account for ' + email + ', a link to reset your password is on its way. Check your spam folder too.'; }
+      catch (e) { const c = (e && e.code) || ''; err.textContent = c === 'auth/invalid-email' ? 'That email address doesn’t look right.' : authMsg(c, e); }
     };
     A.getRedirectResult(auth).catch(e => { if (e && e.code && e.code !== 'auth/no-auth-event') err.textContent = 'Sign-in didn’t work (' + e.code + ').'; });
     let first = true;
@@ -232,9 +318,10 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     });
   } catch (e) {
     // couldn't load Firebase (offline on first visit, or blocked) — still usable on this device
-    err.textContent = 'Couldn’t reach Google sign-in. Check your connection, or use without an account for now.';
+    err.textContent = 'Couldn’t reach the sign-in service. Check your connection, or use without an account for now.';
     $g('gateSignIn').onclick = () => location.reload();
     $g('gateSignIn').textContent = 'Try again';
+    ['gateApple', 'gateOr', 'gateEmailBtn'].forEach(id => { $g(id).hidden = true; });
     if (noAccount()) goLocal(); else showGate();
   }
 }

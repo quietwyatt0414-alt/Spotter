@@ -2053,7 +2053,7 @@ function viewSettings() {
     </div>
     <div class="sec-head"><h2>Your data</h2></div>
     <div class="card store ${st.ok?'ok':''}"><div class="ic">${ic(st.ok?'cloud':'phone')}</div><div><b>${st.t}</b><div class="muted" style="font-size:14px;margin-top:2px">${st.d}</div></div></div>
-    ${HOST ? (() => { const a = HOST.account && HOST.account(); return a ? `<div class="card acct"><div><small>Signed in as</small><b>${esc(a.name || a.email || 'Google account')}</b>${a.name && a.email ? `<small>${esc(a.email)}</small>` : ''}</div><button class="btn btn-line sm" data-a="host-signout">Sign out</button></div>`
+    ${HOST ? (() => { const a = HOST.account && HOST.account(); return a ? `<div class="card acct"><div><small>Signed in as</small><b>${esc(a.name || a.email || 'Your account')}</b>${a.name && a.email ? `<small>${esc(a.email)}</small>` : ''}</div><button class="btn btn-line sm" data-a="host-signout">Sign out</button></div>`
       : `<button class="btn btn-acc block" data-a="host-signin" style="margin-top:10px">Sign in to sync across devices</button>`; })() : ''}
     <button class="imp-cta" data-a="imp-open">${ic('plus')}<span><b>Import from another app</b><small>Liftoff, Strong, Hevy, or any CSV</small></span>${ic('right')}</button>
     ${S.imports.length ? `<div class="card imp-list"><div class="eq-ttl">Imports</div>${S.imports.slice().reverse().map(b => `<div class="eq-row"><div><b>${esc(b.source === 'your file' ? b.file : b.source)} · ${plural(b.workouts,'workout')}</b><small>${fmtDate(b.at)}${b.file && b.source !== 'your file' ? ' · ' + esc(b.file) : ''}</small></div><button class="link" data-a="imp-undo" data-id="${b.id}">Undo</button></div>`).join('')}</div>` : ''}
@@ -2101,7 +2101,7 @@ function proModal() {
   let actions, note = '';
   if (!HOST) { note = `Spotter Pro is sold on the Spotter website, <a href="${PRO_SITE}" target="_blank" rel="noopener">${PRO_SITE.replace('https://', '')}</a>.`; actions = [{label:'Close', cls:'btn-line'}]; }
   else if (!canBuy) { note = 'Pro goes on sale soon. Everything you use today stays free either way.'; actions = [{label:'Close', cls:'btn-line'}]; }
-  else if (!signedIn) { note = 'Pro is tied to your account, so it works on your phone and laptop. Sign in with Google to buy it.'; actions = [{label:'Not now'}, {label:'Sign in to buy', cls:'btn-acc', fn:() => HOST.signIn()}]; }
+  else if (!signedIn) { note = 'Pro is tied to your account, so it works on your phone and laptop. Sign in to buy it.'; actions = [{label:'Not now'}, {label:'Sign in to buy', cls:'btn-acc', fn:() => HOST.signIn()}]; }
   else actions = [{label:'Not now'}, {label:`Buy Pro · ${proPrice()}`, cls:'btn-acc', fn:buyPro}];
   modal({title:'Spotter Pro', body:`
     <div class="pro-price">${esc(proPrice())}<small>once · no subscription</small></div>
@@ -3323,14 +3323,22 @@ const A = {
   'feedback-open': () => feedbackModal(),
   'pro-open': () => proModal(),
   'export-csv': () => proGate(exportCsv),
-  'host-delete': () => modal({title:'Delete your account?', body:`<p>This deletes your Spotter account and signs you out right away.</p>
-      <p>Your workout log is kept for 30 days in case you change your mind. To get it back, sign in again and email ${esc(HOST.contact || 'us')} from the same Google address. After 30 days it’s deleted for good.</p>
-      <p>Want your own copy? Tap Cancel, then <b>Copy backup</b> first.</p>`,
-    actions:[{label:'Cancel'}, {label:'Delete account', cls:'btn-danger', fn:() => { flush(); toast('Deleting your account…');
-      setTimeout(() => Promise.resolve(HOST.deleteAccount()).then(() => location.reload(), e => {
-        const c = (e && e.code) || '';
-        toast(c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request' ? 'Account not deleted' : c === 'auth/popup-blocked' ? 'Allow pop-ups to confirm with Google, then try again' : 'Couldn’t delete your account. Check your connection and try again');
-      }), 400); }}]}),
+  'host-delete': () => { const via = (HOST.account() || {}).via, pw = via === 'password';
+    modal({title:'Delete your account?', body:`<p>This deletes your Spotter account and signs you out right away.</p>
+      <p>Your workout log is kept for 30 days in case you change your mind. To get it back, sign in again and email ${esc(HOST.contact || 'us')} with the email address of your old account. After 30 days it’s deleted for good.</p>
+      <p>Want your own copy? Tap Cancel, then <b>Copy backup</b> first.</p>
+      ${pw ? '<label class="field"><span>Type your password to confirm</span><input type="password" name="pw" autocomplete="current-password"></label>' : ''}`,
+    focus:pw ? 'pw' : undefined,
+    actions:[{label:'Cancel'}, {label:'Delete account', cls:'btn-danger', validate:pw ? v => v.pw ? true : 'Type your password to confirm' : undefined, fn:v => { flush(); toast('Deleting your account…');
+      setTimeout(() => Promise.resolve(HOST.deleteAccount(v && v.pw)).then(() => location.reload(), e => {
+        const c = (e && e.code) || '', who = via === 'apple' ? 'Apple' : 'Google';
+        toast(c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request' || c === 'auth/user-cancelled' ? 'Account not deleted'
+          : c === 'auth/popup-blocked' ? `Allow pop-ups to confirm with ${who}, then try again`
+          : c === 'auth/missing-password' ? 'Type your password to delete your account'
+          : c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/invalid-login-credentials' ? 'Wrong password. Account not deleted'
+          : c === 'auth/too-many-requests' ? 'Too many tries. Wait a few minutes and try again'
+          : 'Couldn’t delete your account. Check your connection and try again');
+      }), 400); }}]}); },
   'host-signin': () => HOST && HOST.signIn && HOST.signIn(),
   'host-signout': () => modal({title:'Sign out?', body:'<p>Your log stays saved in your account. Sign back in any time to get it.</p>', actions:[{label:'Cancel'}, {label:'Sign out', cls:'btn-danger', fn:() => { flush(); setTimeout(() => HOST.signOut(), 400); }}]}),
   'backup-copy': copyBackup,

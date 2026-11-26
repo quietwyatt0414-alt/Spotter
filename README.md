@@ -4,7 +4,7 @@ A free workout tracker (free forever, no ads, optional one-time Pro): routines, 
 day streaks, an exercise-by-exercise progress view that tells you whether you're progressively
 overloading, gym-switch fixes, sick/vacation days, 20 color themes, and imports from Liftoff, Strong, Hevy and any CSV.
 
-It runs as a website with **Sign in with Google** (Firebase), so friends can use it from a link and add it to their home screen.
+It runs as a website with sign-in through Google, email or Apple (Firebase), so friends can use it from a link and add it to their home screen.
 
 - **Live site:** `https://spotter-6d902.web.app` (after setup)
 - **Demo with 5 months of sample data:** `https://spotter-6d902.web.app/demo/`
@@ -27,7 +27,7 @@ change the code  →  pull request  →  preview link posted on the PR  →  mer
 |---|---|
 | `app/index.html` | **The whole app** — one self-contained HTML file. Edit this. It's also the exact file published as the Spotter page on Claude. |
 | `app/demo-data.html` | Generates the demo lifter's 5 months of data (only used for `/demo/`). |
-| `firebase/host.html` | Google sign-in screen + Firestore saving, added in front of the app for the website. |
+| `firebase/host.html` | Sign-in screen (Google, Apple, email) + Firestore saving, added in front of the app for the website. |
 | `firebase/config.js` | Your Firebase project's web config (public by design). |
 | `firebase/sw.js`, `manifest.webmanifest`, `icons/` | Home-screen app icon and offline support. |
 | `scripts/build.py` | Builds `public/` (the website) from the files above. GitHub Actions runs it on every deploy. |
