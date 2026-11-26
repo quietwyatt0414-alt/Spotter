@@ -58,3 +58,12 @@ Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `
 - See it all at **`/stats/`**. One-time setup: Firebase console → Authentication → Users → copy your **User UID**, paste it
   over `PASTE_YOUR_UID_HERE` in `firestore.rules`, then `firebase deploy --only firestore:rules`.
   Until the rules are deployed, nothing is counted and feedback can't be sent.
+
+## Deleting accounts
+
+- **Settings → Delete account** (signed in, website only) deletes the person's Firebase sign-in right away and writes
+  `deletions/<uid>` with their email and name. Their log at `data/users/<uid>/` is kept.
+- On **`/stats/`**, *Deleted accounts* lists them with days left. **Restore** copies the log into their new account
+  (they sign in again, you paste their new User UID from Authentication → Users). **Delete for good** erases it.
+- Nothing deletes automatically (the free plan has no server code), so check `/stats/` and delete logs past 30 days,
+  as the privacy policy promises. Needs the same `firestore.rules` deploy as analytics.

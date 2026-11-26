@@ -31,6 +31,10 @@ tr:last-child td{border-bottom:0}
 .fb-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .fb-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;font-size:13px;color:var(--tx3)}
 .err{color:var(--danger)}
+.del{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.del.due{border-color:var(--danger)}
+.del-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.del-row input{flex:1;min-width:180px;font:inherit;font-size:14px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
 a{color:var(--acc)}
 </style>
 </head>
@@ -75,6 +79,8 @@ async function load(user) {
     document.getElementById('so').onclick = () => A.signOut(auth);
     return;
   }
+  // deleted accounts (separate so the page still works before these rules are deployed)
+  const dSnap = await F.getDocs(F.query(F.collection(fs, 'deletions'), F.orderBy('at', 'asc'))).catch(() => ({docs:[]}));
   const days = {}; mSnap.docs.forEach(d => { days[d.id] = d.data(); });
   const g = (d, k) => (days[d] && days[d][k]) || 0;
   const today = dayOf(Date.now());
@@ -117,6 +123,13 @@ async function load(user) {
     <h2>Feedback (${fSnap.size})</h2>
     ${fSnap.docs.map(d => { const f = d.data(), at = f.at && f.at.toDate ? f.at.toDate().toLocaleString() : '';
       return `<div class="fb"><div class="fb-text">${esc(f.text || '')}</div><div class="fb-meta"><span>${esc(at)}${f.email ? ` · <a href="mailto:${esc(f.email)}">${esc(f.email)}</a>` : ''}${f.signedIn ? '' : ' · no account'}</span><button class="line" data-del="${esc(d.id)}">Delete</button></div></div>`; }).join('') || '<p class="small">No feedback yet.</p>'}
+    <h2>Deleted accounts (${dSnap.docs.length})</h2>
+    <p class="small">Logs are kept 30 days after someone deletes their account. To restore one: have them sign in again, copy their new <b>User UID</b> from Firebase console → Authentication → Users, paste it below and tap Restore, then ask them to close and reopen Spotter. After 30 days, tap <b>Delete for good</b>.</p>
+    ${dSnap.docs.map(d => { const r = d.data(), at = r.at && r.at.toMillis ? r.at.toMillis() : Date.now(), left = 30 - Math.floor((Date.now() - at) / DAY);
+      return `<div class="del ${left <= 0 ? 'due' : ''}" data-uid="${esc(d.id)}"><div><b>${esc(r.email || '(no email)')}</b>${r.name ? ' · ' + esc(r.name) : ''}</div>
+        <div class="small">Deleted ${esc(new Date(at).toLocaleDateString())} · ${left > 0 ? `${left} day${left === 1 ? '' : 's'} left to restore` : '<span class="err">30 days are up: delete for good</span>'} · old ID ${esc(d.id)}</div>
+        <div class="del-row"><input placeholder="New User UID" aria-label="New User UID"><button class="line" data-restore>Restore</button><button class="line" data-purge>Delete for good</button></div>
+        <div class="small del-msg"></div></div>`; }).join('') || '<p class="small">None.</p>'}
     <p class="small" style="margin-top:28px">Signed in as ${esc(user.email || user.uid)} · <button class="line" id="so">Sign out</button></p>`;
   document.getElementById('so').onclick = () => A.signOut(auth);
   out.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
@@ -125,6 +138,25 @@ async function load(user) {
     try { await F.deleteDoc(F.doc(fs, 'feedback', b.dataset.del)); b.closest('.fb').remove(); } catch { b.disabled = false; b.textContent = 'Couldn’t delete'; }
   });
 }
+// move (or erase) a deleted account's log: data/users/{uid}/* plus its deletions record
+async function moveLog(oldUid, newUid) {
+  const docs = (await F.getDocs(F.collection(fs, 'data/users/' + oldUid))).docs;
+  if (newUid) for (const d of docs) await F.setDoc(F.doc(fs, 'data/users/' + newUid + '/' + d.id), d.data());
+  for (const d of docs) await F.deleteDoc(d.ref);
+  await F.deleteDoc(F.doc(fs, 'usermeta', oldUid)).catch(() => {});
+  await F.deleteDoc(F.doc(fs, 'deletions', oldUid));
+  return docs.length;
+}
+out.addEventListener('click', async e => {
+  const b = e.target.closest('[data-restore],[data-purge]'); if (!b) return;
+  const box = b.closest('.del'), msg = box.querySelector('.del-msg'), uid = box.dataset.uid;
+  const newUid = b.hasAttribute('data-restore') ? box.querySelector('input').value.trim() : null;
+  if (b.hasAttribute('data-restore') && (!newUid || newUid === uid)) { msg.textContent = 'Paste their new User UID first.'; return; }
+  if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = newUid ? 'Tap again to restore' : 'Tap again to delete for good'; return; }
+  box.querySelectorAll('button').forEach(x => x.disabled = true); msg.textContent = 'Working…';
+  try { const n = await moveLog(uid, newUid); box.innerHTML = `<div class="small">${newUid ? `Restored ${n} documents to ${esc(newUid)}. Ask them to close and reopen Spotter.` : `Deleted ${n} documents for good.`}</div>`; }
+  catch (err) { console.warn(err); msg.textContent = 'Didn’t finish (' + ((err && err.code) || 'error') + '). Tap again to retry.'; box.querySelectorAll('button').forEach(x => { x.disabled = false; delete x.dataset.sure; }); }
+});
 A.onAuthStateChanged(auth, user => user ? load(user) : signInView());
 </script>
 </body>

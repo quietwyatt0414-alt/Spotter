@@ -2033,6 +2033,7 @@ function viewSettings() {
       </div>
       ${DEMO ? `<button class="btn btn-ghost block" data-a="demo-reset">Reset demo data</button>` : ''}
       <button class="btn btn-danger-ghost block" data-a="wipe">Delete all data</button>
+      ${HOST && typeof HOST.deleteAccount === 'function' && HOST.account && HOST.account() ? `<button class="btn btn-danger-ghost block" data-a="host-delete">Delete account</button>` : ''}
     </div>
     ${HOST && typeof HOST.sendFeedback === 'function' && !DEMO ? `<button class="imp-cta" data-a="feedback-open" style="margin-top:22px">${ic('chat')}<span><b>Send feedback</b><small>Bug, idea, missing exercise? It goes straight to the person who makes Spotter.</small></span>${ic('right')}</button>` : ''}
     <div class="foot-note">${plural(S.workouts.length,'workout')} · ${plural(S.routines.length,'routine')} · ${plural(S.customExercises.length,'custom exercise')}<br>Spotter · free, no ads, no subscription${HOST ? `<br><a href="privacy/">Privacy</a> · <a href="terms/">Terms</a>` : ''}</div>`;
@@ -3098,6 +3099,14 @@ const A = {
   'imp-undo': el => { const b = S.imports.find(x => x.id === el.dataset.id); if (!b) return;
     modal({title:'Undo this import?', body:`<p>Removes the ${plural(b.workouts,'workout')} it added${b.routines.length ? `, the ${plural(b.routines.length,'routine')} it made` : ''}${b.customs.length ? ', and custom exercises it created that you haven’t used since' : ''}. Everything else stays.</p>`, actions:[{label:'Cancel'}, {label:'Undo import', cls:'btn-danger', fn:() => undoImport(b.id)}]}); },
   'feedback-open': () => feedbackModal(),
+  'host-delete': () => modal({title:'Delete your account?', body:`<p>This deletes your Spotter account and signs you out right away.</p>
+      <p>Your workout log is kept for 30 days in case you change your mind. To get it back, sign in again and email ${esc(HOST.contact || 'us')} from the same Google address. After 30 days it’s deleted for good.</p>
+      <p>Want your own copy? Tap Cancel, then <b>Copy backup</b> first.</p>`,
+    actions:[{label:'Cancel'}, {label:'Delete account', cls:'btn-danger', fn:() => { flush(); toast('Deleting your account…');
+      setTimeout(() => Promise.resolve(HOST.deleteAccount()).then(() => location.reload(), e => {
+        const c = (e && e.code) || '';
+        toast(c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request' ? 'Account not deleted' : c === 'auth/popup-blocked' ? 'Allow pop-ups to confirm with Google, then try again' : 'Couldn’t delete your account. Check your connection and try again');
+      }), 400); }}]}),
   'host-signin': () => HOST && HOST.signIn && HOST.signIn(),
   'host-signout': () => modal({title:'Sign out?', body:'<p>Your log stays saved in your account. Sign back in any time to get it.</p>', actions:[{label:'Cancel'}, {label:'Sign out', cls:'btn-danger', fn:() => { flush(); setTimeout(() => HOST.signOut(), 400); }}]}),
   'backup-copy': copyBackup,
