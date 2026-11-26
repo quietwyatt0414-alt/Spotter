@@ -244,6 +244,19 @@ h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:.01em}
 .step span{min-width:44px;text-align:center;font-weight:700;font-size:14px}
 .re-ex .icon-btn{width:32px;height:34px}
 
+/* reorder sheet */
+.ro-card{height:auto;max-height:90vh;max-height:90dvh}
+.ro-hint{color:var(--tx3);font-size:13px;padding:0 16px 10px}
+.ro-list{overflow-y:auto;padding:10px 12px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px;position:relative}
+.ro-row{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 6px 8px 12px;background:var(--s2);border:1px solid var(--line);border-radius:12px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;transition:transform .18s ease;position:relative}
+.ro-row .ro-n{width:22px;flex:none;text-align:center;font-weight:800;color:var(--tx3);font-size:14px}
+.ro-row .nm{flex:1;min-width:0}
+.ro-row .nm b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro-row .nm small{color:var(--tx3);font-size:12px}
+.ro-row .ro-grip{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--tx3)}
+.ro-row.drag{transition:none;z-index:2;cursor:grabbing;border-color:var(--acc);box-shadow:0 10px 28px rgba(0,0,0,.45);background:var(--s1)}
+.ro-row.drag .ro-grip{color:var(--acc)}
+
 /* progress */
 .seg{display:flex;background:var(--s2);border-radius:12px;padding:3px;gap:3px}
 .seg button{flex:1;height:36px;border-radius:9px;font-weight:700;font-size:14px;color:var(--tx2)}
@@ -522,6 +535,7 @@ const ICONS = {
   dots:'<circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none"/>',
   down:'<path d="M6 9l6 6 6-6"/>', left:'<path d="M15 6l-6 6 6 6"/>', right:'<path d="M9 6l6 6-6 6"/>',
   up:'<path d="M6 15l6-6 6 6"/>',
+  grip:'<path d="M5 8h14M5 12h14M5 16h14"/>',
   trendup:'<path d="M4 17l6-6 4 4 6-7"/><path d="M15 8h5v5"/>',
   trenddown:'<path d="M4 7l6 6 4-4 6 7"/><path d="M15 16h5v-5"/>',
   flat:'<path d="M5 12h14M15 8l4 4-4 4"/>',
@@ -2417,11 +2431,10 @@ function screenRoutine() {
   return `<div class="lhead"><button class="icon-btn" data-a="routine-cancel" aria-label="Cancel">${ic('x')}</button><div class="ttl">${d.isNew ? 'New routine' : 'Edit routine'}</div><button class="btn btn-acc sm" data-a="routine-save">Save</button></div>
   <div class="wrap">
     <label class="field"><span>Name</span><input data-draftname value="${esc(d.name)}" placeholder="e.g. Upper A" maxlength="40"></label>
-    <div class="sec-head" style="margin-top:16px"><h2>Exercises</h2></div>
+    <div class="sec-head" style="margin-top:16px"><h2>Exercises</h2>${d.ex.length > 1 ? `<button class="link" data-a="re-reorder">Reorder</button>` : ''}</div>
     <div class="list">${d.ex.length ? d.ex.map((e,i) => `<div class="re-ex">
       <div class="nm"><b>${esc(exName(e.exId))}</b><small>${esc(musLine(e.exId))}</small></div>
       <div class="step"><button data-a="re-n" data-i="${i}" data-v="-1" aria-label="Fewer sets">−</button><span>${e.n} sets</span><button data-a="re-n" data-i="${i}" data-v="1" aria-label="More sets">+</button></div>
-      <button class="icon-btn" data-a="re-up" data-i="${i}" aria-label="Move up" ${i===0?'disabled style="opacity:.3"':''}>${ic('up')}</button>
       <button class="icon-btn" data-a="re-del" data-i="${i}" aria-label="Remove">${ic('x')}</button>
     </div>`).join('') : `<div class="empty">No exercises yet.</div>`}</div>
     <button class="btn btn-ghost block" data-a="re-add" style="margin-top:12px">${ic('plus')}Add exercises</button>
@@ -2439,6 +2452,76 @@ function openPicker(cb, {single = false, title = 'Add exercises', only = null, m
   pk = {sel:current ? [current] : [], q:'', mus:'All', cb, single, title, only, meta};
   renderPicker(); syncLock();
   if (!('ontouchstart' in window)) setTimeout(() => { const s = $('#pkSearch'); s && s.focus(); }, 50);
+}
+/* ---------- reorder sheet: drag exercises into any order ---------- */
+let ro = null;
+function reorderActive() {
+  if (!S.active) return;
+  openReorder(S.active.ex.map(e => ({label:exName(e.exId), sub:plural(e.sets.length, 'set')})), order => {
+    S.active.ex = order.map(i => S.active.ex[i]); markDirty('active'); renderWorkout();
+  });
+}
+function openReorder(items, onDone) {
+  ro = {onDone};
+  const el = $('#sheet'); el.classList.add('open');
+  el.innerHTML = `<div class="sheet-bg" data-a="ro-cancel"></div><div class="sheet-card ro-card" role="dialog" aria-label="Reorder exercises">
+    <div class="sheet-head"><button class="link" data-a="ro-cancel" style="color:var(--tx2)">Cancel</button><div class="ttl">Reorder</div><button class="link" data-a="ro-done">Done</button></div>
+    <div class="ro-hint">Drag an exercise up or down to move it.</div>
+    <div class="ro-list" id="roList">${items.map((it, i) => `<div class="ro-row" data-ri="${i}"><span class="ro-n">${i + 1}</span><div class="nm"><b>${esc(it.label)}</b>${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</div><span class="ro-grip" aria-hidden="true">${ic('grip')}</span></div>`).join('')}</div>
+  </div>`;
+  syncLock();
+  $('#roList').addEventListener('pointerdown', roStart);
+}
+function closeReorder() { if (ro && ro.drag) roEnd(); ro = null; $('#sheet').classList.remove('open'); $('#sheet').innerHTML = ''; syncLock(); }
+function roOrder() { return [...document.querySelectorAll('#roList .ro-row')].map(r => +r.dataset.ri); }
+function roStart(e) {
+  const row = e.target.closest('.ro-row'); if (!row || !ro || ro.drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  e.preventDefault();
+  const list = $('#roList'), rows = [...list.querySelectorAll('.ro-row')];
+  if (rows.length < 2) return;
+  const from = rows.indexOf(row);
+  ro.drag = {row, rows, list, from, to:from, pitch:rows[1].offsetTop - rows[0].offsetTop, y0:e.clientY, y:e.clientY, s0:list.scrollTop, id:e.pointerId, raf:0};
+  try { row.setPointerCapture(e.pointerId); } catch {}
+  row.classList.add('drag');
+  row.addEventListener('pointermove', roMove);
+  row.addEventListener('pointerup', roEnd);
+  row.addEventListener('pointercancel', roEnd);
+  roScrollLoop();
+}
+function roMove(e) { const d = ro && ro.drag; if (!d || e.pointerId !== d.id) return; e.preventDefault(); d.y = e.clientY; roLayout(); }
+function roLayout() {
+  const d = ro.drag, dy = d.y - d.y0 + (d.list.scrollTop - d.s0);
+  const minDy = -d.from * d.pitch, maxDy = (d.rows.length - 1 - d.from) * d.pitch;
+  const cdy = Math.max(minDy - 12, Math.min(maxDy + 12, dy));
+  d.row.style.transform = `translateY(${cdy}px) scale(1.02)`;
+  const to = Math.max(0, Math.min(d.rows.length - 1, d.from + Math.round(cdy / d.pitch)));
+  if (to !== d.to) { d.to = to; try { navigator.vibrate && navigator.vibrate(8); } catch {} }
+  d.rows.forEach((r, i) => {
+    if (r === d.row) return;
+    const shift = d.from < to && i > d.from && i <= to ? -d.pitch : d.from > to && i >= to && i < d.from ? d.pitch : 0;
+    r.style.transform = shift ? `translateY(${shift}px)` : '';
+  });
+}
+// keep the list scrolling while a row is held near its top or bottom edge
+function roScrollLoop() {
+  const d = ro && ro.drag; if (!d) return;
+  const b = d.list.getBoundingClientRect(), edge = 48;
+  const v = d.y < b.top + edge ? -Math.ceil((b.top + edge - d.y) / 6) : d.y > b.bottom - edge ? Math.ceil((d.y - b.bottom + edge) / 6) : 0;
+  if (v) { const before = d.list.scrollTop; d.list.scrollTop += v; if (d.list.scrollTop !== before) roLayout(); }
+  d.raf = requestAnimationFrame(roScrollLoop);
+}
+function roEnd() {
+  const d = ro && ro.drag; if (!d) return;
+  ro.drag = null; cancelAnimationFrame(d.raf);
+  d.row.removeEventListener('pointermove', roMove); d.row.removeEventListener('pointerup', roEnd); d.row.removeEventListener('pointercancel', roEnd);
+  // put the row where it was dropped, then drop the transforms without animating back
+  d.rows.forEach(r => { r.style.transition = 'none'; r.style.transform = ''; });
+  d.row.classList.remove('drag');
+  const rest = d.rows.filter(r => r !== d.row);
+  if (d.to >= rest.length) d.list.appendChild(d.row); else d.list.insertBefore(d.row, rest[d.to]);
+  d.list.querySelectorAll('.ro-row').forEach((r, i) => { r.querySelector('.ro-n').textContent = i + 1; });
+  void d.list.offsetHeight;
+  d.rows.forEach(r => { r.style.transition = ''; });
 }
 function closePicker() { pk = null; $('#sheet').classList.remove('open'); $('#sheet').innerHTML = ''; syncLock(); }
 function renderPicker() {
@@ -3075,8 +3158,7 @@ const A = {
       {label: e.note ? 'Edit note' : 'Add note', fn:() => modal({title:'Note', body:`<label class="field"><textarea name="note" style="font-family:var(--body);font-size:16px" placeholder="Seat height 4, slow negatives…">${esc(e.note)}</textarea></label>`, focus:'note',
         actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc', fn:v => { e.note = v.note.trim().slice(0, 200); markDirty('active'); rerenderCard(i); }}]})},
       {label:'Replace exercise', fn:() => openPicker(ids => { e.exId = ids[0]; markDirty('active'); renderWorkout(); }, {single:true, title:'Replace with'})},
-      ...(i > 0 ? [{label:'Move up', fn:() => { [S.active.ex[i-1], S.active.ex[i]] = [S.active.ex[i], S.active.ex[i-1]]; markDirty('active'); renderWorkout(); }}] : []),
-      ...(i < S.active.ex.length - 1 ? [{label:'Move down', fn:() => { [S.active.ex[i+1], S.active.ex[i]] = [S.active.ex[i], S.active.ex[i+1]]; markDirty('active'); renderWorkout(); }}] : []),
+      ...(S.active.ex.length > 1 ? [{label:'Reorder exercises', fn:reorderActive}] : []),
       {label:'Remove exercise', cls:'btn-danger-ghost', fn:() => exMenuRemove(i)},
     ]);
   },
@@ -3116,7 +3198,7 @@ const A = {
   'routine-delete': () => { const r = S.routines.find(x => x.id === draft.id); if (r) confirmDeleteRoutine(r, true); },
   're-add': () => openPicker(ids => { ids.forEach(id => draft.ex.push({exId:id, n:3})); renderScreen(); }),
   're-n': el => { const e = draft.ex[+el.dataset.i]; e.n = Math.max(1, Math.min(12, e.n + +el.dataset.v)); renderScreenKeep(); },
-  're-up': el => { const i = +el.dataset.i; if (i > 0) { [draft.ex[i-1], draft.ex[i]] = [draft.ex[i], draft.ex[i-1]]; renderScreenKeep(); } },
+  're-reorder': () => openReorder(draft.ex.map(e => ({label:exName(e.exId), sub:plural(e.n, 'set')})), order => { draft.ex = order.map(i => draft.ex[i]); renderScreenKeep(); }),
   're-del': el => { draft.ex.splice(+el.dataset.i, 1); renderScreenKeep(); },
 
   'prog-pick': () => {
@@ -3260,6 +3342,8 @@ const A = {
   }}, {label:'Keep my data', cls:'btn-acc'}]}),
 
   'pk-close': closePicker,
+  'ro-cancel': closeReorder,
+  'ro-done': () => { const r = ro, order = roOrder(); closeReorder(); if (r && order.some((v, i) => v !== i)) r.onDone(order); },
   'pk-mus': el => { pk.mus = el.dataset.k; renderPicker(); },
   // tapping a movement's name: picks the equipment you used last (or the first one); tapping again clears it
   'pk-move': el => {
@@ -3345,7 +3429,7 @@ document.addEventListener('change', e => {
   else if (t.matches('#modal [name=date]')) { const ex = document.querySelector('#modal h3') && progEx; const c = $('#eqConv'); if (c && ex && fromIso(t.value)) c.innerHTML = convFields(ex, fromIso(t.value)); }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if ($('#modal').classList.contains('open')) tryCloseModal(); else if (pk) closePicker(); }
+  if (e.key === 'Escape') { if ($('#modal').classList.contains('open')) tryCloseModal(); else if (ro) closeReorder(); else if (pk) closePicker(); }
   if (e.key === 'Enter' && e.target.matches('#workout input[data-f]')) e.target.blur();
 });
 
