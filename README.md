@@ -31,6 +31,7 @@ change the code  →  pull request  →  preview link posted on the PR  →  mer
 | `firebase/config.js` | Your Firebase project's web config (public by design). |
 | `firebase/sw.js`, `manifest.webmanifest`, `icons/` | Home-screen app icon and offline support. |
 | `scripts/build.py` | Builds `public/` (the website) from the files above. GitHub Actions runs it on every deploy. |
+| `landing/` | The landing page at `/about/`: what Spotter is, screenshots, pricing, FAQ. Share this link in posts. Screenshots in `landing/shots/` come from the demo; `og.png` is the link-preview image. |
 | `firebase/stats.html` | Owner-only stats page at `/stats/`: sign-ups, workouts, active people, 1-week retention, and feedback. |
 | `firestore.rules` | Privacy rules: each person can only read and write their own data. |
 | `functions/` | Spotter Pro payments: Stripe Checkout and the webhook that unlocks Pro (needs the Blaze plan). See **[PAYMENTS.md](PAYMENTS.md)**. |
