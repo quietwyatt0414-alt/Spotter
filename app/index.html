@@ -486,8 +486,6 @@ button.ex-name{text-align:left;padding:0}
 .pro-list li{display:grid;grid-template-columns:22px 1fr;gap:8px;color:var(--tx2)} .pro-list li b{color:var(--tx)}
 .pro-list li svg.i{color:var(--acc);width:20px;height:20px;margin-top:1px}
 .pro-lock{text-align:center;padding:26px 18px} .pro-lock > svg.i{width:34px;height:34px;color:var(--acc)} .pro-lock b{display:block;font-size:18px;margin:8px 0 6px;color:var(--tx)} .pro-lock p{color:var(--tx2);margin:0 0 12px}
-.pro-gift{border-top:1px solid var(--line);padding-top:10px;margin-top:4px} .pro-gift small{color:var(--tx3);font-size:12.5px;display:block}
-.pro-gift div{display:flex;align-items:center;gap:10px;margin-top:4px} .pro-gift code{font-size:13px;color:var(--tx);user-select:all;-webkit-user-select:all;overflow-wrap:anywhere}
 .pro-price{font-family:var(--head);font-size:30px;font-weight:800;color:var(--tx);line-height:1}
 .pro-price small{font-family:var(--body);font-size:14px;font-weight:600;color:var(--tx2);margin-left:6px}
 .foot-note a{color:var(--tx2)}
@@ -2094,12 +2092,11 @@ function proModal() {
   else if (!canBuy) { note = 'Pro goes on sale soon. Everything you use today stays free either way.'; actions = [{label:'Close', cls:'btn-line'}]; }
   else if (!signedIn) { note = 'Pro is tied to your account, so it works on your phone and laptop. Sign in with Google to buy it.'; actions = [{label:'Not now'}, {label:'Sign in to buy', cls:'btn-acc', fn:() => HOST.signIn()}]; }
   else actions = [{label:'Not now'}, {label:`Buy Pro · ${proPrice()}`, cls:'btn-acc', fn:buyPro}];
-  const gift = signedIn && signedIn.id && !isPro() ? `<div class="pro-gift"><small>Getting Pro as a gift? Send this code to the person giving it:</small><div><code>${esc(signedIn.id)}</code><button class="link" data-a="pro-copyid">Copy</button></div></div>` : '';
   modal({title:'Spotter Pro', body:`
     <div class="pro-price">${esc(proPrice())}<small>once · no subscription</small></div>
     <p style="margin-top:8px">Logging, routines, history, PRs and streaks are free forever, with no ads, ever. Pro adds the tools that show how you’re progressing, and helps keep Spotter going.</p>
     <ul class="pro-list">${PRO_FEATURES.map(([i, t, d]) => `<li>${ic(i)}<span><b>${t}.</b> ${d}</span></li>`).join('')}</ul>
-    ${note ? `<p>${note}</p>` : '<p class="faint" style="font-size:13px">Secure checkout by Stripe. Launch-price buyers are founding members. Questions or a refund: Settings → Send feedback.</p>'}${gift}`, actions});
+    ${note ? `<p>${note}</p>` : '<p class="faint" style="font-size:13px">Secure checkout by Stripe. Launch-price buyers are founding members. Questions or a refund: Settings → Send feedback.</p>'}`, actions});
 }
 async function buyPro() {
   toast('Opening secure checkout…');
@@ -3246,8 +3243,6 @@ const A = {
     modal({title:'Undo this import?', body:`<p>Removes the ${plural(b.workouts,'workout')} it added${b.routines.length ? `, the ${plural(b.routines.length,'routine')} it made` : ''}${b.customs.length ? ', and custom exercises it created that you haven’t used since' : ''}. Everything else stays.</p>`, actions:[{label:'Cancel'}, {label:'Undo import', cls:'btn-danger', fn:() => undoImport(b.id)}]}); },
   'feedback-open': () => feedbackModal(),
   'pro-open': () => proModal(),
-  'pro-copyid': () => { const a = HOST && HOST.account && HOST.account(); if (!a || !a.id) return;
-    navigator.clipboard.writeText(a.id).then(() => toast('Code copied. Send it to whoever is giving you Pro')).catch(() => toast('Press and hold the code to copy it')); },
   'export-csv': () => proGate(exportCsv),
   'host-delete': () => modal({title:'Delete your account?', body:`<p>This deletes your Spotter account and signs you out right away.</p>
       <p>Your workout log is kept for 30 days in case you change your mind. To get it back, sign in again and email ${esc(HOST.contact || 'us')} from the same Google address. After 30 days it’s deleted for good.</p>

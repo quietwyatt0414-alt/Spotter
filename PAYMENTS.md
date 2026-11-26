@@ -91,13 +91,12 @@ variables → Actions → **Variables** → `PRO_PRICE_CENTS` = `2999`, run **De
 
 ## Giving Pro to friends for free
 
-1. Your friend signs in to Spotter, opens **Settings → Spotter Pro**, taps **Copy** under "Getting Pro as a gift?",
-   and texts you the code.
-2. You open `https://spotter-6d902.web.app/stats/` (signed in with your Google account), paste the code under
-   **Give Pro**, add their name so you remember who it is, and tap **Give Pro**. It unlocks for them in seconds.
-3. Everyone you've given Pro to is listed there, with **Remove** to take it back.
+Open `https://spotter-6d902.web.app/stats/` (signed in with your Google account), find your friend under
+**People** (search by name or email), and switch **Pro** on. It unlocks for them within seconds. Switch it off to take
+it back.
 
-This works as soon as the Firestore rules are deployed (step 6), even before Stripe is set up.
+People show up in that list after they open Spotter signed in once the Firestore rules are deployed (step 6). This
+works even before Stripe is set up.
 
 ## Refunds and support
 

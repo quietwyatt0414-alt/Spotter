@@ -34,6 +34,10 @@ tr:last-child td{border-bottom:0}
 .del{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
 .del.due{border-color:var(--danger)}
 .del-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.search{width:100%;font:inherit;font-size:15px;background:var(--s1);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:8px}
+.person{display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
+.person .who{flex:1;min-width:0} .person .who b{display:block;overflow:hidden;text-overflow:ellipsis} .person .who .small{display:block;overflow-wrap:anywhere}
+.person .tg{display:flex;align-items:center;gap:8px} .person input{width:22px;height:22px;accent-color:var(--acc)}
 .del-row input{flex:1;min-width:180px;font:inherit;font-size:14px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
 a{color:var(--acc)}
 </style>
@@ -82,7 +86,9 @@ async function load(user) {
   // deleted accounts (separate so the page still works before these rules are deployed)
   const dSnap = await F.getDocs(F.query(F.collection(fs, 'deletions'), F.orderBy('at', 'asc'))).catch(() => ({docs:[]}));
   const pSnap = await F.getDocs(F.collection(fs, 'entitlements')).catch(() => ({docs:[]}));
-  const given = pSnap.docs.filter(d => d.data().pro && d.data().given);
+  const uSnap = await F.getDocs(F.collection(fs, 'usermeta')).catch(() => ({docs:[]}));
+  const ent = {}; pSnap.docs.forEach(d => { ent[d.id] = d.data(); });
+  const people = uSnap.docs.map(d => ({uid:d.id, ...d.data()})).sort((a, b) => String(b.last || '').localeCompare(String(a.last || '')));
   const pro = pSnap.docs.map(d => d.data()), paid = pro.filter(x => x.pro && x.amount > 0);
   const live = paid.filter(x => x.livemode), cents = live.reduce((a, x) => a + (x.amount || 0), 0);
   const days = {}; mSnap.docs.forEach(d => { days[d.id] = d.data(); });
@@ -131,10 +137,13 @@ async function load(user) {
       <div class="tile"><b>${pro.filter(x => x.pro && !x.amount).length}</b><span>Pro given free by you</span></div>
       <div class="tile"><b>${paid.length - live.length}</b><span>test-mode purchases</span></div>
     </div>
-    <p class="small" style="margin-top:10px">Payments, receipts and refunds are in your Stripe dashboard. A full refund there takes Pro away automatically. To give someone Pro for free: they open <b>Settings → Spotter Pro</b> in the app, tap <b>Copy</b> under “Getting Pro as a gift?” and send you the code. Paste it here:</p>
-    <div class="del-row" id="give"><input id="giveUid" placeholder="Their code" aria-label="Their code"><input id="giveName" placeholder="Who is it? (just for you)" aria-label="Name"><button class="line" data-give>Give Pro</button></div>
-    <div class="small" id="giveMsg" style="margin-top:6px"></div>
-    ${given.length ? `<div style="margin-top:10px">${given.map(d => { const g = d.data(); return `<div class="del-row" style="margin-top:4px"><span style="flex:1">${esc(g.note || 'No name')} <span class="small">· ${esc(d.id)}${g.since && g.since.toDate ? ' · since ' + esc(g.since.toDate().toLocaleDateString()) : ''}</span></span><button class="line" data-ungive="${esc(d.id)}">Remove</button></div>`; }).join('')}</div>` : ''}
+    <p class="small" style="margin-top:10px">Payments, receipts and refunds are in your Stripe dashboard. A full refund there takes Pro away automatically. To give someone Pro for free, find them under People below and switch Pro on.</p>
+    <h2>People (${people.length})</h2>
+    <p class="small">Everyone who has opened Spotter signed in since this list was added, most recent first. Switch <b>Pro</b> on to give someone Pro for free, or off to take it away. It changes for them within seconds.</p>
+    <input id="pplSearch" class="search" placeholder="Search name or email" aria-label="Search people">
+    <div class="ppl">${people.map(u => { const e = ent[u.uid] || {}, on = !!e.pro, paid = e.amount > 0;
+      return `<label class="person" data-q="${esc(((u.name || '') + ' ' + (u.email || '')).toLowerCase())}"><span class="who"><b>${esc(u.name || u.email || '(no name)')}</b><span class="small">${esc(u.email || '')}${u.last ? ' · last seen ' + esc(u.last) : ''}${paid ? ' · paid $' + (e.amount / 100).toFixed(2) : ''}</span></span>
+        <span class="tg"><span class="small pro-lbl">Pro</span><input type="checkbox" role="switch" data-pro="${esc(u.uid)}" ${on ? 'checked' : ''} ${paid && on ? 'data-paid="1"' : ''}></span></label>`; }).join('') || '<p class="small">Nobody yet. People show up here after they open Spotter signed in.</p>'}</div>
     <h2>Feedback (${fSnap.size})</h2>
     ${fSnap.docs.map(d => { const f = d.data(), at = f.at && f.at.toDate ? f.at.toDate().toLocaleString() : '';
       return `<div class="fb"><div class="fb-text">${esc(f.text || '')}</div><div class="fb-meta"><span>${esc(at)}${f.email ? ` · <a href="mailto:${esc(f.email)}">${esc(f.email)}</a>` : ''}${f.signedIn ? '' : ' · no account'}</span><button class="line" data-del="${esc(d.id)}">Delete</button></div></div>`; }).join('') || '<p class="small">No feedback yet.</p>'}
@@ -147,21 +156,21 @@ async function load(user) {
         <div class="small del-msg"></div></div>`; }).join('') || '<p class="small">None.</p>'}
     <p class="small" style="margin-top:28px">Signed in as ${esc(user.email || user.uid)} · <button class="line" id="so">Sign out</button></p>`;
   document.getElementById('so').onclick = () => A.signOut(auth);
-  out.querySelector('[data-give]').onclick = async () => {
-    const uid = out.querySelector('#giveUid').value.trim(), note = out.querySelector('#giveName').value.trim().slice(0, 80), m = out.querySelector('#giveMsg');
-    if (!/^[A-Za-z0-9_-]{6,128}$/.test(uid)) { m.textContent = 'Paste their code first.'; return; }
-    const ref = F.doc(fs, 'entitlements', uid);
+  out.querySelector('#pplSearch').oninput = e => { const q = e.target.value.trim().toLowerCase();
+    out.querySelectorAll('.person').forEach(r => { r.style.display = !q || r.dataset.q.includes(q) ? '' : 'none'; }); };
+  // Pro switch: on gives Pro free (or turns a paid one back on), off takes it away
+  out.querySelectorAll('[data-pro]').forEach(cb => cb.onchange = async () => {
+    const uid = cb.dataset.pro, on = cb.checked, ref = F.doc(fs, 'entitlements', uid), lbl = cb.parentElement.querySelector('.pro-lbl');
+    if (!on && cb.dataset.paid && !confirm('This person paid for Pro. Take it away anyway? (Refunds are done in Stripe, which removes Pro by itself.)')) { cb.checked = true; return; }
+    cb.disabled = true; lbl.textContent = 'Saving…';
     try {
-      const cur = await F.getDoc(ref);
-      if (cur.exists() && cur.data().pro) { m.textContent = 'They already have Pro.'; return; }
-      await F.setDoc(ref, {pro:true, founding:false, amount:0, currency:'usd', session:'', paymentIntent:'', livemode:false, given:true, note, since:F.serverTimestamp()});
-      m.textContent = 'Done. Pro shows up for them within seconds.'; setTimeout(() => load(user), 1200);
-    } catch (e) { m.textContent = 'Didn’t work (' + ((e && e.code) || 'error') + ').'; }
-  };
-  out.querySelectorAll('[data-ungive]').forEach(b => b.onclick = async () => {
-    if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Tap again to remove'; return; }
-    b.disabled = true;
-    try { await F.deleteDoc(F.doc(fs, 'entitlements', b.dataset.ungive)); b.closest('.del-row').remove(); } catch { b.disabled = false; b.textContent = 'Couldn’t remove'; }
+      const cur = await F.getDoc(ref), d = cur.exists() ? cur.data() : null;
+      if (on) await F.setDoc(ref, d && d.amount > 0 ? {...d, pro:true} : {pro:true, founding:false, amount:0, currency:'usd', session:'', paymentIntent:'', livemode:false, given:true, since:F.serverTimestamp()});
+      else if (d && d.amount > 0) await F.setDoc(ref, {...d, pro:false});
+      else if (d) await F.deleteDoc(ref);
+      lbl.textContent = on ? 'Pro ✓' : 'Pro';
+    } catch (e) { cb.checked = !on; lbl.textContent = 'Didn’t save'; }
+    cb.disabled = false;
   });
   out.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
     if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Tap again to delete'; return; }

@@ -47,7 +47,7 @@
     cloudName:'your Google account',
     privacyNote:'Your log syncs between your phone and laptop. Other people using this app can’t see it. Spotter only counts anonymous totals (like how many workouts get logged each day) to see what’s working.',
     wait,
-    account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || '', id:state.user.uid} : null,
+    account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || ''} : null,
     signIn:() => { try { localStorage.removeItem('spotter.noaccount'); } catch {} location.reload(); },
     signOut:() => window.__spotter.signOut ? window.__spotter.signOut() : location.reload(),
     track:ev => { if (window.__spotter.track) window.__spotter.track(ev); },
@@ -127,7 +127,8 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     /* Privacy-friendly analytics: only daily totals, no personal data, no cookies, no third parties.
        metrics/{YYYY-MM-DD (UTC)}: signups, active (signed-in people who opened the app), workouts (finished),
        w1 (people who signed up that day and came back 7–13 days later). Signed-in accounts only.
-       usermeta/{uid} is each person's own bookkeeping so they're counted once: {since, last, w1}. */
+       usermeta/{uid} is each person's own bookkeeping so they're counted once: {since, last, w1}, plus their name and
+       email so the owner can find them in the People list on /stats/ (to switch Pro on or off). */
     const DAYMS = 864e5, dayOf = ms => new Date(ms).toISOString().slice(0, 10);
     const bump = (day, field) => F.setDoc(F.doc(fs, 'metrics', day), {[field]:F.increment(1)}, {merge:true}).catch(() => {});
     const visit = async user => {
@@ -144,7 +145,10 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
       const since = 'since' in upd ? upd.since : m.since;
       if (since && !m.w1) { const d = Math.floor((Date.parse(today) - Date.parse(since)) / DAYMS); if (d >= 7 && d <= 13) { upd.w1 = true; todo.push([since, 'w1']); } }
       if (m.last !== today) { upd.last = today; todo.push([today, 'active']); }
-      if (!todo.length) return;
+      const name = String(user.displayName || '').slice(0, 100), email = String(user.email || '').slice(0, 200);
+      if (m.name !== name) upd.name = name;
+      if (m.email !== email) upd.email = email;
+      if (!Object.keys(upd).length) return;
       F.setDoc(ref, {...m, ...upd}).catch(() => {});        // written first (writes go in order) so a retry can't count twice
       todo.forEach(([d, f]) => bump(d, f));
     };
