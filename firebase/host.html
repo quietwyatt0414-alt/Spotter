@@ -13,6 +13,7 @@
 #gate h1{font-size:34px;font-weight:800;text-transform:uppercase;line-height:1.05;margin:4px 0}
 #gate p{color:var(--tx2);margin:0;font-size:15px}
 #gate .g-small{font-size:13px;color:var(--tx3)}
+#gate .g-small a{color:var(--tx2)}
 #gate .g-warn{background:color-mix(in srgb,var(--warm) 14%,transparent);border:1px solid color-mix(in srgb,var(--warm) 40%,transparent);color:var(--tx);border-radius:12px;padding:12px;font-size:14px;text-align:left}
 #gate .g-err{color:var(--danger);font-size:14px;min-height:1em}
 #gate .g-feats{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;text-align:left;font-size:14px;color:var(--tx2);margin:6px 0 4px}
@@ -30,6 +31,7 @@
     <div id="gateErr" class="g-err" role="alert"></div>
     <button class="btn btn-line block" id="gateLocal">Use without an account</button>
     <div class="g-small">Without an account, your log stays on this device only. You can sign in later from Settings and it moves over.</div>
+    <div class="g-small">By signing in you agree to the <a href="terms/">Terms</a> and <a href="privacy/">Privacy Policy</a>.</div>
   </div>
 </div>
 <script src="config.js"></script>
@@ -48,6 +50,8 @@
     signIn:() => { try { localStorage.removeItem('spotter.noaccount'); } catch {} location.reload(); },
     signOut:() => window.__spotter.signOut ? window.__spotter.signOut() : location.reload(),
     track:ev => { if (window.__spotter.track) window.__spotter.track(ev); },
+    contact:'quietwyatt0414@gmail.com',
+    deleteAccount:() => window.__spotter.deleteAccount ? window.__spotter.deleteAccount() : Promise.reject({code:'unavailable'}),
     sendFeedback:fb => window.__spotter.feedback ? window.__spotter.feedback(fb) : Promise.reject(new Error('offline')),
   };
   // the app asks for 'db' and 'user'; null means "no account", so it saves on this device
@@ -61,6 +65,14 @@ const $g = id => document.getElementById(id);
 const gate = $g('gate'), err = $g('gateErr');
 const noAccount = () => { try { return localStorage.getItem('spotter.noaccount') === '1'; } catch { return false; } };
 const showGate = () => { document.getElementById('loading').style.display = 'none'; gate.hidden = false; };
+// just deleted an account: say what happens to the log
+try {
+  if (sessionStorage.getItem('spotter.deleted')) {
+    sessionStorage.removeItem('spotter.deleted');
+    const w = $g('gateWarn'); w.hidden = false;
+    w.innerHTML = '<b>Your account is deleted.</b> Your workout log is kept for 30 days in case you change your mind. To get it back, sign in again and email <a href="mailto:' + window.SPOTTER_HOST.contact + '">' + window.SPOTTER_HOST.contact + '</a> from the same Google address. After 30 days it’s deleted for good.';
+  }
+} catch {}
 const goLocal = () => { gate.hidden = true; document.getElementById('loading').style.display = ''; settle(null); };
 $g('gateLocal').onclick = () => { try { localStorage.setItem('spotter.noaccount', '1'); } catch {} goLocal(); };
 
@@ -137,6 +149,23 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
       return Promise.race([p, new Promise(r => setTimeout(r, 4000))]);
     };
 
+    /* Delete account: the sign-in is deleted right away, the log is kept 30 days so the owner can restore it
+       (deletions/{uid} tells the owner whose it was), then the owner deletes it for good from /stats/. */
+    window.__spotter.deleteAccount = async () => {
+      const user = auth.currentUser; if (!user) throw {code:'auth/no-current-user'};
+      // Firebase only deletes an account signed in the last few minutes, so confirm with Google first
+      if (!(Date.now() - Date.parse(user.metadata.lastSignInTime) < 4 * 60e3)) await A.reauthenticateWithPopup(user, provider);
+      const rec = F.doc(fs, 'deletions', user.uid);
+      const timeout = new Promise((_, no) => setTimeout(() => no({code:'unavailable'}), 8000));
+      await Promise.race([F.setDoc(rec, {email:user.email || '', name:user.displayName || '', at:F.serverTimestamp()}), timeout]);
+      await F.deleteDoc(F.doc(fs, 'usermeta', user.uid)).catch(() => {});
+      window.__spotter.deleting = true;
+      try { await A.deleteUser(user); }
+      catch (e) { window.__spotter.deleting = false; F.deleteDoc(rec).catch(() => {}); throw e; }
+      try { await F.terminate(fs); await F.clearIndexedDbPersistence(fs); } catch {}
+      try { localStorage.removeItem('spotter.v1'); localStorage.removeItem('spotter.noaccount'); sessionStorage.setItem('spotter.deleted', '1'); } catch {}
+    };
+
     window.__spotter.signOut = async () => {
       try { await A.signOut(auth); } catch {}
       try { await F.terminate(fs); await F.clearIndexedDbPersistence(fs); } catch {}
@@ -164,7 +193,7 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     A.getRedirectResult(auth).catch(e => { if (e && e.code && e.code !== 'auth/no-auth-event') err.textContent = 'Sign-in didn’t work (' + e.code + ').'; });
     let first = true;
     A.onAuthStateChanged(auth, user => {
-      if (S.done) { if ((user && user.uid) !== (S.user && S.user.uid)) location.reload(); return; }   // account changed after the app started
+      if (S.done) { if (window.__spotter.deleting) return; if ((user && user.uid) !== (S.user && S.user.uid)) location.reload(); return; }   // account changed after the app started
       if (user) { S.user = user; S.api = {db, user:userApi}; visit(user); try { localStorage.removeItem('spotter.noaccount'); } catch {} gate.hidden = true; document.getElementById('loading').style.display = ''; settle(user); }
       else if (first && noAccount()) goLocal();
       else showGate();

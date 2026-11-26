@@ -1,0 +1,22 @@
+/* Shared styles for the privacy policy and terms pages (copied to public/legal.css by scripts/build.py). */
+:root{--bg:#0b0b0d;--s1:#141417;--line:#2a2a31;--tx:#f4f4f6;--tx2:#a3a3ad;--acc:#d4ff3f;--mark:#5a4a12;--mark-tx:#ffe9a8;
+  --head:'Barlow Condensed',system-ui,sans-serif;--body:'Barlow',system-ui,-apple-system,sans-serif}
+@media (prefers-color-scheme: light){:root{--bg:#f6f6f3;--s1:#ffffff;--line:#e2e2dc;--tx:#141417;--tx2:#55555e;--acc:#4d6b00;--mark:#fff1b8;--mark-tx:#3d2f00}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--body);font-size:17px;line-height:1.6}
+main{max-width:720px;margin:0 auto;padding:28px 16px 64px}
+.brand{display:inline-flex;align-items:center;gap:8px;font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:.14em;color:var(--tx);text-decoration:none}
+.brand i{width:10px;height:10px;border-radius:3px;background:var(--acc);transform:rotate(45deg)}
+h1{font-family:var(--head);font-size:40px;font-weight:800;text-transform:uppercase;line-height:1.05;margin:28px 0 6px}
+h2{font-family:var(--head);font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin:36px 0 8px}
+.meta{color:var(--tx2);font-size:15px;margin:0 0 20px}
+.summary{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:6px 18px;margin:20px 0}
+a{color:var(--acc)}
+ul{padding-left:22px} li{margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:10px 0;display:block;overflow-x:auto}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-weight:700;color:var(--tx2)}
+/* Guesses waiting for the owner to confirm. scripts/build.py warns while any are left. */
+mark.review{background:var(--mark);color:var(--mark-tx);border-radius:4px;padding:0 4px}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);color:var(--tx2);font-size:15px}
+footer a{margin-right:16px}
