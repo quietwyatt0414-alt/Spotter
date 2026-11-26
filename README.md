@@ -49,7 +49,8 @@ Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `
   If you add a new document name, update `firestore.rules` too and deploy rules: `firebase deploy --only firestore:rules`.
 - Changes to `firestore.rules` are deployed by the **Deploy backend** workflow once its service account has the roles in
   PAYMENTS.md step 3. Until then, deploy them by hand: `firebase deploy --only firestore:rules`.
-- **Spotter Pro**: everything that was free stays free; Pro only adds tools. Pro tools in the app call `proGate()`;
+- **Spotter Pro**: free = a workout log (logging, routines, history, PRs, streaks, imports, backups). Pro = the Progress
+  tab (`progressOpen()`), warm-up sets and CSV export; people from before launch keep Progress (`SPOTTER_PRO.keepFreeBefore`). Pro tools call `proGate()`;
   `isPro()` reads `HOST.pro()`, which comes from `entitlements/<uid>` (written only by `functions/` and the owner).
   The demo has Pro unlocked. Server tests: `cd functions && npm test`.
 

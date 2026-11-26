@@ -485,14 +485,9 @@ button.ex-name{text-align:left;padding:0}
 .pro-list{list-style:none;padding:0;margin:4px 0 12px;display:grid;gap:8px}
 .pro-list li{display:grid;grid-template-columns:22px 1fr;gap:8px;color:var(--tx2)} .pro-list li b{color:var(--tx)}
 .pro-list li svg.i{color:var(--acc);width:20px;height:20px;margin-top:1px}
+.pro-lock{text-align:center;padding:26px 18px} .pro-lock > svg.i{width:34px;height:34px;color:var(--acc)} .pro-lock b{display:block;font-size:18px;margin:8px 0 6px;color:var(--tx)} .pro-lock p{color:var(--tx2);margin:0 0 12px}
 .pro-price{font-family:var(--head);font-size:30px;font-weight:800;color:var(--tx);line-height:1}
 .pro-price small{font-family:var(--body);font-size:14px;font-weight:600;color:var(--tx2);margin-left:6px}
-.plates{display:flex;align-items:center;gap:3px;min-height:92px;justify-content:center;margin:10px 0 6px}
-.plates .bar{width:44px;height:10px;border-radius:3px;background:var(--tx3)}
-.plates .pl{width:15px;border-radius:4px;background:var(--acc-bg);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:var(--acc-ink);writing-mode:vertical-rl}
-.plates .sleeve{width:14px;height:14px;border-radius:3px;background:var(--line)}
-.pc-out{text-align:center;color:var(--tx2);font-size:15px;min-height:42px}
-.pc-out b{color:var(--tx);font-size:17px}
 .foot-note a{color:var(--tx2)}
 
 /* loading */
@@ -1471,7 +1466,7 @@ function syncLock() {
   document.body.classList.toggle('locked', any);
 }
 function renderTabbar() {
-  const tabs = [['home','lift','Workout'],['history','clock','History'],['exercises','list','Exercises'],['progress','chart','Progress'],['settings','sliders','Settings']];
+  const tabs = [['home','lift','Workout'],['history','clock','History'],['exercises','list','Exercises'],['progress','chart',progressOpen() ? 'Progress' : 'Progress 🔒'],['settings','sliders','Settings']];
   $('#tabbar').innerHTML = tabs.map(([k,i,l]) => `<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}" aria-label="${l}">${ic(i)}<span>${l}</span></button>`).join('');
 }
 function renderMini() {
@@ -1905,6 +1900,10 @@ function screenGymSwitch() {
 
 function viewProgress() {
   let html = `<header class="top"><h1 class="h1" style="margin:0">Progress</h1>${syncPill()}</header>`;
+  if (!progressOpen()) return html + `<div class="card pro-lock">${ic('chart')}<b>Progress is part of Spotter Pro</b>
+    <p>See a chart for every exercise, your estimated 1-rep max over time, and whether you’re progressively overloading or stuck.</p>
+    <p>Your history, PRs and streak stay free in the other tabs.</p>
+    <button class="btn btn-acc block" data-a="pro-open">See Spotter Pro · ${esc(proPrice())} once</button></div>`;
   const counts = {};
   S.workouts.forEach(w => w.ex.forEach(e => { if (e.sets.some(x => x.t !== 'w')) counts[e.exId] = (counts[e.exId] || 0) + 1; }));
   const exIds = Object.keys(counts);
@@ -2067,19 +2066,29 @@ function viewSettings() {
 const PRO_SITE = 'https://spotter-6d902.web.app';
 const proState = () => (HOST && typeof HOST.pro === 'function' && HOST.pro()) || null;
 const isPro = () => !!DEMO || !!(proState() && proState().pro);
+/* The Progress tab is Pro, but only where Pro can be bought (the website, once it's on sale), and people who used
+   Spotter before Pro launched keep it free: accounts created, or a log started, before SPOTTER_PRO.keepFreeBefore. */
+const proSellable = () => !!(HOST && typeof HOST.buyPro === 'function' && HOST.proOnSale);
+function grandfathered() {
+  const cut = HOST && HOST.keepFreeBefore ? Date.parse(HOST.keepFreeBefore) : NaN; if (!isFinite(cut)) return false;
+  const made = HOST.accountCreated && HOST.accountCreated();
+  if (made) return made < cut;
+  return S.workouts.some(w => !w.imp && w.start < cut);   // imported history doesn't count
+}
+const progressOpen = () => isPro() || !proSellable() || grandfathered();
 const proPrice = () => (HOST && HOST.proPrice) || '$19.99';
 const PRO_FEATURES = [
-  ['weight', 'Plate calculator', 'Which plates go on each side, for any weight and bar.'],
+  ['chart', 'Progress', 'Charts for every exercise, estimated 1-rep max trends, and a check that tells you if you’re progressively overloading.'],
   ['trendup', 'Warm-up sets', 'One tap adds a ramp of warm-ups up to your working weight.'],
   ['copy', 'Spreadsheet export', 'Every set you’ve logged, as a CSV for Excel, Numbers or Google Sheets.'],
   ['star', 'Everything Pro adds later', 'Pay once and new Pro tools are yours too.'],
 ];
 function proGate(fn) { if (isPro()) fn(); else proModal(); }
 function proCard() {
-  if (DEMO) return `<div class="card pro-card">${ic('star')}<div><b>Spotter Pro is unlocked in the demo</b><small>Try the plate calculator and warm-up sets from an exercise’s ⋯ menu.</small></div></div>`;
+  if (DEMO) return `<div class="card pro-card">${ic('star')}<div><b>Spotter Pro is unlocked in the demo</b><small>Try the Progress tab, and warm-up sets from an exercise’s ⋯ menu.</small></div></div>`;
   const st = proState();
   if (st && st.pro) return `<div class="card pro-card">${ic('star')}<div><b>Spotter Pro${st.founding ? ' · Founding member' : ''}</b><small>Thanks for supporting Spotter. Pro is yours for good.</small></div></div>`;
-  return `<button class="imp-cta" data-a="pro-open" style="margin:0 0 14px">${ic('star')}<span><b>Spotter Pro</b><small>Plate calculator, warm-up sets and spreadsheet export. One-time ${esc(proPrice())}.</small></span>${ic('right')}</button>`;
+  return `<button class="imp-cta" data-a="pro-open" style="margin:0 0 14px">${ic('star')}<span><b>Spotter Pro</b><small>Progress charts and overload check, warm-up sets, spreadsheet export. One-time ${esc(proPrice())}.</small></span>${ic('right')}</button>`;
 }
 function proModal() {
   const signedIn = HOST && HOST.account && HOST.account();
@@ -2091,7 +2100,7 @@ function proModal() {
   else actions = [{label:'Not now'}, {label:`Buy Pro · ${proPrice()}`, cls:'btn-acc', fn:buyPro}];
   modal({title:'Spotter Pro', body:`
     <div class="pro-price">${esc(proPrice())}<small>once · no subscription</small></div>
-    <p style="margin-top:8px">Spotter is free forever, with no ads, ever. Pro adds a few extra tools for people who want them, and helps keep Spotter going.</p>
+    <p style="margin-top:8px">Logging, routines, history, PRs and streaks are free forever, with no ads, ever. Pro adds the tools that show how you’re progressing, and helps keep Spotter going.</p>
     <ul class="pro-list">${PRO_FEATURES.map(([i, t, d]) => `<li>${ic(i)}<span><b>${t}.</b> ${d}</span></li>`).join('')}</ul>
     ${note ? `<p>${note}</p>` : '<p class="faint" style="font-size:13px">Secure checkout by Stripe. Launch-price buyers are founding members. Questions or a refund: Settings → Send feedback.</p>'}`, actions});
 }
@@ -2116,50 +2125,10 @@ function proReturn() {
 // the host fires this when entitlements/{uid} changes (detail.unlocked: it just turned on, e.g. after checkout)
 window.addEventListener('spotter-pro', ev => {
   if (!booted || !S) return;
-  if (tab === 'settings') { const y = window.scrollY; renderView(); window.scrollTo(0, y); }
+  renderTabbar();
+  if (tab === 'settings' || tab === 'progress') { const y = window.scrollY; renderView(); if (tab === 'progress') initCharts($('#view')); window.scrollTo(0, y); }
   if (ev.detail && ev.detail.unlocked) toast('Spotter Pro is unlocked. Thank you!');
 });
-
-// plate calculator: which plates go on each side of the bar
-const PLATES = {lb:[45, 35, 25, 10, 5, 2.5], kg:[25, 20, 15, 10, 5, 2.5, 1.25]};
-const BARS = {lb:[[45, 'Barbell 45'], [35, 'Women’s bar 35'], [25, 'EZ bar 25'], [0, 'No bar']], kg:[[20, 'Barbell 20'], [15, 'Women’s bar 15'], [10, 'EZ bar 10'], [0, 'No bar']]};
-function platesFor(total, bar, u) {
-  const per = Math.max(0, (total - bar) / 2), out = []; let left = Math.round(per * 1000) / 1000;
-  for (const p of PLATES[u]) while (left + 1e-6 >= p) { out.push(p); left = Math.round((left - p) * 1000) / 1000; }
-  return {plates:out, left, per};
-}
-function plateCalc(i) {
-  const e = S.active && S.active.ex[i]; if (!e) return;
-  const u = unit(), eq = exInfo(e.exId).eq;
-  const open = e.sets.find(s => !s.done && s.t !== 'w') || e.sets[e.sets.length - 1];
-  const filled = e.sets.filter(s => s.t !== 'w' && s.w > 0);
-  const p0 = prevFor(e, Math.max(0, e.sets.indexOf(open)));
-  const start = open && open.w > 0 ? fmtW(open.w) : filled.length ? fmtW(filled[filled.length - 1].w) : p0 && p0.w > 0 ? fmtW(p0.w) : '';
-  const bars = BARS[u], dflt = eq === 'EZ bar' ? bars[2][0] : eq === 'Barbell' || eq === 'Smith machine' ? bars[0][0] : bars[3][0];
-  modal({title:'Plate calculator', body:`
-    <div class="eq-pair" style="grid-template-columns:1fr 1fr"><label class="field"><span>Total weight (${u})</span><input name="pcw" inputmode="decimal" autocomplete="off" value="${esc(start)}" placeholder="e.g. ${u === 'lb' ? 225 : 100}"></label>
-    <label class="field"><span>Bar</span><select name="pcbar">${bars.map(([w, l]) => `<option value="${w}" ${w === dflt ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div>
-    <div class="plates" id="pcVis"></div><div class="pc-out" id="pcOut"></div>`, focus:'pcw',
-    actions:[{label:'Close'}, {label:'Use for next set', cls:'btn-acc', fn:v => {
-      const t = parseFloat(String(v.pcw).replace(',', '.')); if (!(t > 0)) return;
-      const tgt = e.sets.find(s => !s.done && s.t !== 'w'); if (!tgt) { toast('No open set to fill'); return; }
-      const r = platesFor(t, +v.pcbar, u); tgt.w = toKg(+v.pcbar + 2 * (r.per - r.left)); markDirty('active'); rerenderCard(i);
-      toast(`Set to ${fmtW(tgt.w)} ${u}`); }}]});
-  const m = $('#modal'), wIn = m.querySelector('[name=pcw]'), bIn = m.querySelector('[name=pcbar]');
-  const draw = () => {
-    m.dataset.dirty = '';
-    const t = parseFloat(wIn.value.replace(',', '.')), bar = +bIn.value, vis = $('#pcVis'), out = $('#pcOut');
-    if (!(t > 0)) { vis.innerHTML = ''; out.innerHTML = 'Type a weight to see the plates.'; return; }
-    if (t < bar) { vis.innerHTML = ''; out.innerHTML = `That’s less than the bar (${bar} ${u}).`; return; }
-    const r = platesFor(t, bar, u), max = PLATES[u][0];
-    const side = r.plates.map(p => `<span class="pl" style="height:${Math.round(34 + 54 * p / max)}px">${fmtNum(p)}</span>`);
-    vis.innerHTML = bar ? `<span class="sleeve"></span>${side.slice().reverse().join('')}<span class="bar"></span>${side.join('')}<span class="sleeve"></span>` : side.join('');
-    const counts = []; r.plates.forEach(p => { const c = counts.find(x => x[0] === p); c ? c[1]++ : counts.push([p, 1]); });
-    const list = counts.map(([p, n]) => n > 1 ? `${n} × ${fmtNum(p)}` : fmtNum(p)).join(' + ');
-    out.innerHTML = (r.plates.length ? `<b>${list}</b> ${bar ? 'on each side' : 'per side'}` : `<b>Just the bar</b>`) + (r.left > 0.01 ? `<br>Closest you can load: ${fmtNum(bar + 2 * (r.per - r.left))} ${u} (${fmtNum(r.left * 2)} ${u} short)` : '');
-  };
-  wIn.addEventListener('input', draw); bIn.addEventListener('change', draw); draw();
-}
 
 // warm-up sets: a ramp up to the first working set
 function warmupPlan(workKg, eq) {
@@ -3111,7 +3080,6 @@ const A = {
     const i = +el.dataset.ei, e = S.active.ex[i];
     menu(exName(e.exId), [
       {label:'Muscles worked', fn:() => exInfoModal(e.exId)},
-      {label:'Plate calculator' + (isPro() ? '' : ' · Pro'), fn:() => proGate(() => plateCalc(i))},
       {label:'Add warm-up sets' + (isPro() ? '' : ' · Pro'), fn:() => proGate(() => addWarmups(i))},
       {label: e.note ? 'Edit note' : 'Add note', fn:() => modal({title:'Note', body:`<label class="field"><textarea name="note" style="font-family:var(--body);font-size:16px" placeholder="Seat height 4, slow negatives…">${esc(e.note)}</textarea></label>`, focus:'note',
         actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc', fn:v => { e.note = v.note.trim().slice(0, 200); markDirty('active'); rerenderCard(i); }}]})},

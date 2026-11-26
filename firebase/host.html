@@ -24,7 +24,7 @@
     <div class="brand g-brand"><span class="brand-dot"></span>SPOTTER</div>
     <h1>Free workout tracker</h1>
     <p>Log your lifts, see if you’re progressing, keep your streak. Free forever. No ads, ever. Optional one-time Pro.</p>
-    <div class="g-feats"><span>Routines & PRs</span><span>Rest timer</span><span>Overload check</span><span>Syncs to your phone & laptop</span></div>
+    <div class="g-feats"><span>Routines & PRs</span><span>Rest timer</span><span>Streaks & history</span><span>Syncs to your phone & laptop</span></div>
     <div id="gateWarn" class="g-warn" hidden></div>
     <div id="gateSetup" class="g-warn" hidden></div>
     <button class="btn btn-acc block lg" id="gateSignIn">Sign in with Google</button>
@@ -58,6 +58,8 @@
     pro:() => state.pro,
     proPrice:PRO.price || '$19.99',
     proOnSale:!!PRO.onSale,
+    keepFreeBefore:PRO.keepFreeBefore || null,
+    accountCreated:() => state.user && state.user.metadata ? Date.parse(state.user.metadata.creationTime) || null : null,
     buyPro:() => window.__spotter.buyPro ? window.__spotter.buyPro() : Promise.reject({code:'unavailable'}),
   };
   // the app asks for 'db' and 'user'; null means "no account", so it saves on this device
