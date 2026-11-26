@@ -47,7 +47,7 @@
     cloudName:'your Google account',
     privacyNote:'Your log syncs between your phone and laptop. Other people using this app can’t see it. Spotter only counts anonymous totals (like how many workouts get logged each day) to see what’s working.',
     wait,
-    account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || ''} : null,
+    account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || '', id:state.user.uid} : null,
     signIn:() => { try { localStorage.removeItem('spotter.noaccount'); } catch {} location.reload(); },
     signOut:() => window.__spotter.signOut ? window.__spotter.signOut() : location.reload(),
     track:ev => { if (window.__spotter.track) window.__spotter.track(ev); },
@@ -58,8 +58,6 @@
     pro:() => state.pro,
     proPrice:PRO.price || '$19.99',
     proOnSale:!!PRO.onSale,
-    keepFreeBefore:PRO.keepFreeBefore || null,
-    accountCreated:() => state.user && state.user.metadata ? Date.parse(state.user.metadata.creationTime) || null : null,
     buyPro:() => window.__spotter.buyPro ? window.__spotter.buyPro() : Promise.reject({code:'unavailable'}),
   };
   // the app asks for 'db' and 'user'; null means "no account", so it saves on this device

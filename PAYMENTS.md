@@ -72,8 +72,8 @@ functions. If it fails, the red step says which permission or setting is missing
 
 ## 7. Turn the Buy button on
 
-In `firebase/config.js`, change `onSale: false` to `onSale: true`, and set `keepFreeBefore` to today's date
-(for example `"2026-12-05"`) so everyone who used Spotter before Pro went on sale keeps the Progress tab free. Merge (GitHub's web editor is fine, or
+In `firebase/config.js`, change `onSale: false` to `onSale: true` (this also locks the Progress tab for people
+without Pro). Merge (GitHub's web editor is fine, or
 ask Claude). Then on the live site: Settings → Spotter Pro → Buy, and pay with Stripe's test card
 `4242 4242 4242 4242`, any future date, any CVC. Pro should unlock within a few seconds.
 
@@ -88,6 +88,16 @@ and signing secret), update both GitHub secrets with the **live** values (`sk_li
 The amount charged is `PRO_PRICE_CENTS` (default `1999`). To raise it to $29.99: GitHub → Settings → Secrets and
 variables → Actions → **Variables** → `PRO_PRICE_CENTS` = `2999`, run **Deploy backend**, and change `price` in
 `firebase/config.js` to `"$29.99"`. People who paid $19.99 or less stay marked as founding members.
+
+## Giving Pro to friends for free
+
+1. Your friend signs in to Spotter, opens **Settings → Spotter Pro**, taps **Copy** under "Getting Pro as a gift?",
+   and texts you the code.
+2. You open `https://spotter-6d902.web.app/stats/` (signed in with your Google account), paste the code under
+   **Give Pro**, add their name so you remember who it is, and tap **Give Pro**. It unlocks for them in seconds.
+3. Everyone you've given Pro to is listed there, with **Remove** to take it back.
+
+This works as soon as the Firestore rules are deployed (step 6), even before Stripe is set up.
 
 ## Refunds and support
 
