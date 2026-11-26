@@ -3,6 +3,7 @@
   public/index.html        the app with Google sign-in   = app/index.html + firebase/host.html
   public/demo/index.html   the demo with 5 months of data = app/index.html + app/demo-data.html
   public/config.js, sw.js, manifest.webmanifest, icons/   copied from firebase/
+  public/privacy/, public/terms/, public/legal.css         copied from legal/
 
 app/index.html is the single source for the app; it's also the exact file published on Claude.
 Run:  python3 scripts/build.py
@@ -30,6 +31,14 @@ if pub.exists():
 for f in ["config.js", "sw.js", "manifest.webmanifest"]:
     shutil.copy(root / "firebase" / f, pub / f)
 shutil.copytree(root / "firebase" / "icons", pub / "icons")
+for page in ["privacy", "terms"]:
+    src = (root / "legal" / f"{page}.html").read_text()
+    guesses = src.count('class="review"')
+    if guesses:
+        print(f"note: legal/{page}.html still has {guesses} highlighted guesses to review")
+    (pub / page).mkdir()
+    (pub / page / "index.html").write_text(src)
+shutil.copy(root / "legal" / "legal.css", pub / "legal.css")
 
 cfg = (root / "firebase" / "config.js").read_text()
 if "PASTE_" in cfg or "YOUR_PROJECT_ID" in cfg:

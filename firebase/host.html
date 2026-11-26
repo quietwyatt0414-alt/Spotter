@@ -13,6 +13,7 @@
 #gate h1{font-size:34px;font-weight:800;text-transform:uppercase;line-height:1.05;margin:4px 0}
 #gate p{color:var(--tx2);margin:0;font-size:15px}
 #gate .g-small{font-size:13px;color:var(--tx3)}
+#gate .g-small a{color:var(--tx2)}
 #gate .g-warn{background:color-mix(in srgb,var(--warm) 14%,transparent);border:1px solid color-mix(in srgb,var(--warm) 40%,transparent);color:var(--tx);border-radius:12px;padding:12px;font-size:14px;text-align:left}
 #gate .g-err{color:var(--danger);font-size:14px;min-height:1em}
 #gate .g-feats{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;text-align:left;font-size:14px;color:var(--tx2);margin:6px 0 4px}
@@ -30,6 +31,7 @@
     <div id="gateErr" class="g-err" role="alert"></div>
     <button class="btn btn-line block" id="gateLocal">Use without an account</button>
     <div class="g-small">Without an account, your log stays on this device only. You can sign in later from Settings and it moves over.</div>
+    <div class="g-small">By signing in you agree to the <a href="terms/">Terms</a> and <a href="privacy/">Privacy Policy</a>.</div>
   </div>
 </div>
 <script src="config.js"></script>

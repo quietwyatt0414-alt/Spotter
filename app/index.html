@@ -477,6 +477,7 @@ button.ex-name{text-align:left;padding:0}
 .switch.on{background:var(--acc-bg)} .switch.on span{transform:translateX(20px)}
 .switch:disabled{opacity:.4}
 .foot-note{text-align:center;color:var(--tx3);font-size:13px;margin-top:28px}
+.foot-note a{color:var(--tx2)}
 
 /* loading */
 .loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);z-index:100}
@@ -1997,7 +1998,7 @@ function viewSettings() {
       ${DEMO ? `<button class="btn btn-ghost block" data-a="demo-reset">Reset demo data</button>` : ''}
       <button class="btn btn-danger-ghost block" data-a="wipe">Delete all data</button>
     </div>
-    <div class="foot-note">${plural(S.workouts.length,'workout')} · ${plural(S.routines.length,'routine')} · ${plural(S.customExercises.length,'custom exercise')}<br>Spotter · free, no ads, no subscription</div>`;
+    <div class="foot-note">${plural(S.workouts.length,'workout')} · ${plural(S.routines.length,'routine')} · ${plural(S.customExercises.length,'custom exercise')}<br>Spotter · free, no ads, no subscription${HOST ? `<br><a href="privacy/">Privacy</a> · <a href="terms/">Terms</a>` : ''}</div>`;
 }
 
 /* ---------- active workout ---------- */
