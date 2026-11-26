@@ -2,6 +2,7 @@
 
   public/index.html        the app with Google sign-in   = app/index.html + firebase/host.html
   public/demo/index.html   the demo with 5 months of data = app/index.html + app/demo-data.html
+  public/stats/index.html  owner-only analytics + feedback page = firebase/stats.html
   public/config.js, sw.js, manifest.webmanifest, icons/   copied from firebase/
 
 app/index.html is the single source for the app; it's also the exact file published on Claude.
@@ -25,8 +26,10 @@ pub = root / "public"
 if pub.exists():
     shutil.rmtree(pub)
 (pub / "demo").mkdir(parents=True)
+(pub / "stats").mkdir()
 (pub / "index.html").write_text(inject("firebase/host.html"))
 (pub / "demo" / "index.html").write_text(inject("app/demo-data.html", "Spotter — Demo Data"))
+shutil.copy(root / "firebase" / "stats.html", pub / "stats" / "index.html")
 for f in ["config.js", "sw.js", "manifest.webmanifest"]:
     shutil.copy(root / "firebase" / f, pub / f)
 shutil.copytree(root / "firebase" / "icons", pub / "icons")

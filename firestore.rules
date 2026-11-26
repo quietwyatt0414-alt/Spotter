@@ -2,13 +2,57 @@ rules_version = '2';
 
 // Spotter keeps each person's log at data/users/{their uid}/{profile | active | log-YYYY-MM}.
 // People can read and write only their own documents. Everything else is closed.
+//
+// Analytics and feedback (see firebase/host.html and /stats/):
+//   metrics/{YYYY-MM-DD}  anonymous daily totals. Signed-in people can only add 1 to one known counter at a time.
+//   usermeta/{uid}        each person's own "already counted" flags.
+//   feedback/{id}         messages from the in-app feedback form. Anyone can send one; nobody can edit them.
+// Only the owner (the uid below) can read metrics and feedback, on the /stats/ page.
+// To find your uid: Firebase console → Authentication → Users → copy the "User UID" of your Google account.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOwner() {
+      return request.auth != null && request.auth.uid in ['PASTE_YOUR_UID_HERE'];
+    }
+
     match /data/users/{uid}/{docId} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if request.auth != null && request.auth.uid == uid
                    && (docId in ['profile', 'active'] || docId.matches('log-[0-9]{4}-[0-9]{2}'))
                    && request.resource.data.size() < 50;
+    }
+
+    // a counter is unchanged or one higher
+    function sameOrPlusOne(before, after, k) {
+      return after.get(k, 0) == before.get(k, 0) || after.get(k, 0) == before.get(k, 0) + 1;
+    }
+    function oneBump(before, after) {
+      return after.keys().hasOnly(['signups', 'active', 'workouts', 'w1'])
+          && after.diff(before).affectedKeys().size() == 1
+          && sameOrPlusOne(before, after, 'signups') && sameOrPlusOne(before, after, 'active')
+          && sameOrPlusOne(before, after, 'workouts') && sameOrPlusOne(before, after, 'w1');
+    }
+    match /metrics/{day} {
+      allow read: if isOwner();
+      allow create: if request.auth != null && day.matches('20[0-9]{2}-[0-9]{2}-[0-9]{2}')
+                    && oneBump({}, request.resource.data);
+      allow update: if request.auth != null && oneBump(resource.data, request.resource.data);
+    }
+
+    match /usermeta/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && request.auth.uid == uid
+                   && request.resource.data.keys().hasOnly(['since', 'last', 'w1']);
+    }
+
+    match /feedback/{id} {
+      allow read, delete: if isOwner();
+      allow create: if request.resource.data.keys().hasOnly(['text', 'email', 'signedIn', 'at'])
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() >= 3 && request.resource.data.text.size() <= 2000
+                    && request.resource.data.email is string && request.resource.data.email.size() <= 200
+                    && request.resource.data.signedIn is bool
+                    && request.resource.data.at == request.time;
     }
   }
 }

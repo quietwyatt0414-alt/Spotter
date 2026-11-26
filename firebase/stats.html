@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Spotter Stats</title>
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+:root{--bg:#0b0b0d;--s1:#141417;--s2:#1c1c20;--line:#2a2a31;--tx:#f2f2f4;--tx2:#b4b4bc;--tx3:#7c7c86;--acc:#d4ff3f;--acc-ink:#0b0b0d;--danger:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:.02em}
+h2{font-size:17px;margin:32px 0 10px;color:var(--tx2);font-weight:600}
+p{color:var(--tx2);margin:0 0 12px}
+.small{font-size:13px;color:var(--tx3)}
+button{font:inherit;border:0;border-radius:10px;padding:10px 16px;cursor:pointer;background:var(--acc);color:var(--acc-ink);font-weight:600}
+button.line{background:none;border:1px solid var(--line);color:var(--tx2);padding:6px 12px;font-weight:500}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:14px}
+.tile b{display:block;font-size:30px;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile span{font-size:13px;color:var(--tx3)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--tx3);font-weight:500;background:var(--s1)}
+tr:last-child td{border-bottom:0}
+.fb{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.fb-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.fb-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;font-size:13px;color:var(--tx3)}
+.err{color:var(--danger)}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Spotter stats</h1>
+  <p class="small">Anonymous daily totals from signed-in accounts (days are in UTC). People using Spotter without an account aren’t counted.</p>
+  <div id="out"><p>Loading…</p></div>
+</main>
+<script src="../config.js"></script>
+<script type="module">
+const V = '13.4.0', CDN = `https://www.gstatic.com/firebasejs/${V}/`;
+const out = document.getElementById('out');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAY = 864e5, dayOf = ms => new Date(ms).toISOString().slice(0, 10), ms = d => Date.parse(d + 'T00:00:00Z');
+const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '–';
+
+const [{initializeApp}, A, F] = await Promise.all([import(CDN + 'firebase-app.js'), import(CDN + 'firebase-auth.js'), import(CDN + 'firebase-firestore.js')]);
+const app = initializeApp(window.SPOTTER_FIREBASE_CONFIG);
+const auth = A.getAuth(app), fs = F.getFirestore(app);
+
+function signInView(msg) {
+  out.innerHTML = `${msg ? `<p class="err">${esc(msg)}</p>` : ''}<button id="si">Sign in with Google</button>`;
+  document.getElementById('si').onclick = () => A.signInWithPopup(auth, new A.GoogleAuthProvider()).catch(e => signInView('Sign-in didn’t work (' + (e.code || e.message) + ').'));
+}
+
+async function load(user) {
+  out.innerHTML = '<p>Loading…</p>';
+  let mSnap, fSnap;
+  try {
+    [mSnap, fSnap] = await Promise.all([
+      F.getDocs(F.query(F.collection(fs, 'metrics'), F.where(F.documentId(), '>=', dayOf(Date.now() - 182 * DAY)))),   // last 26 weeks
+      F.getDocs(F.query(F.collection(fs, 'feedback'), F.orderBy('at', 'desc'), F.limit(100))),
+    ]);
+  } catch (e) {
+    console.warn('stats read failed', e);
+    if (!e || e.code !== 'permission-denied') { out.innerHTML = `<p class="err">Couldn’t load the stats (${esc((e && (e.code || e.message)) || 'error')}). Reload to try again.</p>`; return; }
+    out.innerHTML = `<p class="err">Can’t read the stats with this account.</p>
+      <p>Only the owner can see this page. Put this account’s ID in <code>firestore.rules</code> (replace <code>PASTE_YOUR_UID_HERE</code>) and deploy the rules:
+      <code>firebase deploy --only firestore:rules</code></p><p>This account’s ID: <code>${esc(user.uid)}</code></p>
+      <button class="line" id="so">Sign out</button>`;
+    document.getElementById('so').onclick = () => A.signOut(auth);
+    return;
+  }
+  const days = {}; mSnap.docs.forEach(d => { days[d.id] = d.data(); });
+  const g = (d, k) => (days[d] && days[d][k]) || 0;
+  const today = dayOf(Date.now());
+  const range = (from, to) => { const r = []; for (let t = ms(from); t <= ms(to); t += DAY) r.push(dayOf(t)); return r; };
+  const sum = (list, k) => list.reduce((a, d) => a + g(d, k), 0);
+
+  const last7 = range(dayOf(Date.now() - 6 * DAY), today);
+  // cohorts whose 7–13 day window is over: signed up 14–41 days ago
+  const matured = range(dayOf(Date.now() - 41 * DAY), dayOf(Date.now() - 14 * DAY));
+  const tiles = [
+    [sum(last7, 'signups'), 'sign-ups, last 7 days'],
+    [sum(last7, 'workouts'), 'workouts logged, last 7 days'],
+    [(sum(last7, 'active') / 7).toFixed(1), 'people active per day (7-day avg)'],
+    [pct(sum(matured, 'w1'), sum(matured, 'signups')), `1-week retention (${sum(matured, 'w1')} of ${sum(matured, 'signups')} who signed up 2–6 weeks ago came back on day 7–13)`],
+  ];
+
+  // weeks starting Monday, newest first
+  const ids = Object.keys(days).sort();
+  const weeks = [];
+  if (ids.length) {
+    const first = ms(ids[0]), monday = t => t - ((new Date(t).getUTCDay() + 6) % 7) * DAY;
+    for (let w = monday(ms(today)); w >= monday(first); w -= 7 * DAY) {
+      const list = range(dayOf(w), dayOf(w + 6 * DAY));
+      const done = w + 6 * DAY + 13 * DAY < ms(today);       // last cohort day's window has closed
+      weeks.push({label:dayOf(w), signups:sum(list, 'signups'), workouts:sum(list, 'workouts'), active:sum(list, 'active'), w1:sum(list, 'w1'), done});
+    }
+  }
+  const daily = range(dayOf(Date.now() - 13 * DAY), today).reverse();
+
+  out.innerHTML = `
+    <div class="tiles">${tiles.map(([v, l]) => `<div class="tile"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('')}</div>
+    <h2>By week</h2>
+    <div class="scroll"><table><thead><tr><th>Week of</th><th>Sign-ups</th><th>Workouts</th><th>Active (person-days)</th><th>Came back day 7–13</th><th>1-week retention</th></tr></thead><tbody>
+      ${weeks.map(w => `<tr><td>${w.label}</td><td>${w.signups}</td><td>${w.workouts}</td><td>${w.active}</td><td>${w.w1}</td><td>${w.done ? pct(w.w1, w.signups) : '<span class="small">still counting</span>'}</td></tr>`).join('') || '<tr><td colspan="6">No data yet</td></tr>'}
+    </tbody></table></div>
+    <h2>Last 14 days</h2>
+    <div class="scroll"><table><thead><tr><th>Day</th><th>Sign-ups</th><th>Workouts</th><th>Active</th></tr></thead><tbody>
+      ${daily.map(d => `<tr><td>${d}</td><td>${g(d, 'signups')}</td><td>${g(d, 'workouts')}</td><td>${g(d, 'active')}</td></tr>`).join('')}
+    </tbody></table></div>
+    <h2>Feedback (${fSnap.size})</h2>
+    ${fSnap.docs.map(d => { const f = d.data(), at = f.at && f.at.toDate ? f.at.toDate().toLocaleString() : '';
+      return `<div class="fb"><div class="fb-text">${esc(f.text || '')}</div><div class="fb-meta"><span>${esc(at)}${f.email ? ` · <a href="mailto:${esc(f.email)}">${esc(f.email)}</a>` : ''}${f.signedIn ? '' : ' · no account'}</span><button class="line" data-del="${esc(d.id)}">Delete</button></div></div>`; }).join('') || '<p class="small">No feedback yet.</p>'}
+    <p class="small" style="margin-top:28px">Signed in as ${esc(user.email || user.uid)} · <button class="line" id="so">Sign out</button></p>`;
+  document.getElementById('so').onclick = () => A.signOut(auth);
+  out.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Tap again to delete'; return; }
+    b.disabled = true;
+    try { await F.deleteDoc(F.doc(fs, 'feedback', b.dataset.del)); b.closest('.fb').remove(); } catch { b.disabled = false; b.textContent = 'Couldn’t delete'; }
+  });
+}
+A.onAuthStateChanged(auth, user => user ? load(user) : signInView());
+</script>
+</body>
+</html>

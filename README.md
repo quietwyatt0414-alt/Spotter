@@ -31,6 +31,7 @@ change the code  →  pull request  →  preview link posted on the PR  →  mer
 | `firebase/config.js` | Your Firebase project's web config (public by design). |
 | `firebase/sw.js`, `manifest.webmanifest`, `icons/` | Home-screen app icon and offline support. |
 | `scripts/build.py` | Builds `public/` (the website) from the files above. GitHub Actions runs it on every deploy. |
+| `firebase/stats.html` | Owner-only stats page at `/stats/`: sign-ups, workouts, active people, 1-week retention, and feedback. |
 | `firestore.rules` | Privacy rules: each person can only read and write their own data. |
 | `.github/workflows/` | Auto-deploy: live on `main`, previews on pull requests. |
 
@@ -46,3 +47,14 @@ Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `
 - Each person's data: `data/users/<uid>/profile`, `.../active` (workout in progress), `.../log-YYYY-MM` (one doc per month).
   If you add a new document name, update `firestore.rules` too and deploy rules: `firebase deploy --only firestore:rules`.
 - Changes to `firestore.rules` are **not** deployed by the GitHub workflow (it only deploys hosting). Deploy them by hand.
+
+## Analytics and feedback
+
+- The website counts **anonymous daily totals** in Firestore (`metrics/YYYY-MM-DD`, UTC days): `signups`, `active`
+  (signed-in people who opened the app that day), `workouts` (finished), and `w1` (people who signed up that day and came
+  back 7–13 days later). No names, emails, cookies or third-party trackers. Only signed-in accounts are counted.
+  `usermeta/<uid>` holds each person's own "already counted" flags. The code is in `firebase/host.html`.
+- **Send feedback** in Settings saves to `feedback/` (anyone can send; nobody can edit or read others').
+- See it all at **`/stats/`**. One-time setup: Firebase console → Authentication → Users → copy your **User UID**, paste it
+  over `PASTE_YOUR_UID_HERE` in `firestore.rules`, then `firebase deploy --only firestore:rules`.
+  Until the rules are deployed, nothing is counted and feedback can't be sent.

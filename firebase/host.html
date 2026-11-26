@@ -42,11 +42,13 @@
   window.__spotter = {state, settle:user => { if (state.done) return; state.done = true; settle(user); }};
   window.SPOTTER_HOST = {
     cloudName:'your Google account',
-    privacyNote:'Your log syncs between your phone and laptop. Other people using this app can’t see it.',
+    privacyNote:'Your log syncs between your phone and laptop. Other people using this app can’t see it. Spotter only counts anonymous totals (like how many workouts get logged each day) to see what’s working.',
     wait,
     account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || ''} : null,
     signIn:() => { try { localStorage.removeItem('spotter.noaccount'); } catch {} location.reload(); },
     signOut:() => window.__spotter.signOut ? window.__spotter.signOut() : location.reload(),
+    track:ev => { if (window.__spotter.track) window.__spotter.track(ev); },
+    sendFeedback:fb => window.__spotter.feedback ? window.__spotter.feedback(fb) : Promise.reject(new Error('offline')),
   };
   // the app asks for 'db' and 'user'; null means "no account", so it saves on this device
   window.claude = {use:async name => { await wait; if (!state.user || !state.api) return null; return state.api[name] || null; }};
@@ -104,6 +106,37 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     };
     const userApi = {id:async () => S.user && S.user.uid, me:async () => ({id:S.user.uid}), can:async () => true, isOwner:async () => true, canEdit:async () => true};
 
+    /* Privacy-friendly analytics: only daily totals, no personal data, no cookies, no third parties.
+       metrics/{YYYY-MM-DD (UTC)}: signups, active (signed-in people who opened the app), workouts (finished),
+       w1 (people who signed up that day and came back 7–13 days later). Signed-in accounts only.
+       usermeta/{uid} is each person's own bookkeeping so they're counted once: {since, last, w1}. */
+    const DAYMS = 864e5, dayOf = ms => new Date(ms).toISOString().slice(0, 10);
+    const bump = (day, field) => F.setDoc(F.doc(fs, 'metrics', day), {[field]:F.increment(1)}, {merge:true}).catch(() => {});
+    const visit = async user => {
+      const ref = F.doc(fs, 'usermeta', user.uid);
+      let m;
+      try { const s = await F.getDoc(ref); m = s.exists() ? s.data() : null; } catch { return; }   // offline: skip this visit
+      const now = Date.now(), today = dayOf(now), upd = {}, todo = [];
+      if (!m) {
+        const created = Date.parse(user.metadata && user.metadata.creationTime) || now;
+        const fresh = now - created < 2 * DAYMS;            // accounts made before analytics existed aren't new sign-ups
+        m = {}; upd.since = fresh ? dayOf(created) : null;
+        if (fresh) todo.push([upd.since, 'signups']);
+      }
+      const since = 'since' in upd ? upd.since : m.since;
+      if (since && !m.w1) { const d = Math.floor((Date.parse(today) - Date.parse(since)) / DAYMS); if (d >= 7 && d <= 13) { upd.w1 = true; todo.push([since, 'w1']); } }
+      if (m.last !== today) { upd.last = today; todo.push([today, 'active']); }
+      if (!todo.length) return;
+      F.setDoc(ref, {...m, ...upd}).catch(() => {});        // written first (writes go in order) so a retry can't count twice
+      todo.forEach(([d, f]) => bump(d, f));
+    };
+    window.__spotter.track = ev => { if (S.user && ev === 'workout') bump(dayOf(Date.now()), 'workouts'); };
+    window.__spotter.feedback = ({text, email}) => {
+      const p = F.addDoc(F.collection(fs, 'feedback'), {text:String(text).slice(0, 2000), email:String(email || '').slice(0, 200), signedIn:!!S.user, at:F.serverTimestamp()});
+      // offline, Firestore keeps the message and sends it later, so don't wait forever for the server
+      return Promise.race([p, new Promise(r => setTimeout(r, 4000))]);
+    };
+
     window.__spotter.signOut = async () => {
       try { await A.signOut(auth); } catch {}
       try { await F.terminate(fs); await F.clearIndexedDbPersistence(fs); } catch {}
@@ -132,7 +165,7 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     let first = true;
     A.onAuthStateChanged(auth, user => {
       if (S.done) { if ((user && user.uid) !== (S.user && S.user.uid)) location.reload(); return; }   // account changed after the app started
-      if (user) { S.user = user; S.api = {db, user:userApi}; try { localStorage.removeItem('spotter.noaccount'); } catch {} gate.hidden = true; document.getElementById('loading').style.display = ''; settle(user); }
+      if (user) { S.user = user; S.api = {db, user:userApi}; visit(user); try { localStorage.removeItem('spotter.noaccount'); } catch {} gate.hidden = true; document.getElementById('loading').style.display = ''; settle(user); }
       else if (first && noAccount()) goLocal();
       else showGate();
       first = false;

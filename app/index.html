@@ -524,6 +524,7 @@ const ICONS = {
   phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
   search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
   weight:'<path d="M5 20h14l-2-11H7L5 20zM9.5 9a2.5 2.5 0 1 1 5 0"/>',
+  chat:'<path d="M5 5h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-4 3.5V17H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
   copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
 };
 const ic = (n, cls='') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
@@ -1051,12 +1052,14 @@ function remapIds(d, map) {
   for (const k of Object.keys(d.adjust)) if (map[k]) { d.adjust[to(k)] = [...(d.adjust[to(k)] || []), ...d.adjust[k]]; delete d.adjust[k]; changed = true; }
   return changed;
 }
+const track = ev => { if (!DEMO && HOST && typeof HOST.track === 'function') try { HOST.track(ev); } catch {} };
 const hasData = d => d && (d.workouts.length || d.routines.length || d.customExercises.length || d.active);
 
 /* ---------- storage: Claude cloud db when writable, else this device ---------- */
 // Demo mode: the demo build defines window.SPOTTER_DEMO before this script (see demo-data.html).
 // Self-hosted builds (e.g. the Firebase version) set window.SPOTTER_HOST before this script:
 // {cloudName, wait:Promise (resolves once sign-in is settled), account():{name,email}|null, signIn(), signOut()}
+// Optional: track(event) counts anonymous totals ('workout'); sendFeedback({text, email}) -> Promise.
 const HOST = (window.SPOTTER_HOST && typeof window.SPOTTER_HOST === 'object') ? window.SPOTTER_HOST : null;
 const CLOUD_NAME = HOST && HOST.cloudName ? HOST.cloudName : 'your Claude account';
 const DEMO = (window.SPOTTER_DEMO && typeof window.SPOTTER_DEMO.generate === 'function') ? window.SPOTTER_DEMO : null;
@@ -1997,6 +2000,7 @@ function viewSettings() {
       ${DEMO ? `<button class="btn btn-ghost block" data-a="demo-reset">Reset demo data</button>` : ''}
       <button class="btn btn-danger-ghost block" data-a="wipe">Delete all data</button>
     </div>
+    ${HOST && typeof HOST.sendFeedback === 'function' && !DEMO ? `<button class="imp-cta" data-a="feedback-open" style="margin-top:22px">${ic('chat')}<span><b>Send feedback</b><small>Bug, idea, missing exercise? It goes straight to the person who makes Spotter.</small></span>${ic('right')}</button>` : ''}
     <div class="foot-note">${plural(S.workouts.length,'workout')} · ${plural(S.routines.length,'routine')} · ${plural(S.customExercises.length,'custom exercise')}<br>Spotter · free, no ads, no subscription</div>`;
 }
 
@@ -2132,6 +2136,7 @@ function doFinish(doneEx) {
   S.active = null; rest = null; workoutOpen = false;
   markDirty('active', 'log-' + monthKey(rec.start));
   flush();
+  track('workout');
   screen = {type:'summary', id:rec.id, prs}; calMonth = null; calSel = null;
   renderAll();
 }
@@ -2795,6 +2800,17 @@ function toastUndo(msg, fn, ms = 8000) {
   t.classList.add('show', 'has-undo'); clearTimeout(toastT);
   toastT = setTimeout(() => { t.classList.remove('show', 'has-undo'); undoFn = null; }, ms);
 }
+function feedbackModal() {
+  const signed = HOST && HOST.account && HOST.account();
+  modal({title:'Send feedback', body:`
+      <p>What’s working, what’s annoying, what’s missing? Every message gets read.</p>
+      <label class="field"><span>Your feedback</span><textarea name="text" maxlength="2000" style="font-family:inherit;font-size:16px" placeholder="e.g. I wish I could…"></textarea></label>
+      <label class="field"><span>Email (optional, if you’d like a reply)</span><input name="email" type="email" autocomplete="email" maxlength="200" value="${esc((signed && signed.email) || '')}"></label>`,
+    focus:'text', actions:[{label:'Cancel'}, {label:'Send', cls:'btn-acc',
+      validate:v => String(v.text || '').trim().length >= 3 ? true : 'Write a few words first',
+      fn:v => { Promise.resolve(HOST.sendFeedback({text:String(v.text).trim().slice(0, 2000), email:String(v.email || '').trim().slice(0, 200)}))
+        .then(() => toast('Thanks! Feedback sent.'), () => toast('Couldn’t send — check your connection and try again')); }}]});
+}
 function menu(title, items) { modal({title, col:true, actions:[...items, {label:'Cancel', cls:'btn-line'}]}); }
 
 /* ---------- backup ---------- */
@@ -3047,6 +3063,7 @@ const A = {
   'imp-go': impDoImport,
   'imp-undo': el => { const b = S.imports.find(x => x.id === el.dataset.id); if (!b) return;
     modal({title:'Undo this import?', body:`<p>Removes the ${plural(b.workouts,'workout')} it added${b.routines.length ? `, the ${plural(b.routines.length,'routine')} it made` : ''}${b.customs.length ? ', and custom exercises it created that you haven’t used since' : ''}. Everything else stays.</p>`, actions:[{label:'Cancel'}, {label:'Undo import', cls:'btn-danger', fn:() => undoImport(b.id)}]}); },
+  'feedback-open': () => feedbackModal(),
   'host-signin': () => HOST && HOST.signIn && HOST.signIn(),
   'host-signout': () => modal({title:'Sign out?', body:'<p>Your log stays saved in your account. Sign back in any time to get it.</p>', actions:[{label:'Cancel'}, {label:'Sign out', cls:'btn-danger', fn:() => { flush(); setTimeout(() => HOST.signOut(), 400); }}]}),
   'backup-copy': copyBackup,
