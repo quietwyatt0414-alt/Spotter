@@ -1,6 +1,6 @@
 # Spotter
 
-A free workout tracker: routines, live logging with your previous sets, rest timer, PRs, a calendar with
+A free workout tracker (free forever, no ads, optional one-time Pro): routines, live logging with your previous sets, rest timer, PRs, a calendar with
 day streaks, an exercise-by-exercise progress view that tells you whether you're progressively
 overloading, gym-switch fixes, sick/vacation days, 20 color themes, and imports from Liftoff, Strong, Hevy and any CSV.
 
@@ -33,7 +33,8 @@ change the code  →  pull request  →  preview link posted on the PR  →  mer
 | `scripts/build.py` | Builds `public/` (the website) from the files above. GitHub Actions runs it on every deploy. |
 | `firebase/stats.html` | Owner-only stats page at `/stats/`: sign-ups, workouts, active people, 1-week retention, and feedback. |
 | `firestore.rules` | Privacy rules: each person can only read and write their own data. |
-| `.github/workflows/` | Auto-deploy: live on `main`, previews on pull requests. |
+| `functions/` | Spotter Pro payments: Stripe Checkout and the webhook that unlocks Pro (needs the Blaze plan). See **[PAYMENTS.md](PAYMENTS.md)**. |
+| `.github/workflows/` | Auto-deploy: live on `main`, previews on pull requests. `deploy-backend.yml` deploys `firestore.rules` and `functions/` (after the one-time setup in PAYMENTS.md). |
 
 Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `firebase emulators:start --only hosting`.
 
@@ -46,7 +47,11 @@ Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `
   Hooks the app reads: `window.SPOTTER_HOST` (sign-in, account, wording) and `window.SPOTTER_DEMO` (demo data).
 - Each person's data: `data/users/<uid>/profile`, `.../active` (workout in progress), `.../log-YYYY-MM` (one doc per month).
   If you add a new document name, update `firestore.rules` too and deploy rules: `firebase deploy --only firestore:rules`.
-- Changes to `firestore.rules` are **not** deployed by the GitHub workflow (it only deploys hosting). Deploy them by hand.
+- Changes to `firestore.rules` are deployed by the **Deploy backend** workflow once its service account has the roles in
+  PAYMENTS.md step 3. Until then, deploy them by hand: `firebase deploy --only firestore:rules`.
+- **Spotter Pro**: everything that was free stays free; Pro only adds tools. Pro tools in the app call `proGate()`;
+  `isPro()` reads `HOST.pro()`, which comes from `entitlements/<uid>` (written only by `functions/` and the owner).
+  The demo has Pro unlocked. Server tests: `cd functions && npm test`.
 
 ## Analytics and feedback
 

@@ -18,7 +18,7 @@
 <p class="meta">Effective November 26, 2026</p>
 
 <div class="summary">
-<p><b>The short version.</b> Spotter stores your workout log so it can show it back to you on your phone and laptop. It has no ads, no third-party analytics and no tracking, and it doesn't sell or share your data. It does count a few anonymous daily totals, like how many workouts get logged, to see what's working. If you sign in with Google, your log is stored in Google's Firebase cloud, where the person who runs Spotter can see it. If you use Spotter without an account, your log never leaves your device.</p>
+<p><b>The short version.</b> Spotter stores your workout log so it can show it back to you on your phone and laptop. It has no ads, no third-party analytics and no tracking, and it doesn't sell or share your data. It does count a few anonymous daily totals, like how many workouts get logged, to see what's working. If you sign in with Google, your log is stored in Google's Firebase cloud, where the person who runs Spotter can see it. If you use Spotter without an account, your log never leaves your device. If you buy Spotter Pro, Stripe handles the payment; we never see your card details, and we keep only a record that your account has Pro.</p>
 </div>
 
 <h2>Who runs Spotter</h2>
@@ -40,10 +40,14 @@
 <tr><td>Usage bookkeeping for signed-in accounts: the day you signed up, the last day you opened the app, and whether you came back in your second week</td><td>The app, automatically, when you open it signed in</td><td>So each person is counted once in the daily totals below. It's stored with your account ID, and only you and the owner can read it.</td></tr>
 <tr><td>Anonymous daily totals: sign-ups, people who opened the app, finished workouts, and second-week returns</td><td>Added up from signed-in accounts</td><td>To see whether Spotter is growing and useful. The totals have no names, emails or account IDs in them.</td></tr>
 <tr><td>Feedback you send: your message, the email you give (filled in with your sign-in email, which you can clear), whether you were signed in, and when you sent it</td><td>You, through <i>Settings → Send feedback</i></td><td>To read your bug reports and ideas, and reply if you left an email.</td></tr>
+<tr><td>If you buy Spotter Pro: a purchase record with whether your account has Pro, the amount and currency you paid, Stripe's IDs for the checkout and payment, whether it was a test payment, whether you paid the launch (founding member) price, and when. If it's refunded, that too.</td><td>Stripe, when your payment goes through or is refunded</td><td>To unlock Pro on your account on every device, and to handle refunds. It's stored with your account ID, and only you and the owner can read it. Only Spotter's server code and the owner can change it.</td></tr>
 <tr><td>Technical data such as IP address, browser type and request times</td><td>Your browser, automatically, when it loads the site or talks to Firebase</td><td>Firebase and Google keep this in their own service logs to run and secure the service. We don't use it to track you.</td></tr>
 </table>
 <p>When you import from another app (Liftoff, Strong, Hevy or a CSV) or restore a backup, the file is read inside your browser. Only the workouts it contains are saved to your log; the file itself isn't uploaded.</p>
-<p>We don't collect your location, contacts, photos, payment details or anything from other apps on your device. Spotter has no ads, no third-party analytics, no advertising IDs and no tracking cookies. People who use Spotter without an account aren't counted at all.</p>
+<p>We don't collect your location, contacts, photos or anything from other apps on your device, and we never see or store your card number or bank details: Stripe collects those directly. Spotter has no ads, no third-party analytics, no advertising IDs and no tracking cookies. People who use Spotter without an account aren't counted at all.</p>
+
+<h2>Payments</h2>
+<p>When you tap <i>Buy Pro</i>, Spotter sends Stripe your account ID and the email address on your Google account (so Stripe can send your receipt), and you're taken to a checkout page run by <a href="https://stripe.com/privacy" rel="noopener">Stripe</a>. There, Stripe collects your payment details and anything it needs to process the payment and prevent fraud, such as your card, billing country or postal code, and device information. Stripe handles that under its own privacy policy, and is responsible for it as the payment processor. Stripe then tells Spotter whether the payment succeeded, which is how Pro gets unlocked. The owner can see your payments (amount, date, email and the last digits of the card, as Stripe shows them) in the Stripe dashboard, to issue refunds and keep records.</p>
 
 <h2>Bodyweight and health information</h2>
 <p>Your workouts and bodyweight say something about your fitness and health. We treat them as personal information, use them only to run the app for you, and never use them for advertising or share them. Spotter isn't a medical service and isn't covered by HIPAA.</p>
@@ -57,13 +61,15 @@
 <li><b>You</b>, on any device where you sign in.</li>
 <li><b>The person who runs Spotter.</b> As the owner of the Firebase project, we can view, export, change and delete any user's data in the Firebase console. The app's privacy rules don't apply to the owner. The owner also reads feedback messages and the daily totals on a private stats page. We only look at your workout log when we need to: to fix a bug or a sync problem, to answer a request from you, to delete your data, or if the law requires it. Nobody else has admin access today.</li>
 <li><b>Google</b>, which hosts and processes the data for us as our service provider under its own <a href="https://firebase.google.com/terms/data-processing-terms" rel="noopener">data processing terms</a>.</li>
+<li><b>Stripe</b>, if you buy Spotter Pro, as described under Payments above.</li>
 <li><b>Authorities</b>, only if we're legally required to share it, or if it's needed to protect someone's safety.</li>
 </ul>
 <p>We don't sell your personal information, and we don't share it for advertising.</p>
 
 <h2>Other services the site loads</h2>
 <ul>
-<li><b>Google Sign-In and Firebase</b> (from <code>gstatic.com</code> and Google's sign-in pages), to sign you in and sync your log.</li>
+<li><b>Google Sign-In and Firebase</b> (from <code>gstatic.com</code> and Google's sign-in pages), to sign you in and sync your log, and Firebase Cloud Functions, which start a checkout and receive Stripe's payment confirmations.</li>
+<li><b>Stripe</b>, only if you choose to buy Spotter Pro: its checkout page (<code>checkout.stripe.com</code>) collects your payment. See <a href="https://stripe.com/privacy" rel="noopener">Stripe's privacy policy</a>.</li>
 <li><b>Google Fonts</b>, for the app's typefaces. Your browser requests them from Google, which receives your IP address. See <a href="https://policies.google.com/privacy" rel="noopener">Google's privacy policy</a>.</li>
 </ul>
 
@@ -71,7 +77,7 @@
 <p>Spotter doesn't use advertising or analytics cookies. It uses your browser's local storage and IndexedDB to keep you signed in, keep an offline copy of your log, remember small things like which quote you saw last, and (without an account) store your whole log. The site also installs a service worker so it can open without a connection.</p>
 
 <h2>How long we keep it</h2>
-<p>We keep your log and usage bookkeeping for as long as you have a Spotter account. When you delete your account (<i>Settings → Delete account</i>), your sign-in record and usage bookkeeping are deleted right away. We keep your workout log, plus your name and email so we know whose it is, for 30 days in case you change your mind, and then delete them for good. Feedback messages are kept until we've dealt with them, and you can ask us to delete yours. The anonymous daily totals can't be traced back to you, so we keep them. Google may keep its service logs and backups for a limited time under its own policies.</p>
+<p>We keep your log and usage bookkeeping for as long as you have a Spotter account. When you delete your account (<i>Settings → Delete account</i>), your sign-in record and usage bookkeeping are deleted right away. We keep your workout log, plus your name and email so we know whose it is, for 30 days in case you change your mind, and then delete them for good. Feedback messages are kept until we've dealt with them, and you can ask us to delete yours. The anonymous daily totals can't be traced back to you, so we keep them. If you bought Spotter Pro, the purchase record on your account follows your log: it's deleted when your log is deleted for good. Stripe keeps its own records of payments, and we keep payment records from the Stripe dashboard (amount, date and the email on the receipt) for as long as tax and accounting law requires, usually up to 7 years. Google may keep its service logs and backups for a limited time under its own policies.</p>
 
 <h2>Your choices and rights</h2>
 <ul>

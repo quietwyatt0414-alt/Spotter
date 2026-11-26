@@ -81,6 +81,9 @@ async function load(user) {
   }
   // deleted accounts (separate so the page still works before these rules are deployed)
   const dSnap = await F.getDocs(F.query(F.collection(fs, 'deletions'), F.orderBy('at', 'asc'))).catch(() => ({docs:[]}));
+  const pSnap = await F.getDocs(F.collection(fs, 'entitlements')).catch(() => ({docs:[]}));
+  const pro = pSnap.docs.map(d => d.data()), paid = pro.filter(x => x.pro && x.amount > 0);
+  const live = paid.filter(x => x.livemode), cents = live.reduce((a, x) => a + (x.amount || 0), 0);
   const days = {}; mSnap.docs.forEach(d => { days[d.id] = d.data(); });
   const g = (d, k) => (days[d] && days[d][k]) || 0;
   const today = dayOf(Date.now());
@@ -120,6 +123,15 @@ async function load(user) {
     <div class="scroll"><table><thead><tr><th>Day</th><th>Sign-ups</th><th>Workouts</th><th>Active</th></tr></thead><tbody>
       ${daily.map(d => `<tr><td>${d}</td><td>${g(d, 'signups')}</td><td>${g(d, 'workouts')}</td><td>${g(d, 'active')}</td></tr>`).join('')}
     </tbody></table></div>
+    <h2>Spotter Pro</h2>
+    <div class="tiles">
+      <div class="tile"><b>${live.length}</b><span>Pro sales (live payments)</span></div>
+      <div class="tile"><b>$${(cents / 100).toFixed(2)}</b><span>Pro revenue before Stripe fees (~3%)</span></div>
+      <div class="tile"><b>${pro.filter(x => x.pro && !x.amount).length}</b><span>Pro given free by you</span></div>
+      <div class="tile"><b>${paid.length - live.length}</b><span>test-mode purchases</span></div>
+    </div>
+    <p class="small" style="margin-top:10px">Payments, receipts and refunds are in your Stripe dashboard. A full refund there takes Pro away automatically. To give someone Pro for free (a friend, a tester, a lost purchase), paste their <b>User UID</b> from Firebase console → Authentication → Users:</p>
+    <div class="del-row" id="give"><input placeholder="User UID" aria-label="User UID to give Pro"><button class="line" data-give>Give Pro</button><span class="small" id="giveMsg"></span></div>
     <h2>Feedback (${fSnap.size})</h2>
     ${fSnap.docs.map(d => { const f = d.data(), at = f.at && f.at.toDate ? f.at.toDate().toLocaleString() : '';
       return `<div class="fb"><div class="fb-text">${esc(f.text || '')}</div><div class="fb-meta"><span>${esc(at)}${f.email ? ` · <a href="mailto:${esc(f.email)}">${esc(f.email)}</a>` : ''}${f.signedIn ? '' : ' · no account'}</span><button class="line" data-del="${esc(d.id)}">Delete</button></div></div>`; }).join('') || '<p class="small">No feedback yet.</p>'}
@@ -132,6 +144,12 @@ async function load(user) {
         <div class="small del-msg"></div></div>`; }).join('') || '<p class="small">None.</p>'}
     <p class="small" style="margin-top:28px">Signed in as ${esc(user.email || user.uid)} · <button class="line" id="so">Sign out</button></p>`;
   document.getElementById('so').onclick = () => A.signOut(auth);
+  out.querySelector('[data-give]').onclick = async () => {
+    const uid = out.querySelector('#give input').value.trim(), m = out.querySelector('#giveMsg');
+    if (!/^[A-Za-z0-9_-]{6,128}$/.test(uid)) { m.textContent = 'Paste a User UID first.'; return; }
+    try { await F.setDoc(F.doc(fs, 'entitlements', uid), {pro:true, founding:false, amount:0, currency:'usd', session:'', paymentIntent:'', livemode:false, given:true, since:F.serverTimestamp()}); m.textContent = 'Done. Pro shows up for them within seconds.'; }
+    catch (e) { m.textContent = 'Didn’t work (' + ((e && e.code) || 'error') + ').'; }
+  };
   out.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
     if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = 'Tap again to delete'; return; }
     b.disabled = true;
@@ -144,6 +162,9 @@ async function moveLog(oldUid, newUid) {
   if (newUid) for (const d of docs) await F.setDoc(F.doc(fs, 'data/users/' + newUid + '/' + d.id), d.data());
   for (const d of docs) await F.deleteDoc(d.ref);
   await F.deleteDoc(F.doc(fs, 'usermeta', oldUid)).catch(() => {});
+  // Spotter Pro moves with the log on a restore, and goes with it on a delete for good
+  const ent = await F.getDoc(F.doc(fs, 'entitlements', oldUid)).catch(() => null);
+  if (ent && ent.exists()) { if (newUid) await F.setDoc(F.doc(fs, 'entitlements', newUid), ent.data()); await F.deleteDoc(ent.ref); }
   await F.deleteDoc(F.doc(fs, 'deletions', oldUid));
   return docs.length;
 }

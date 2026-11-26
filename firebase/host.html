@@ -23,7 +23,7 @@
   <div class="g-in">
     <div class="brand g-brand"><span class="brand-dot"></span>SPOTTER</div>
     <h1>Free workout tracker</h1>
-    <p>Log your lifts, see if you’re progressing, keep your streak. No ads, no subscription.</p>
+    <p>Log your lifts, see if you’re progressing, keep your streak. Free forever. No ads, ever. Optional one-time Pro.</p>
     <div class="g-feats"><span>Routines & PRs</span><span>Rest timer</span><span>Overload check</span><span>Syncs to your phone & laptop</span></div>
     <div id="gateWarn" class="g-warn" hidden></div>
     <div id="gateSetup" class="g-warn" hidden></div>
@@ -39,7 +39,8 @@
 // Classic script: runs before the app, so the app sees SPOTTER_HOST and window.claude right away.
 (() => {
   let settle;
-  const state = {user:null, api:null, done:false};
+  const state = {user:null, api:null, done:false, pro:null};
+  const PRO = window.SPOTTER_PRO || {};
   const wait = new Promise(r => { settle = r; });
   window.__spotter = {state, settle:user => { if (state.done) return; state.done = true; settle(user); }};
   window.SPOTTER_HOST = {
@@ -53,6 +54,11 @@
     contact:'quietwyatt0414@gmail.com',
     deleteAccount:() => window.__spotter.deleteAccount ? window.__spotter.deleteAccount() : Promise.reject({code:'unavailable'}),
     sendFeedback:fb => window.__spotter.feedback ? window.__spotter.feedback(fb) : Promise.reject(new Error('offline')),
+    // Spotter Pro: entitlements/{uid} is written only by the Stripe webhook (functions/index.js)
+    pro:() => state.pro,
+    proPrice:PRO.price || '$19.99',
+    proOnSale:!!PRO.onSale,
+    buyPro:() => window.__spotter.buyPro ? window.__spotter.buyPro() : Promise.reject({code:'unavailable'}),
   };
   // the app asks for 'db' and 'user'; null means "no account", so it saves on this device
   window.claude = {use:async name => { await wait; if (!state.user || !state.api) return null; return state.api[name] || null; }};
@@ -166,6 +172,27 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
       try { localStorage.removeItem('spotter.v1'); localStorage.removeItem('spotter.noaccount'); sessionStorage.setItem('spotter.deleted', '1'); } catch {}
     };
 
+    /* Spotter Pro: listen to entitlements/{uid} (only the Stripe webhook and the owner can write it), and start
+       Stripe Checkout through the createCheckout function. Both need the Blaze plan and the backend deploy. */
+    const watchPro = user => {
+      let first = true;
+      F.onSnapshot(F.doc(fs, 'entitlements', user.uid), s => {
+        const was = !!(S.pro && S.pro.pro), d = s.exists() ? s.data() : null;
+        S.pro = d ? {pro:!!d.pro, founding:!!d.founding} : null;
+        window.dispatchEvent(new CustomEvent('spotter-pro', {detail:{unlocked:!first && !was && !!(S.pro && S.pro.pro)}}));
+        first = false;
+      }, () => {});          // rules not deployed yet, or offline: no Pro
+    };
+    window.__spotter.buyPro = async () => {
+      if (!S.user) throw {code:'unauthenticated'};
+      const Fn = await import(CDN + 'firebase-functions.js');
+      const call = Fn.httpsCallable(Fn.getFunctions(app, 'us-central1'), 'createCheckout', {timeout:20000});
+      const r = await call({origin:location.origin});
+      if (!r.data || !r.data.url) throw {code:'unavailable'};
+      location.href = r.data.url;
+      await new Promise(() => {});                          // leaving for Stripe
+    };
+
     window.__spotter.signOut = async () => {
       try { await A.signOut(auth); } catch {}
       try { await F.terminate(fs); await F.clearIndexedDbPersistence(fs); } catch {}
@@ -194,7 +221,7 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     let first = true;
     A.onAuthStateChanged(auth, user => {
       if (S.done) { if (window.__spotter.deleting) return; if ((user && user.uid) !== (S.user && S.user.uid)) location.reload(); return; }   // account changed after the app started
-      if (user) { S.user = user; S.api = {db, user:userApi}; visit(user); try { localStorage.removeItem('spotter.noaccount'); } catch {} gate.hidden = true; document.getElementById('loading').style.display = ''; settle(user); }
+      if (user) { S.user = user; S.api = {db, user:userApi}; visit(user); watchPro(user); try { localStorage.removeItem('spotter.noaccount'); } catch {} gate.hidden = true; document.getElementById('loading').style.display = ''; settle(user); }
       else if (first && noAccount()) goLocal();
       else showGate();
       first = false;
