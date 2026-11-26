@@ -525,6 +525,7 @@ const ICONS = {
   phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
   search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
   weight:'<path d="M5 20h14l-2-11H7L5 20zM9.5 9a2.5 2.5 0 1 1 5 0"/>',
+  chat:'<path d="M5 5h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-4 3.5V17H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
   copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
 };
 const ic = (n, cls='') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
@@ -552,10 +553,13 @@ const CAT = {
     ['decline_mach','Decline Chest Press Machine','Machine','Lower chest','Triceps,Front delts','Machine Decline Press|Decline Machine Press'],
     ['decline_iso','Iso-Lateral Decline Press','Machine','Lower chest','Triceps,Front delts','Hammer Strength Decline Press|Plate Loaded Decline Press'],
     ['fly_iso','Iso-Lateral Chest Fly','Machine','Chest','Front delts','Hammer Strength Chest Fly|Iso Lateral Fly|Plate Loaded Chest Fly'],
+    ['smith_incline','Smith Machine Incline Press','Smith machine','Upper chest','Front delts,Triceps','Incline Bench Press (Smith)'],
+    ['bench_smith','Smith Machine Bench Press','Smith machine','Chest','Front delts,Triceps','Smith Bench Press|Smith Flat Bench'],
+    ['incline_fly_cable','Incline Cable Fly','Cable','Upper chest','Front delts','Low to High Cable Fly|Low-to-High Fly|Incline Cable Crossover'],
   ],
   Back:[
     ['row_db','Single-Arm Dumbbell Row','Dumbbell','Lats,Upper back','Rear delts,Biceps','Dumbbell Bent-Over Row (Single Arm)|Single-Arm Row (Dumbbell)|One-Arm Dumbbell Row|Single Arm Dumbbell Row|Dumbbell Row|One Arm Row'],
-    ['pulldown','Wide-Grip Pulldown','Cable','Lats','Upper back,Biceps','Lat Pulldown|Wide Grip Lat Pulldown|Pulldown|Lat Pull Down'],
+    ['pulldown','Lat Pulldown','Cable','Lats','Upper back,Biceps','Wide-Grip Pulldown|Lat Pulldown|Wide Grip Lat Pulldown|Pulldown|Lat Pull Down'],
     ['row_cable','Seated Cable Row','Cable','Upper back,Lats','Biceps,Rear delts','Cable Row|Seated Row|Low Row'],
     ['pulldown_cg','Close-Grip Pulldown','Cable','Lats','Upper back,Biceps','Close-Grip Lat Pulldown|Close Grip Lat Pulldown|V-Bar Pulldown'],
     ['row_bb','Barbell Row','Barbell','Upper back,Lats','Rear delts,Biceps,Lower back','Bent Over Row (Barbell)|Bent Over Row|Barbell Bent Over Row|Bent-Over Barbell Row'],
@@ -577,6 +581,10 @@ const CAT = {
     ['pulldown_iso','Iso-Lateral Pulldown','Machine','Lats','Upper back,Biceps','Hammer Strength Pulldown|Plate Loaded Pulldown|Iso Lateral Pulldown'],
     ['row_high_iso','Iso-Lateral High Row','Machine','Upper back,Lats','Rear delts,Biceps','Hammer Strength High Row|High Row|Iso Lateral High Row'],
     ['back_ext','Back Extension','Bodyweight','Lower back','Glutes,Hamstrings',''],
+    ['row_chest','Chest-Supported Row','Machine','Upper back','Lats,Rear delts,Biceps',''],
+    ['rack_pull','Rack Pull','Barbell','Upper back,Traps,Lower back','Glutes,Hamstrings,Forearms',''],
+    ['pullup_assist','Assisted Pull Up','Machine','Lats','Upper back,Biceps','Assisted Pull-Up Machine|Machine Assisted Pull Up|Gravitron'],
+    ['chinup_assist','Assisted Chin Up','Machine','Lats','Biceps,Upper back','Assisted Chin-Up|Machine Assisted Chin Up'],
   ],
   Shoulders:[
     ['press_db','Dumbbell Shoulder Press','Dumbbell','Front delts','Side delts,Triceps','Shoulder Press (Dumbbell)|Seated Dumbbell Press|Dumbbell Overhead Press|DB Shoulder Press'],
@@ -597,15 +605,20 @@ const CAT = {
     ['press_db_stand','Standing Dumbbell Shoulder Press','Dumbbell','Front delts','Side delts,Triceps,Abs','Standing Dumbbell Press'],
     ['lat_db_seat','Seated Dumbbell Lateral Raise','Dumbbell','Side delts','','Seated Lateral Raise'],
     ['rev_pec','Reverse Pec Deck','Machine','Rear delts','Upper back','Machine Rear Delt Fly|Rear Delt Machine|Reverse Fly Machine|Reverse Machine Fly'],
+    ['lat_mach','Lateral Raise Machine','Machine','Side delts','Traps','Lateral Raise (Machine)'],
+    ['face_pull','Cable Face Pull','Cable','Rear delts','Upper back,Traps','Face Pull'],
+    ['arnold','Arnold Press','Dumbbell','Front delts','Side delts,Triceps',''],
+    ['upright_cable','Cable Upright Row','Cable','Side delts,Traps','Front delts,Biceps','Upright Cable Row'],
   ],
   Traps:[
     ['shrug_bb','Barbell Shrug','Barbell','Traps','Forearms','Shrug (Barbell)|Barbell Shrugs|Shrug|Shrugs'],
     ['shrug_db','Dumbbell Shrug','Dumbbell','Traps','Forearms','Dumbbell Shrugs|Shrug (Dumbbell)|Dumbbell Shrug'],
+    ['shrug_smith','Smith Machine Shrug','Smith machine','Traps','Forearms','Smith Shrug'],
   ],
   Biceps:[
     ['curl_bb','Barbell Curl','Barbell','Biceps','Forearms','Bicep Curl (Barbell)|Barbell Bicep Curl|Standing Barbell Curl|Bicep Curl'],
     ['curl_db','Dumbbell Curl','Dumbbell','Biceps','Forearms','Alternating Dumbbell Curl|Bicep Curl (Dumbbell)|Dumbbell Curl|Dumbbell Bicep Curl|Alternate Dumbbell Curl|DB Curl'],
-    ['curl_rope','Rope Cable Curl','Cable','Biceps,Brachialis','Forearms','Rope Curl|Cable Rope Hammer Curl|Rope Hammer Curl'],
+    ['curl_rope','Cable Rope Hammer Curl','Cable','Biceps,Brachialis','Forearms','Rope Cable Curl|Rope Curl|Cable Rope Hammer Curl|Rope Hammer Curl'],
     ['curl_ez','EZ Barbell Curl','EZ bar','Biceps','Forearms','EZ Bar Curl|EZ Curl'],
     ['preacher','EZ Barbell Preacher Curl','EZ bar','Biceps','Brachialis','Preacher Curl (EZ Bar)|Preacher Curl|EZ Bar Preacher Curl'],
     ['preacher_db','Dumbbell Preacher Curl','Dumbbell','Biceps','Brachialis','Preacher Curl (Dumbbell)|Single-Arm Preacher Curl|One-Arm Preacher Curl'],
@@ -621,17 +634,22 @@ const CAT = {
   ],
   Triceps:[
     ['skull','Lying Triceps Extension','EZ bar','Triceps','','Skull Crusher (EZ Bar)|Skull Crusher|Skullcrusher|EZ Bar Skull Crusher|Lying Barbell Triceps Extension'],
-    ['pushdown','Triceps Pressdown','Cable','Triceps','','Triceps Pushdown (Cable)|Triceps Pushdown|Tricep Pushdown|Cable Pushdown|Bar Pushdown|Straight Bar Pushdown'],
-    ['rope_pd','Cable Rope Pushdown','Cable','Triceps','','Rope Pushdown|Rope Triceps Pushdown|Rope Pressdown|Tricep Rope Pushdown'],
+    ['pushdown','Straight Bar Pushdown','Cable','Triceps','','Triceps Pressdown|Triceps Pushdown (Cable)|Triceps Pushdown|Tricep Pushdown|Cable Pushdown|Bar Pushdown|Straight Bar Pushdown'],
+    ['rope_pd','Rope Pushdown','Cable','Triceps','','Cable Rope Pushdown|Rope Pushdown|Rope Triceps Pushdown|Rope Pressdown|Tricep Rope Pushdown'],
     ['oh_ext_db','Dumbbell Overhead Triceps Extension','Dumbbell','Triceps','','Overhead Triceps Extension (Dumbbell)|Overhead Triceps Extension|Overhead Dumbbell Extension|Seated Dumbbell Triceps Extension'],
     ['cgbp','Close Grip Bench Press','Barbell','Triceps','Chest,Front delts','Close-Grip Bench Press|CGBP|Close Grip Bench'],
-    ['kickback','Kickback','Dumbbell','Triceps','','Triceps Kickback|Tricep Kickback|Dumbbell Kickback'],
+    ['kickback','Dumbbell Triceps Kickback','Dumbbell','Triceps','','Kickback|Triceps Kickback|Tricep Kickback|Dumbbell Kickback'],
     ['pushdown_1a','Single-Arm Cable Pushdown','Cable','Triceps','','Single-Arm Cable Triceps Extension|Single-Arm Pushdown|One-Arm Pushdown|Single Arm Tricep Pushdown'],
     ['skull_db','Lying Dumbbell Triceps Extension','Dumbbell','Triceps','','Skull Crusher (Dumbbell)|Dumbbell Skull Crusher|Dumbbell Lying Triceps Extension'],
     ['french_press','Barbell French Press','Barbell','Triceps','','Seated Barbell French Press|French Press|Seated Overhead Barbell Extension|Overhead Barbell Triceps Extension'],
     ['bench_dip','Bench Dip','Bodyweight','Triceps','Front delts,Chest','Bench Dips|Bench Dip|Bench Triceps Dip'],
     ['dips','Dips','Bodyweight','Triceps,Lower chest','Front delts','Parallel Dip Bar|Dips|Dip|Parallel Bar Dips|Chest Dips|Triceps Dips'],
     ['oh_ext_db_stand','Standing Dumbbell Overhead Triceps Extension','Dumbbell','Triceps','','Standing Overhead Dumbbell Extension'],
+    ['oh_ext_cable','Cable Overhead Triceps Extension','Cable','Triceps','','Overhead Triceps Extension (Cable)'],
+    ['dip_mach','Dip Machine','Machine','Triceps','Chest,Front delts','Triceps Dip (Machine)'],
+    ['dip_assist','Assisted Dip','Machine','Triceps,Lower chest','Front delts','Assisted Dip Machine|Machine Assisted Dip'],
+    ['pushdown_vbar','V-Bar Pushdown','Cable','Triceps','','V Bar Pushdown|V-Bar Triceps Pushdown'],
+    ['kickback_cable_tri','Cable Triceps Kickback','Cable','Triceps','','Cable Kickback (Triceps)|Single-Arm Cable Kickback'],
   ],
   Forearms:[
     ['wrist_curl','Barbell Wrist Curl','Barbell','Forearms','','Seated Barbell Wrist Curl|Wrist Curl (Barbell)|Wrist Curl|Barbell Wrist Curl'],
@@ -699,11 +717,10 @@ const CAT = {
 };
 // No longer in the catalogue. Kept so older logs and routines still read right; they show up once you've used them.
 const RETIRED_EX = {
-  Chest:[['smith_incline','Incline Bench Press (Smith)','Smith machine','Upper chest','Front delts,Triceps','']],
-  Back:[['pendlay','Pendlay Row','Barbell','Upper back,Lats','Rear delts,Biceps,Lower back',''], ['row_chest','Chest-Supported Row','Machine','Upper back','Lats,Rear delts,Biceps',''], ['rack_pull','Rack Pull','Barbell','Upper back,Traps,Lower back','Glutes,Hamstrings,Forearms',''], ['pulldown_bn','Behind-Neck Pulldown','Cable','Lats','Upper back,Biceps,Rear delts','Behind the Neck Lat Pulldown|Behind Neck Pulldown'], ['pullup_bn','Behind the Neck Pull Up','Bodyweight','Lats','Upper back,Rear delts,Biceps','Behind Neck Pull-Up'], ['row_bb_sup','Barbell Bent Over Rows Supinated Grip','Barbell','Lats,Upper back','Biceps,Rear delts,Lower back','Underhand Barbell Row|Reverse Grip Barbell Row|Yates Row'], ['pulldown_rope','Rope Pulldown','Cable','Lats','Upper back,Biceps','Rope Lat Pulldown']],
-  Shoulders:[['arnold','Arnold Press','Dumbbell','Front delts','Side delts,Triceps',''], ['lat_mach','Lateral Raise (Machine)','Machine','Side delts','Traps',''], ['face_pull','Face Pull','Cable','Rear delts','Upper back,Traps',''], ['front_raise_cable_n','One-Arm Low-Pulley Front Raise Neutral Grip','Cable','Front delts','','Neutral Grip Cable Front Raise'], ['ohp_bn_seated','Seated Behind the Neck Barbell Shoulder Press','Barbell','Front delts,Side delts','Triceps,Traps','Seated Behind the Neck Press'], ['ohp_bn','Standing Behind the Neck Barbell Shoulder Press','Barbell','Front delts,Side delts','Triceps,Traps','Behind the Neck Press|Behind the Neck Overhead Press'], ['front_raise_alt','Alternate Dumbbell Front Raise Neutral Grip','Dumbbell','Front delts','','Alternating Front Raise|Neutral Grip Front Raise'], ['front_raise_2h','Two-Handed Dumbbell Front Raise','Dumbbell','Front delts','Upper chest','Two Hand Front Raise'], ['rear_fly','Dumbbell Rear Delt Fly','Dumbbell','Rear delts','Upper back','Bent-Over Lateral Raise|Rear Delt Fly (Dumbbell)|Rear Delt Fly|Reverse Fly|Bent Over Reverse Fly|Rear Lateral Raise|Dumbbell Rear Delt Fly']],
+  Back:[['pendlay','Pendlay Row','Barbell','Upper back,Lats','Rear delts,Biceps,Lower back',''], ['pulldown_bn','Behind-Neck Pulldown','Cable','Lats','Upper back,Biceps,Rear delts','Behind the Neck Lat Pulldown|Behind Neck Pulldown'], ['pullup_bn','Behind the Neck Pull Up','Bodyweight','Lats','Upper back,Rear delts,Biceps','Behind Neck Pull-Up'], ['row_bb_sup','Barbell Bent Over Rows Supinated Grip','Barbell','Lats,Upper back','Biceps,Rear delts,Lower back','Underhand Barbell Row|Reverse Grip Barbell Row|Yates Row'], ['pulldown_rope','Rope Pulldown','Cable','Lats','Upper back,Biceps','Rope Lat Pulldown']],
+  Shoulders:[['front_raise_cable_n','One-Arm Low-Pulley Front Raise Neutral Grip','Cable','Front delts','','Neutral Grip Cable Front Raise'], ['ohp_bn_seated','Seated Behind the Neck Barbell Shoulder Press','Barbell','Front delts,Side delts','Triceps,Traps','Seated Behind the Neck Press'], ['ohp_bn','Standing Behind the Neck Barbell Shoulder Press','Barbell','Front delts,Side delts','Triceps,Traps','Behind the Neck Press|Behind the Neck Overhead Press'], ['front_raise_alt','Alternate Dumbbell Front Raise Neutral Grip','Dumbbell','Front delts','','Alternating Front Raise|Neutral Grip Front Raise'], ['front_raise_2h','Two-Handed Dumbbell Front Raise','Dumbbell','Front delts','Upper chest','Two Hand Front Raise'], ['rear_fly','Dumbbell Rear Delt Fly','Dumbbell','Rear delts','Upper back','Bent-Over Lateral Raise|Rear Delt Fly (Dumbbell)|Rear Delt Fly|Reverse Fly|Bent Over Reverse Fly|Rear Lateral Raise|Dumbbell Rear Delt Fly']],
   Biceps:[['bayesian','Bayesian Cable Curl','Cable','Biceps','Forearms',''], ['spider','Spider Curl','Dumbbell','Biceps','Brachialis',''], ['curl_cable_1a','Single-Arm Low Pulley Cable Curl','Cable','Biceps','Forearms','One-Arm Cable Curl|Single Arm Cable Curl'], ['curl_high_cable','Standing High Pulley Cable Curl','Cable','Biceps','','High Cable Curl|Overhead Cable Curl']],
-  Triceps:[['oh_ext_cable','Overhead Triceps Extension (Cable)','Cable','Triceps','',''], ['dip_mach','Triceps Dip (Machine)','Machine','Triceps','Chest,Front delts',''], ['pushdown_1a_sup','Single-Arm Cable Triceps Extension with Supinated Grip','Cable','Triceps','','Single-Arm Reverse Grip Pushdown|One-Arm Underhand Pushdown'], ['rev_pushdown','Reverse Grip Cable Triceps Extension with Barbell','Cable','Triceps','Forearms','Reverse Grip Pushdown|Underhand Pushdown|Reverse Grip Triceps Pushdown']],
+  Triceps:[['pushdown_1a_sup','Single-Arm Cable Triceps Extension with Supinated Grip','Cable','Triceps','','Single-Arm Reverse Grip Pushdown|One-Arm Underhand Pushdown'], ['rev_pushdown','Reverse Grip Cable Triceps Extension with Barbell','Cable','Triceps','Forearms','Reverse Grip Pushdown|Underhand Pushdown|Reverse Grip Triceps Pushdown']],
   Quads:[['squat_bw15','1.5 Rep Bodyweight Squats','Bodyweight','Quads,Glutes','Adductors','One and a Half Squat'], ['squat_mb','Medicine Ball Squat','Other','Quads,Glutes','Abs,Adductors',''], ['squat_band','Mini-Band Air Squat','Band','Quads,Glutes','Abductors','Banded Squat|Band Squat'], ['squat_reach','Squat Sit to Reach','Bodyweight','Quads,Glutes','Adductors,Upper back',''], ['duck_walk','Duck Walk','Bodyweight','Quads,Glutes','Adductors',''], ['leg_ext_1','Single Leg Extension','Machine','Quads','','One-Leg Extension|Single-Leg Leg Extension'], ['tuck_jump','Tuck Jump','Bodyweight','Quads,Calves','Glutes,Hip flexors','Knee Tuck Jumps|Tuck Jump|Tuck Jumps'], ['burpee','Burpee','Bodyweight','Quads,Chest','Glutes,Front delts,Triceps,Abs','Burpees|Burpee'], ['squat_bw','Bodyweight Squat','Bodyweight','Quads,Glutes','Adductors','Air Squat|Air Squats'], ['bss_bw','Bodyweight Bulgarian Split Squat','Bodyweight','Quads,Glutes','Adductors','Bodyweight Split Squat'], ['squat_jump','Jump Squat','Bodyweight','Quads,Glutes','Calves,Hamstrings','Squat Jump|Squat Jumps'], ['wall_sit','Wall Sit','Bodyweight','Quads','Glutes','Wall Squat']],
   Hamstrings:[['nordic','Nordic Curl','Bodyweight','Hamstrings','',''], ['dl_mb','Medicine Ball Deadlift','Other','Hamstrings,Glutes','Lower back',''], ['sl_dl_bw','Single-Leg Deadlift','Bodyweight','Hamstrings,Glutes','Lower back','Single Leg Bodyweight Deadlift|Single Leg RDL|Single-Leg Deadlift'], ['kb_swing','Kettlebell Swing','Kettlebell','Glutes,Hamstrings','Lower back,Front delts,Abs','Kettlebell Swings|Kettlebell Swing|KB Swing'], ['sumo_dl_kb','Kettlebell Sumo Deadlift','Kettlebell','Glutes,Quads,Adductors','Hamstrings,Lower back','Kettlebell Deadlift|KB Sumo Deadlift']],
   Glutes:[['frog_pump_smith','Smith Machine Frog Pump','Smith machine','Glutes','Adductors','Smith Frog Pump'], ['side_hip_raise','Side Lying Hip Raise','Bodyweight','Obliques,Abductors','Glutes','Side Plank Hip Raise|Side Plank Dips'], ['glute_bridge','Glute Bridge','Bodyweight','Glutes','Hamstrings','Bodyweight Glute Bridge|Glute Bridge|Hip Bridge'], ['bridge_1','Single Leg Glute Bridge','Bodyweight','Glutes','Hamstrings,Abs','One-Leg Glute Bridge'], ['bridge_band','Banded Glute Bridge','Band','Glutes','Abductors,Hamstrings','Band Glute Bridge'], ['abd_band','Band Seated Hip Abduction','Band','Abductors,Glutes','','Banded Hip Abduction|Seated Band Abduction'], ['frog_pump','Frog Pump','Bodyweight','Glutes','Adductors','Bodyweight Frog Pump|Frog Pump|Frog Pumps'], ['clams','Banded Clamshell','Band','Abductors,Glutes','','Banded Clams|Clamshell|Clam Shells|Banded Clamshell'], ['side_leg_raise','Side Lying Leg Raise','Bodyweight','Abductors,Glutes','Obliques','Side Leg Raise|Lying Hip Abduction'], ['band_walk','Lateral Mini-Band Walk','Band','Abductors,Glutes','Quads','Lateral Band Walk|Monster Walk|Banded Side Steps'], ['donkey_kick','Donkey Kick','Bodyweight','Glutes','Hamstrings','Donkey Kicks|Donkey Kick|Quadruped Kickback'], ['fire_hydrant','Fire Hydrant','Bodyweight','Abductors,Glutes','','Fire Hydrants|Fire Hydrant']],
@@ -872,7 +889,7 @@ const toU = kg => isLb() ? kg / KG : kg;
 const toKg = v => isLb() ? v * KG : v;
 const fmtNum = n => { const r = Math.round(n * 10) / 10; return Number.isInteger(r) ? String(r) : r.toFixed(1); };
 const fmtW = kg => fmtNum(toU(kg || 0));
-const fmtSet = s => s.bw > 0 ? `BW${s.w - s.bw > 0.05 ? '+' + fmtW(s.w - s.bw) : ''} × ${s.r}` : `${s.w > 0 ? fmtW(s.w) : 'BW'} × ${s.r}`;
+const fmtSet = s => s.bw > 0 ? `BW${s.w - s.bw > 0.05 ? '+' + fmtW(s.w - s.bw) : s.w - s.bw < -0.05 ? '−' + fmtW(s.bw - s.w) : ''} × ${s.r}` : `${s.w > 0 ? fmtW(s.w) : 'BW'} × ${s.r}`;
 const fmtVol = kg => Math.round(toU(kg)).toLocaleString() + ' ' + unit();
 const e1 = s => (!s || !(s.w > 0) || !(s.r > 0)) ? 0 : (s.r === 1 ? s.w : s.w * (1 + s.r / 30));
 const DAY = 864e5;
@@ -886,6 +903,7 @@ const weekStart = ts => { const d = new Date(ts); d.setHours(0,0,0,0); d.setDate
 // bodyweight moves: share of bodyweight lifted each rep (custom bodyweight exercises count it all)
 const BW_FRAC = {pullup:1, pullup_bn:1, chinup:1, dips:1, pushup:.65};
 const bwFrac = id => BW_FRAC[id] != null ? BW_FRAC[id] : (String(id).startsWith('c_') && exInfo(id).eq === 'Bodyweight' ? 1 : 0);
+const usesBW = id => bwFrac(id) > 0 || ASSIST.has(id);
 const curBW = () => { const L = S.bwLog; return (L && L.length ? L[L.length - 1].kg : +S.settings.bw) || 0; };   // kg, latest weigh-in
 // weigh-in in effect on a day: the latest one on or before it (before your first weigh-in, the first one)
 function bwAt(ts) {
@@ -896,7 +914,10 @@ function bwAt(ts) {
 }
 const bwOf = w => (w && +w.bw) || (w ? bwAt(w.start) : curBW());   // older workouts may carry the bodyweight they were saved with
 // sets with bodyweight folded in: w = total load, bw = the bodyweight part (logged added weight stays in the log untouched)
-const withBW = (exId, sets, kg) => { const b = bwFrac(exId) * kg; return b > 0 ? sets.map(x => ({...x, w:(x.w || 0) + b, bw:b})) : sets; };
+const ASSIST = new Set(['pullup_assist', 'chinup_assist', 'dip_assist']);   // weight entered = how much the machine helps
+const withBW = (exId, sets, kg) => {
+  if (ASSIST.has(exId)) return sets.map(x => kg > 0 ? {...x, w:Math.max(0, kg - (x.w || 0)), bw:kg} : {...x, w:0});
+  const b = bwFrac(exId) * kg; return b > 0 ? sets.map(x => ({...x, w:(x.w || 0) + b, bw:b})) : sets; };
 const exInfo = id => LIB[id] || S.customExercises.find(c => c.id === id) || {id, name:'Unknown exercise', muscle:'Other'};
 // primary & secondary muscles; custom exercises without a list fall back to their group
 const equipOf = id => exInfo(id).eq || 'Other';
@@ -908,29 +929,35 @@ const exName = id => exInfo(id).name;
    Picking a movement asks which equipment you used. Each equipment is still its own exercise with its own
    history and records; the movement only groups them when you're choosing. */
 const MOVES = [
-  ['flat_press', 'Flat Chest Press', {Barbell:'bench_bb', Dumbbell:'bench_db', Machine:'press_mach', 'Iso-Lateral':'press_iso'}],
+  ['flat_press', 'Flat Chest Press', {Barbell:'bench_bb', Dumbbell:'bench_db', Machine:'press_mach', 'Iso-Lateral':'press_iso', Smith:'bench_smith'}],
   ['incline_press', 'Incline Chest Press', {Barbell:'incline_bb', Dumbbell:'incline_db', Machine:'incline_mach', 'Iso-Lateral':'incline_iso', Smith:'smith_incline'}],
   ['decline_press', 'Decline Chest Press', {Barbell:'decline_bb', Dumbbell:'decline_db', Machine:'decline_mach', 'Iso-Lateral':'decline_iso'}],
   ['chest_fly', 'Chest Fly', {Dumbbell:'fly_db', Cable:'fly_cable', Machine:'pec_deck', 'Iso-Lateral':'fly_iso'}],
+  ['incline_fly_m', 'Incline Chest Fly', {Dumbbell:'incline_fly_db', Cable:'incline_fly_cable'}],
   ['shoulder_press', 'Shoulder Press', {Barbell:'ohp', Dumbbell:'press_db', Machine:'press_smach', 'Iso-Lateral':'press_iso_sh', Smith:'press_smith'}],
   ['seated_row', 'Seated Row', {Cable:'row_cable', Machine:'row_mach', 'Iso-Lateral':'row_iso'}],
   ['lat_pulldown', 'Lat Pulldown', {Cable:'pulldown', Machine:'pulldown_mach', 'Iso-Lateral':'pulldown_iso'}],
+  ['pullup_m', 'Pull Up', {Bodyweight:'pullup', Assisted:'pullup_assist'}],
+  ['chinup_m', 'Chin Up', {Bodyweight:'chinup', Assisted:'chinup_assist'}],
   ['push_press', 'Push Press', {Barbell:'push_press_bb', Dumbbell:'push_press_db'}],
   ['lateral_raise', 'Lateral Raise', {Dumbbell:'lat_db', Cable:'lat_cable', Machine:'lat_mach'}],
   ['front_raise_m', 'Front Raise', {Cable:'front_raise_cable', Dumbbell:'front_raise', Barbell:'front_raise_bb'}],
   ['rear_delt_fly', 'Rear Delt Fly', {Machine:'rev_pec', Cable:'rear_fly_cable', Dumbbell:'rear_fly'}],
-  ['shrug_m', 'Shrug', {Barbell:'shrug_bb', Dumbbell:'shrug_db'}],
+  ['shrug_m', 'Shrug', {Barbell:'shrug_bb', Dumbbell:'shrug_db', Smith:'shrug_smith'}],
+  ['upright_m', 'Upright Row', {Barbell:'upright', Cable:'upright_cable'}],
   ['biceps_curl', 'Biceps Curl', {Barbell:'curl_bb', 'EZ bar':'curl_ez', Dumbbell:'curl_db', Cable:'curl_cable', Machine:'curl_mach'}],
   ['preacher_m', 'Preacher Curl', {'EZ bar':'preacher', Dumbbell:'preacher_db', Machine:'preacher_mach'}],
+  ['hammer_m', 'Hammer Curl', {Dumbbell:'hammer', Cable:'curl_rope'}],
   ['wrist_curl_m', 'Wrist Curl', {Barbell:'wrist_curl', Dumbbell:'wrist_curl_db'}],
   ['reverse_curl_m', 'Reverse Curl', {Barbell:'rev_curl', Dumbbell:'rev_curl_db'}],
-  ['pushdown_m', 'Triceps Pushdown', {Bar:'pushdown', Rope:'rope_pd', 'Single-arm':'pushdown_1a'}],
+  ['pushdown_m', 'Triceps Pushdown', {Cable:'pushdown'}],
+  ['kickback_tri_m', 'Triceps Kickback', {Dumbbell:'kickback', Cable:'kickback_cable_tri'}],
+  ['dips_m', 'Dips', {Bodyweight:'dips', Machine:'dip_mach', Assisted:'dip_assist'}],
   ['lying_ext_m', 'Lying Triceps Extension', {'EZ bar':'skull', Dumbbell:'skull_db'}],
   ['overhead_ext_m', 'Overhead Triceps Extension', {Dumbbell:'oh_ext_db', Barbell:'french_press', Cable:'oh_ext_cable'}],
   ['bent_row', 'Bent Over Row', {Barbell:'row_bb', Dumbbell:'row_db2', 'T-Bar':'row_tbar'}],
   ['pullover_m', 'Pullover', {Dumbbell:'pullover_db', Barbell:'pullover_bb'}],
   ['deadlift_m', 'Deadlift', {Barbell:'deadlift', Dumbbell:'dl_db', 'Trap bar':'trapbar_dl'}],
-  ['sumo_m', 'Sumo Deadlift', {Barbell:'sumo_dl', Kettlebell:'sumo_dl_kb'}],
   ['rdl_m', 'Romanian Deadlift', {Barbell:'rdl', Dumbbell:'rdl_db'}],
   ['squat_m', 'Squat', {Barbell:'squat', Smith:'smith_squat'}],
   ['lunge_m', 'Walking Lunge', {Dumbbell:'lunge', Barbell:'lunge_bb'}],
@@ -942,19 +969,26 @@ const MOVES = [
   ['calf_raise_m', 'Calf Raise', {Standing:'calf_stand', Seated:'calf_seat', 'Leg Press':'calf_press', Smith:'calf_smith'}],
   ['crunch_m', 'Crunch', {Bodyweight:'crunch', Machine:'ab_mach', Cable:'cable_crunch'}],
 ];
-// done standing or seated: each position is its own exercise; the first listed is the usual one
-const POS = [
-  ['ohp', 'ohp_seated', 'Standing'], ['press_db_stand', 'press_db', 'Seated'], ['curl_db', 'curl_db_seat', 'Standing'], ['hammer', 'hammer_seat', 'Standing'],
-  ['lat_db', 'lat_db_seat', 'Standing'], ['oh_ext_db_stand', 'oh_ext_db', 'Seated'],
+// a second choice on top of equipment (seated/standing, or which cable attachment). Each option is its own exercise
+// with its own history; `def` is the usual one, the only one listed when browsing.
+const OPTS = [
+  ['Position', {Standing:'ohp', Seated:'ohp_seated'}, 'Standing'],
+  ['Position', {Standing:'press_db_stand', Seated:'press_db'}, 'Seated'],
+  ['Position', {Standing:'curl_db', Seated:'curl_db_seat'}, 'Standing'],
+  ['Position', {Standing:'hammer', Seated:'hammer_seat'}, 'Standing'],
+  ['Position', {Standing:'lat_db', Seated:'lat_db_seat'}, 'Standing'],
+  ['Position', {Standing:'oh_ext_db_stand', Seated:'oh_ext_db'}, 'Seated'],
+  ['Attachment', {Bar:'pushdown', Rope:'rope_pd', 'V-Bar':'pushdown_vbar', 'Single-arm':'pushdown_1a'}, 'Bar'],
 ];
-const POS_OF = {};
-for (const [st, se, d] of POS) if (LIB[st] && LIB[se]) { const o = {st, se, def:d === 'Standing' ? st : se}; o.alt = o.def === st ? se : st; POS_OF[st] = {...o, pos:'Standing'}; POS_OF[se] = {...o, pos:'Seated'}; }
-const posPair = id => POS_OF[id] ? [POS_OF[id].st, POS_OF[id].se] : [id];
-const isPosAlt = id => POS_OF[id] && POS_OF[id].alt === id;
-// for a pair: the position you did most recently (or the usual one)
-function posPick(id) { const o = POS_OF[id]; if (!o) return id; for (const w of S.workouts) for (const e of w.ex) if (e.exId === o.st || e.exId === o.se) return e.exId; return o.def; }
-// same equipment in the position you're already in, when there is one
-const samePos = (v, cur) => POS_OF[cur] && POS_OF[v] ? (POS_OF[cur].pos === 'Standing' ? POS_OF[v].st : POS_OF[v].se) : v;
+const OPT_OF = {};
+for (const [label, ids, d] of OPTS) { const list = Object.entries(ids).filter(([, x]) => LIB[x]); if (list.length < 2) continue;
+  const g = {label, list, def:ids[d] || list[0][1]}; for (const [key, x] of list) OPT_OF[x] = {g, key}; }
+const posPair = id => OPT_OF[id] ? OPT_OF[id].g.list.map(([, x]) => x) : [id];
+const isPosAlt = id => !!OPT_OF[id] && OPT_OF[id].g.def !== id;
+// for a group: the option you did most recently (or the usual one)
+function posPick(id) { const o = OPT_OF[id]; if (!o) return id; const ids = posPair(id); for (const w of S.workouts) for (const e of w.ex) if (ids.includes(e.exId)) return e.exId; return o.g.def; }
+// same option on the other equipment, when it has it (seated stays seated)
+const samePos = (v, cur) => { const a = OPT_OF[cur], b = OPT_OF[v]; if (!a || !b || a.g.label !== b.g.label) return v; const m = b.g.list.find(([k]) => k === a.key); return m ? m[1] : v; };
 const MOVE = {}, MOVE_OF = {};
 for (const [id, name, v] of MOVES) { MOVE[id] = {id, name, v:Object.entries(v).filter(([, ex]) => LIB[ex])}; for (const [eq, ex] of MOVE[id].v) for (const x of posPair(ex)) MOVE_OF[x] = {move:id, eq}; }
 // variants you can pick: catalogue ones, plus retired ones you've used, plus whatever is already in front of you
@@ -965,7 +999,7 @@ function groupMoves(list, poolIds) {
   for (const x of list) {
     const mo = MOVE_OF[x.id];
     if (!mo) { rows.push({x, name:x.name}); continue; }
-    if (!seen[mo.move]) { const vars = MOVE[mo.move].v.filter(([, ex]) => poolIds.has(ex)); seen[mo.move] = {m:MOVE[mo.move], vars, hits:[], name:MOVE[mo.move].name}; rows.push(seen[mo.move]); }
+    if (!seen[mo.move]) { const vars = MOVE[mo.move].v.map(([eq, ex]) => [eq, posPair(ex).find(x => poolIds.has(x))]).filter(([, x]) => x); seen[mo.move] = {m:MOVE[mo.move], vars, hits:[], name:MOVE[mo.move].name}; rows.push(seen[mo.move]); }
     seen[mo.move].hits.push(x.id);
   }
   return rows.sort((a, b) => a.name.localeCompare(b.name));
@@ -1052,12 +1086,14 @@ function remapIds(d, map) {
   for (const k of Object.keys(d.adjust)) if (map[k]) { d.adjust[to(k)] = [...(d.adjust[to(k)] || []), ...d.adjust[k]]; delete d.adjust[k]; changed = true; }
   return changed;
 }
+const track = ev => { if (!DEMO && HOST && typeof HOST.track === 'function') try { HOST.track(ev); } catch {} };
 const hasData = d => d && (d.workouts.length || d.routines.length || d.customExercises.length || d.active);
 
 /* ---------- storage: Claude cloud db when writable, else this device ---------- */
 // Demo mode: the demo build defines window.SPOTTER_DEMO before this script (see demo-data.html).
 // Self-hosted builds (e.g. the Firebase version) set window.SPOTTER_HOST before this script:
 // {cloudName, wait:Promise (resolves once sign-in is settled), account():{name,email}|null, signIn(), signOut()}
+// Optional: track(event) counts anonymous totals ('workout'); sendFeedback({text, email}) -> Promise.
 const HOST = (window.SPOTTER_HOST && typeof window.SPOTTER_HOST === 'object') ? window.SPOTTER_HOST : null;
 const CLOUD_NAME = HOST && HOST.cloudName ? HOST.cloudName : 'your Claude account';
 const DEMO = (window.SPOTTER_DEMO && typeof window.SPOTTER_DEMO.generate === 'function') ? window.SPOTTER_DEMO : null;
@@ -1734,7 +1770,7 @@ function nextTarget(o) {
   if (!o.weighted) return `Beat <b>${L.bestReps} reps</b>: try <b>${L.bestReps + 1}</b> on your best set.`;
   const top = L.top, topSets = L.sets.filter(x => x.w === top), reps = Math.max(...topSets.map(x => x.r)), bw = topSets[0].bw || 0;
   const inc = isLb() ? 5 : 2.5, wU = toU(top);
-  if (bw) { const add = toU(top - bw), lab = a => 'BW' + (a > 0.05 ? '+' + fmtNum(a) : '');
+  if (bw) { const add = toU(top - bw), lab = a => 'BW' + (a > 0.05 ? '+' + fmtNum(a) : a < -0.05 ? '−' + fmtNum(-a) : '');
     return `Beat <b>${lab(add)} × ${reps}</b>: try <b>${lab(add)} × ${reps + 1}</b> or <b>${lab(add + inc)} × ${reps}</b>.`; }
   return `Beat <b>${fmtNum(wU)} ${unit()} × ${reps}</b>: try <b>${fmtNum(wU)} × ${reps + 1}</b> or <b>${fmtNum(wU + inc)} × ${reps}</b>.`;
 }
@@ -1998,6 +2034,7 @@ function viewSettings() {
       ${DEMO ? `<button class="btn btn-ghost block" data-a="demo-reset">Reset demo data</button>` : ''}
       <button class="btn btn-danger-ghost block" data-a="wipe">Delete all data</button>
     </div>
+    ${HOST && typeof HOST.sendFeedback === 'function' && !DEMO ? `<button class="imp-cta" data-a="feedback-open" style="margin-top:22px">${ic('chat')}<span><b>Send feedback</b><small>Bug, idea, missing exercise? It goes straight to the person who makes Spotter.</small></span>${ic('right')}</button>` : ''}
     <div class="foot-note">${plural(S.workouts.length,'workout')} · ${plural(S.routines.length,'routine')} · ${plural(S.customExercises.length,'custom exercise')}<br>Spotter · free, no ads, no subscription${HOST ? `<br><a href="privacy/">Privacy</a> · <a href="terms/">Terms</a>` : ''}</div>`;
 }
 
@@ -2027,7 +2064,7 @@ function renderWorkout() {
 }
 function exCard(e, i) {
   // while lifting, records are real sets of 4+ reps (a heavy single isn't something to chase every session)
-  const rec = bestSet(e.exId, S.active.id, SET_PR_REPS), best = rec ? rec.e1 : 0, bwNow = curBW(), isBW = bwFrac(e.exId) > 0;
+  const rec = bestSet(e.exId, S.active.id, SET_PR_REPS), best = rec ? rec.e1 : 0, bwNow = curBW(), isBW = bwFrac(e.exId) > 0, isAssist = ASSIST.has(e.exId);
   let n = 0;
   const rows = e.sets.map((s, j) => {
     if (s.t !== 'w') n++;
@@ -2036,7 +2073,7 @@ function exCard(e, i) {
     const pr = s.done && s.t !== 'w' && s.r >= SET_PR_REPS && best > 0 && e1(withBW(e.exId, [{...s, w:s.w || 0}], bwNow)[0]) > best + 1e-9;
     return `<div class="set-row ${s.done?'done':''}">
       <button class="set-num t-${s.t}" data-a="set-type" data-ei="${i}" data-si="${j}" aria-label="Set type">${lbl}</button>
-      <button class="prev" data-a="set-prev" data-ei="${i}" data-si="${j}" aria-label="Use previous">${p ? (isBW ? `BW${p.w > 0 ? '+' + fmtW(p.w) : ''} × ${p.r}` : fmtSet(p)) : '—'}</button>
+      <button class="prev" data-a="set-prev" data-ei="${i}" data-si="${j}" aria-label="Use previous">${p ? (isBW ? `BW${p.w > 0 ? '+' + fmtW(p.w) : ''} × ${p.r}` : isAssist ? `BW${p.w > 0 ? '−' + fmtW(p.w) : ''} × ${p.r}` : fmtSet(p)) : '—'}</button>
       <input inputmode="decimal" autocomplete="off" data-f="w" data-ei="${i}" data-si="${j}" value="${s.w != null ? fmtW(s.w) : ''}" placeholder="${p && p.w != null ? fmtW(p.w) : ''}" aria-label="Weight">
       <input inputmode="numeric" autocomplete="off" data-f="r" data-ei="${i}" data-si="${j}" value="${s.r != null ? s.r : ''}" placeholder="${p ? p.r : ''}" aria-label="Reps">
       <button class="chk" data-a="set-done" data-ei="${i}" data-si="${j}" aria-label="Complete set">${ic('check')}</button>
@@ -2045,10 +2082,10 @@ function exCard(e, i) {
   }).join('');
   return `<section class="ex" data-card="${i}">
     <div class="ex-head"><div><button class="ex-name" data-a="ex-info" data-id="${esc(e.exId)}">${esc(exName(e.exId))}</button><div class="ex-mus">${musHTML(e.exId)}</div>${MOVE_OF[e.exId] ? `<div class="eq-chips ex-eq">${moveVariants(MOVE_OF[e.exId].move, e.exId).map(([eq, v]) => { const on = posPair(v).includes(e.exId), id = on ? e.exId : samePos(v, e.exId);
-      return `<button class="eqc ${on ? 'on' : ''}" data-a="ex-variant" data-ei="${i}" data-id="${esc(id)}" aria-pressed="${on}">${esc(eq)}</button>`; }).join('')}</div>` : ''}${POS_OF[e.exId] ? `<div class="pos-tog" role="group" aria-label="Position">${[['Standing', POS_OF[e.exId].st], ['Seated', POS_OF[e.exId].se]].map(([l, id]) => `<button class="${id === e.exId ? 'on' : ''}" data-a="ex-variant" data-ei="${i}" data-id="${esc(id)}" aria-pressed="${id === e.exId}">${l}</button>`).join('')}</div>` : ''}${rec ? `<div class="ex-best">${ic('trophy')}<span>Record <b>${fmtSet(rec.s)}</b>${rec.e1 > 0 ? ` · ${fmtW(rec.e1)} ${unit()} e1RM` : ''} · ${fmtShort(rec.ts)}</span></div>` : ''}${bwFrac(e.exId) && !bwNow ? `<button class="ex-bw" data-a="bw-edit">Add your bodyweight so these sets count</button>` : ''}</div>
+      return `<button class="eqc ${on ? 'on' : ''}" data-a="ex-variant" data-ei="${i}" data-id="${esc(id)}" aria-pressed="${on}">${esc(eq)}</button>`; }).join('')}</div>` : ''}${OPT_OF[e.exId] ? `<div class="pos-tog" role="group" aria-label="${OPT_OF[e.exId].g.label}">${OPT_OF[e.exId].g.list.map(([l, id]) => `<button class="${id === e.exId ? 'on' : ''}" data-a="ex-variant" data-ei="${i}" data-id="${esc(id)}" aria-pressed="${id === e.exId}">${esc(l)}</button>`).join('')}</div>` : ''}${rec ? `<div class="ex-best">${ic('trophy')}<span>Record <b>${fmtSet(rec.s)}</b>${rec.e1 > 0 ? ` · ${fmtW(rec.e1)} ${unit()} e1RM` : ''} · ${fmtShort(rec.ts)}</span></div>` : ''}${usesBW(e.exId) && !bwNow ? `<button class="ex-bw" data-a="bw-edit">Add your bodyweight so these sets count</button>` : ''}</div>
       <button class="icon-btn" data-a="ex-menu" data-ei="${i}" aria-label="Exercise options">${ic('dots')}</button></div>
     ${e.note ? `<div class="ex-note">${esc(e.note)}</div>` : ''}
-    <div class="set-row hdr"><span>Set</span><span>Previous</span><span>${isBW ? '+' + unit() : unit()}</span><span>Reps</span><span>${ic('check')}</span></div>
+    <div class="set-row hdr"><span>Set</span><span>Previous</span><span>${isBW ? '+' + unit() : isAssist ? '−' + unit() : unit()}</span><span>Reps</span><span>${ic('check')}</span></div>
     ${rows}
     <div class="ex-foot"><button data-a="set-add" data-ei="${i}">+ Add set</button><button data-a="set-del" data-ei="${i}" aria-label="Remove last set">− Set</button></div>
   </section>`;
@@ -2133,6 +2170,7 @@ function doFinish(doneEx) {
   S.active = null; rest = null; workoutOpen = false;
   markDirty('active', 'log-' + monthKey(rec.start));
   flush();
+  track('workout');
   screen = {type:'summary', id:rec.id, prs}; calMonth = null; calSel = null;
   renderAll();
 }
@@ -2226,7 +2264,7 @@ function screenDetail() {
       <div class="stat"><b>${workPRs(w)}</b><span>PRs</span></div>
     </div>
     ${w.ex.map(e => { let n = 0; return `<div class="card dt-ex"><h4>${esc(exName(e.exId))}</h4>${e.note ? `<div class="ex-note" style="margin:0 0 8px">${esc(e.note)}</div>` : ''}
-      ${e.sets.map(s => { if (s.t !== 'w') n++; return `<div class="dt-set"><span class="n" style="color:${s.t==='w'?'var(--warm)':s.t==='d'?'var(--drop)':''}">${s.t==='w'?'W':s.t==='d'?'D':n}</span><span>${bwFrac(e.exId) ? 'Bodyweight' + (s.w > 0 ? ' + ' + fmtW(s.w) + ' ' + unit() : '') : s.w > 0 ? fmtW(s.w) + ' ' + unit() : 'Bodyweight'} × ${s.r}</span><span class="e">${s.pr ? `<span class="trophy">${ic('trophy')}</span>` : ''}${(v => v ? fmtW(v) + ' e1RM' : '')(e1(withBW(e.exId, [s], bwOf(w))[0]))}</span></div>`; }).join('')}
+      ${e.sets.map(s => { if (s.t !== 'w') n++; return `<div class="dt-set"><span class="n" style="color:${s.t==='w'?'var(--warm)':s.t==='d'?'var(--drop)':''}">${s.t==='w'?'W':s.t==='d'?'D':n}</span><span>${ASSIST.has(e.exId) ? 'Assist ' + fmtW(s.w) + ' ' + unit() : bwFrac(e.exId) ? 'Bodyweight' + (s.w > 0 ? ' + ' + fmtW(s.w) + ' ' + unit() : '') : s.w > 0 ? fmtW(s.w) + ' ' + unit() : 'Bodyweight'} × ${s.r}</span><span class="e">${s.pr ? `<span class="trophy">${ic('trophy')}</span>` : ''}${(v => v ? fmtW(v) + ' e1RM' : '')(e1(withBW(e.exId, [s], bwOf(w))[0]))}</span></div>`; }).join('')}
     </div>`; }).join('')}
     <div class="list" style="margin-top:14px">
       <button class="btn btn-acc block" data-a="repeat-workout" data-id="${w.id}">Do this workout again</button>
@@ -2295,8 +2333,8 @@ function renderPkList() {
     const hitNames = q && !named ? r.hits.map(id => exName(id)) : [];
     const dflt = last[r.m.id] || posPick(r.vars[0][1]);
     return `<div class="pk-item pk-move ${on ? 'on' : ''}" data-a="pk-move" data-id="${esc(dflt)}" data-move="${r.m.id}" role="button" tabindex="0"><span><b>${esc(r.name)}</b>${hitNames.length ? `<em class="aka">${esc(hitNames.join(' · '))}</em>` : ''}<small>${esc(musLine(r.vars[0][1]))}</small>
-      <span class="eq-chips">${r.vars.map(([eq, v]) => { const pair = posPair(v), selId = pair.find(x => pk.sel.includes(x)), id = selId || posPick(v);
-        return `<button class="eqc ${selId ? 'on' : ''} ${q && pair.some(x => r.hits.includes(x)) && !named ? 'hit' : ''}" data-a="pk-toggle" data-id="${esc(id)}">${esc(eq)}${POS_OF[id] && id !== POS_OF[id].def ? ` · ${POS_OF[id].pos}` : ''}${pair.includes(last[r.m.id]) ? '<i class="eq-last" title="Last used"></i>' : ''}</button>`; }).join('')}</span></span></div>`; };
+      <span class="eq-chips">${r.vars.map(([eq, v]) => { const pair = posPair(v), selId = pair.find(x => pk.sel.includes(x)), id = selId || (pk.only ? v : posPick(v));
+        return `<button class="eqc ${selId ? 'on' : ''} ${q && pair.some(x => r.hits.includes(x)) && !named ? 'hit' : ''}" data-a="pk-toggle" data-id="${esc(id)}">${esc(eq)}${OPT_OF[id] && id !== OPT_OF[id].g.def ? ` · ${OPT_OF[id].key}` : ''}${pair.includes(last[r.m.id]) ? '<i class="eq-last" title="Last used"></i>' : ''}</button>`; }).join('')}</span></span></div>`; };
   const item = x0 => { const pid = pk.only ? x0.id : (posPair(x0.id).find(y => pk.sel.includes(y)) || posPick(x0.id)), x = pid === x0.id ? x0 : {...x0, ...exInfo(pid), id:pid};
     const st = pk.meta ? pk.meta(x.id) : null; return `<button class="pk-item ${pk.sel.includes(x.id)?'on':''}" data-a="pk-toggle" data-id="${esc(x.id)}"><span><b>${esc(x.name)}</b>${via[x.id] ? `<em class="aka">aka ${esc(via[x.id])}</em>` : ''}<small class="${st ? 'st-' + st.cls : ''}">${st ? esc(musclesOf(x.id).p.join(', ')) + ' · ' + esc(st.text) : esc(musLine(x.id)) + (x.custom ? ' · custom' : '')}</small></span><span class="tick">${ic('check')}</span></button>`; };
   let html = '';
@@ -2326,7 +2364,7 @@ function exInfoModal(id) {
     ${(x.aka || []).some(a => !/\(/.test(a)) ? `<div class="mrow"><span class="mlbl">Also called</span><div class="aka-list">${esc(x.aka.filter(a => !/\(/.test(a)).slice(0, 5).join(' · '))}</div></div>` : ''}
     <div class="mrow"><span class="mlbl">Equipment</span><div><span class="mchip s">${esc(equipOf(id))}</span></div></div>
     ${MOVE_OF[id] && moveVariants(MOVE_OF[id].move, id).length > 1 ? `<div class="mrow"><span class="mlbl">${esc(MOVE[MOVE_OF[id].move].name)}</span><div class="eq-chips">${moveVariants(MOVE_OF[id].move, id).map(([eq, v]) => { const on = posPair(v).includes(id), to = samePos(v, id); return `<button class="eqc ${on ? 'on' : ''}" ${on ? 'disabled' : `data-a="ex-info" data-id="${esc(to)}"`}>${esc(eq)}</button>`; }).join('')}</div></div>` : ''}
-    ${POS_OF[id] ? `<div class="mrow"><span class="mlbl">Position</span><div class="eq-chips">${[['Standing', POS_OF[id].st], ['Seated', POS_OF[id].se]].map(([l, v]) => `<button class="eqc ${v === id ? 'on' : ''}" ${v === id ? 'disabled' : `data-a="ex-info" data-id="${esc(v)}"`}>${l}</button>`).join('')}</div></div>` : ''}
+    ${OPT_OF[id] ? `<div class="mrow"><span class="mlbl">${OPT_OF[id].g.label}</span><div class="eq-chips">${OPT_OF[id].g.list.map(([l, v]) => `<button class="eqc ${v === id ? 'on' : ''}" ${v === id ? 'disabled' : `data-a="ex-info" data-id="${esc(v)}"`}>${esc(l)}</button>`).join('')}</div></div>` : ''}
     <div class="mrow"><span class="mlbl">Group</span><div><span class="mchip s">${esc(x.muscle)}</span>${isCustom ? '<span class="mchip s">Custom</span>' : ''}</div></div>
     ${u ? `<div class="ex-stats"><div><b>${u.n}</b><span>Sessions</span></div><div><b>${best ? fmtW(best) : '—'}</b><span>Best e1RM</span></div><div><b>${heavy ? fmtW(heavy) : 'BW'}</b><span>Heaviest</span></div><div><b>${fmtShort(u.last)}</b><span>Last done</span></div></div>`
       : '<p class="faint" style="margin-top:12px;font-size:14px">You haven’t logged this one yet.</p>'}`,
@@ -2796,6 +2834,17 @@ function toastUndo(msg, fn, ms = 8000) {
   t.classList.add('show', 'has-undo'); clearTimeout(toastT);
   toastT = setTimeout(() => { t.classList.remove('show', 'has-undo'); undoFn = null; }, ms);
 }
+function feedbackModal() {
+  const signed = HOST && HOST.account && HOST.account();
+  modal({title:'Send feedback', body:`
+      <p>What’s working, what’s annoying, what’s missing? Every message gets read.</p>
+      <label class="field"><span>Your feedback</span><textarea name="text" maxlength="2000" style="font-family:inherit;font-size:16px" placeholder="e.g. I wish I could…"></textarea></label>
+      <label class="field"><span>Email (optional, if you’d like a reply)</span><input name="email" type="email" autocomplete="email" maxlength="200" value="${esc((signed && signed.email) || '')}"></label>`,
+    focus:'text', actions:[{label:'Cancel'}, {label:'Send', cls:'btn-acc',
+      validate:v => String(v.text || '').trim().length >= 3 ? true : 'Write a few words first',
+      fn:v => { Promise.resolve(HOST.sendFeedback({text:String(v.text).trim().slice(0, 2000), email:String(v.email || '').trim().slice(0, 200)}))
+        .then(() => toast('Thanks! Feedback sent.'), () => toast('Couldn’t send — check your connection and try again')); }}]});
+}
 function menu(title, items) { modal({title, col:true, actions:[...items, {label:'Cancel', cls:'btn-line'}]}); }
 
 /* ---------- backup ---------- */
@@ -3048,6 +3097,7 @@ const A = {
   'imp-go': impDoImport,
   'imp-undo': el => { const b = S.imports.find(x => x.id === el.dataset.id); if (!b) return;
     modal({title:'Undo this import?', body:`<p>Removes the ${plural(b.workouts,'workout')} it added${b.routines.length ? `, the ${plural(b.routines.length,'routine')} it made` : ''}${b.customs.length ? ', and custom exercises it created that you haven’t used since' : ''}. Everything else stays.</p>`, actions:[{label:'Cancel'}, {label:'Undo import', cls:'btn-danger', fn:() => undoImport(b.id)}]}); },
+  'feedback-open': () => feedbackModal(),
   'host-signin': () => HOST && HOST.signIn && HOST.signIn(),
   'host-signout': () => modal({title:'Sign out?', body:'<p>Your log stays saved in your account. Sign back in any time to get it.</p>', actions:[{label:'Cancel'}, {label:'Sign out', cls:'btn-danger', fn:() => { flush(); setTimeout(() => HOST.signOut(), 400); }}]}),
   'backup-copy': copyBackup,
