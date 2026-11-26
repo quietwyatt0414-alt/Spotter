@@ -2071,16 +2071,15 @@ const progressOpen = () => isPro();
 const proPrice = () => (HOST && HOST.proPrice) || '$19.99';
 const PRO_FEATURES = [
   ['chart', 'Progress', 'Charts for every exercise, estimated 1-rep max trends, and a check that tells you if you’re progressively overloading.'],
-  ['trendup', 'Warm-up sets', 'One tap adds a ramp of warm-ups up to your working weight.'],
   ['copy', 'Spreadsheet export', 'Every set you’ve logged, as a CSV for Excel, Numbers or Google Sheets.'],
   ['star', 'Everything Pro adds later', 'Pay once and new Pro tools are yours too.'],
 ];
 function proGate(fn) { if (isPro()) fn(); else proModal(); }
 function proCard() {
-  if (DEMO) return `<div class="card pro-card">${ic('star')}<div><b>Spotter Pro is unlocked in the demo</b><small>Try the Progress tab, and warm-up sets from an exercise’s ⋯ menu.</small></div></div>`;
+  if (DEMO) return `<div class="card pro-card">${ic('star')}<div><b>Spotter Pro is unlocked in the demo</b><small>Try the Progress tab and the spreadsheet export in Settings.</small></div></div>`;
   const st = proState();
   if (st && st.pro) return `<div class="card pro-card">${ic('star')}<div><b>Spotter Pro${st.founding ? ' · Founding member' : ''}</b><small>Thanks for supporting Spotter. Pro is yours for good.</small></div></div>`;
-  return `<button class="imp-cta" data-a="pro-open" style="margin:0 0 14px">${ic('star')}<span><b>Spotter Pro</b><small>Progress charts and overload check, warm-up sets, spreadsheet export. One-time ${esc(proPrice())}.</small></span>${ic('right')}</button>`;
+  return `<button class="imp-cta" data-a="pro-open" style="margin:0 0 14px">${ic('star')}<span><b>Spotter Pro</b><small>Progress charts and overload check, spreadsheet export. One-time ${esc(proPrice())}.</small></span>${ic('right')}</button>`;
 }
 function proModal() {
   const signedIn = HOST && HOST.account && HOST.account();
@@ -3072,7 +3071,7 @@ const A = {
     const i = +el.dataset.ei, e = S.active.ex[i];
     menu(exName(e.exId), [
       {label:'Muscles worked', fn:() => exInfoModal(e.exId)},
-      {label:'Add warm-up sets' + (isPro() ? '' : ' · Pro'), fn:() => proGate(() => addWarmups(i))},
+      {label:'Add warm-up sets', fn:() => addWarmups(i)},
       {label: e.note ? 'Edit note' : 'Add note', fn:() => modal({title:'Note', body:`<label class="field"><textarea name="note" style="font-family:var(--body);font-size:16px" placeholder="Seat height 4, slow negatives…">${esc(e.note)}</textarea></label>`, focus:'note',
         actions:[{label:'Cancel'}, {label:'Save', cls:'btn-acc', fn:v => { e.note = v.note.trim().slice(0, 200); markDirty('active'); rerenderCard(i); }}]})},
       {label:'Replace exercise', fn:() => openPicker(ids => { e.exId = ids[0]; markDirty('active'); renderWorkout(); }, {single:true, title:'Replace with'})},
