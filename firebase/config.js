@@ -11,7 +11,7 @@ window.SPOTTER_FIREBASE_CONFIG = {
 
 // Spotter Pro (one-time unlock through Stripe). price is the label shown in the app; the amount actually charged is
 // PRO_PRICE_CENTS in the backend (default 1999), so change both together. Set onSale to true once Stripe and the
-// backend are set up (see PAYMENTS.md); until then the app says Pro is coming soon and the Progress tab stays free.
+// backend are set up (see PAYMENTS.md); until then the app says Pro is coming soon.
 window.SPOTTER_PRO = {
   price: "$19.99",
   onSale: false,

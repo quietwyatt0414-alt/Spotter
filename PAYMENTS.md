@@ -16,7 +16,7 @@ App unlocks Pro ◀── entitlements/<uid> in Firestore ◀── stripeWebhoo
   need to run `firebase deploy` on a computer again.
 - `/stats/` shows Pro sales and lets you give Pro to someone for free.
 
-Until step 7, the app shows "Pro goes on sale soon", nothing can be bought, and the Progress tab stays free for everyone.
+Until step 7, the app shows "Pro goes on sale soon" and nothing can be bought. The Progress tab is locked for everyone without Pro either way (you can switch Pro on for people from `/stats/`).
 
 ## 1. Create a Stripe account
 
@@ -72,8 +72,7 @@ functions. If it fails, the red step says which permission or setting is missing
 
 ## 7. Turn the Buy button on
 
-In `firebase/config.js`, change `onSale: false` to `onSale: true` (this also locks the Progress tab for people
-without Pro). Merge (GitHub's web editor is fine, or
+In `firebase/config.js`, change `onSale: false` to `onSale: true`. Merge (GitHub's web editor is fine, or
 ask Claude). Then on the live site: Settings → Spotter Pro → Buy, and pay with Stripe's test card
 `4242 4242 4242 4242`, any future date, any CVC. Pro should unlock within a few seconds.
 

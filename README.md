@@ -50,7 +50,7 @@ Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `
 - Changes to `firestore.rules` are deployed by the **Deploy backend** workflow once its service account has the roles in
   PAYMENTS.md step 3. Until then, deploy them by hand: `firebase deploy --only firestore:rules`.
 - **Spotter Pro**: free = a workout log (logging, routines, history, PRs, streaks, imports, backups). Pro = the Progress
-  tab (`progressOpen()`, locked only once Pro is on sale), warm-up sets and CSV export. The owner can give Pro free from `/stats/`. Pro tools call `proGate()`;
+  tab (`progressOpen()`, locked without Pro except in the demo), warm-up sets and CSV export. The owner can give Pro free from `/stats/`. Pro tools call `proGate()`;
   `isPro()` reads `HOST.pro()`, which comes from `entitlements/<uid>` (written only by `functions/` and the owner).
   The demo has Pro unlocked. Server tests: `cd functions && npm test`.
 
