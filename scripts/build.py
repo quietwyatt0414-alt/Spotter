@@ -5,6 +5,7 @@
   public/stats/index.html  owner-only analytics + feedback page = firebase/stats.html
   public/config.js, sw.js, manifest.webmanifest, icons/   copied from firebase/
   public/privacy/, public/terms/, public/legal.css         copied from legal/
+  public/about/            the landing page (what Spotter is, pricing, FAQ) = landing/
 
 app/index.html is the single source for the app; it's also the exact file published on Claude.
 Run:  python3 scripts/build.py
@@ -42,6 +43,7 @@ for page in ["privacy", "terms"]:
     (pub / page).mkdir()
     (pub / page / "index.html").write_text(src)
 shutil.copy(root / "legal" / "legal.css", pub / "legal.css")
+shutil.copytree(root / "landing", pub / "about")
 
 cfg = (root / "firebase" / "config.js").read_text()
 if "PASTE_" in cfg or "YOUR_PROJECT_ID" in cfg:
