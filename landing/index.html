@@ -6,7 +6,8 @@
 <title>Spotter: the free workout log for lifters</title>
 <meta name="description" content="A fast, notebook-style lifting log. Routines, your last sets right where you log, rest timer, PRs and streaks. Free forever, no ads, no subscription. Works in your browser.">
 <meta name="theme-color" content="#0b0b0d">
-<link rel="icon" href="../icons/icon-192.png">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="../icons/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="../icons/icon-180.png">
 <link rel="canonical" href="https://spotter-6d902.web.app/about/">
 <meta property="og:type" content="website">
@@ -41,7 +42,8 @@ nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,
 nav.scrolled{border-bottom-color:var(--line)}
 nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
 .brand{font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:.14em;display:flex;align-items:center;gap:9px;text-decoration:none}
-.brand i{width:11px;height:11px;border-radius:3px;background:var(--acc);transform:rotate(45deg)}
+:root{--mark:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%20fill%3D%22%23000%22%3E%3Cg%20stroke%3D%22%23000%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M14%2012v40M26%2012v40M38%2012v40M50%2012v40%22%2F%3E%3Cpath%20d%3D%22M7%2044L57%2020%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")}
+.brand i{width:22px;height:22px;flex:none;background:var(--acc);-webkit-mask:var(--mark) center/contain no-repeat;mask:var(--mark) center/contain no-repeat}
 .nav-links{display:flex;align-items:center;gap:22px;font-weight:600;font-size:15px}
 .nav-links a{text-decoration:none;color:var(--tx2)}
 .nav-links a:hover{color:var(--tx)}
