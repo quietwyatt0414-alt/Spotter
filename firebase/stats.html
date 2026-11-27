@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Spotter Stats</title>
-<link rel="icon" href="../icons/icon-192.png">
+<title>Chalkbook Stats</title>
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="../icons/icon-192.png" sizes="192x192">
 <style>
 :root{--bg:#0b0b0d;--s1:#141417;--s2:#1c1c20;--line:#2a2a31;--tx:#f2f2f4;--tx2:#b4b4bc;--tx3:#7c7c86;--acc:#2dd4bf;--acc-ink:#0b0b0d;--danger:#ff6b6b}
 *{box-sizing:border-box}
@@ -44,8 +45,8 @@ a{color:var(--acc)}
 </head>
 <body>
 <main>
-  <h1>Spotter stats</h1>
-  <p class="small">Anonymous daily totals from signed-in accounts (days are in UTC). People using Spotter without an account aren’t counted.</p>
+  <h1>Chalkbook stats</h1>
+  <p class="small">Anonymous daily totals from signed-in accounts (days are in UTC). People using Chalkbook without an account aren’t counted.</p>
   <div id="out"><p>Loading…</p></div>
 </main>
 <script src="../config.js"></script>
@@ -130,7 +131,7 @@ async function load(user) {
     <div class="scroll"><table><thead><tr><th>Day</th><th>Sign-ups</th><th>Workouts</th><th>Active</th></tr></thead><tbody>
       ${daily.map(d => `<tr><td>${d}</td><td>${g(d, 'signups')}</td><td>${g(d, 'workouts')}</td><td>${g(d, 'active')}</td></tr>`).join('')}
     </tbody></table></div>
-    <h2>Spotter Pro</h2>
+    <h2>Chalkbook Pro</h2>
     <div class="tiles">
       <div class="tile"><b>${live.length}</b><span>Pro sales (live payments)</span></div>
       <div class="tile"><b>$${(cents / 100).toFixed(2)}</b><span>Pro revenue before Stripe fees (~3%)</span></div>
@@ -139,16 +140,16 @@ async function load(user) {
     </div>
     <p class="small" style="margin-top:10px">Payments, receipts and refunds are in your Stripe dashboard. A full refund there takes Pro away automatically. To give someone Pro for free, find them under People below and switch Pro on.</p>
     <h2>People (${people.length})</h2>
-    <p class="small">Everyone who has opened Spotter signed in since this list was added, most recent first. Switch <b>Pro</b> on to give someone Pro for free, or off to take it away. It changes for them within seconds.</p>
+    <p class="small">Everyone who has opened Chalkbook signed in since this list was added, most recent first. Switch <b>Pro</b> on to give someone Pro for free, or off to take it away. It changes for them within seconds.</p>
     <input id="pplSearch" class="search" placeholder="Search name or email" aria-label="Search people">
     <div class="ppl">${people.map(u => { const e = ent[u.uid] || {}, on = !!e.pro, paid = e.amount > 0;
       return `<label class="person" data-q="${esc(((u.name || '') + ' ' + (u.email || '')).toLowerCase())}"><span class="who"><b>${esc(u.name || u.email || '(no name)')}</b><span class="small">${esc(u.email || '')}${u.last ? ' · last seen ' + esc(u.last) : ''}${paid ? ' · paid $' + (e.amount / 100).toFixed(2) : ''}</span></span>
-        <span class="tg"><span class="small pro-lbl">Pro</span><input type="checkbox" role="switch" data-pro="${esc(u.uid)}" ${on ? 'checked' : ''} ${paid && on ? 'data-paid="1"' : ''}></span></label>`; }).join('') || '<p class="small">Nobody yet. People show up here after they open Spotter signed in.</p>'}</div>
+        <span class="tg"><span class="small pro-lbl">Pro</span><input type="checkbox" role="switch" data-pro="${esc(u.uid)}" ${on ? 'checked' : ''} ${paid && on ? 'data-paid="1"' : ''}></span></label>`; }).join('') || '<p class="small">Nobody yet. People show up here after they open Chalkbook signed in.</p>'}</div>
     <h2>Feedback (${fSnap.size})</h2>
     ${fSnap.docs.map(d => { const f = d.data(), at = f.at && f.at.toDate ? f.at.toDate().toLocaleString() : '';
       return `<div class="fb"><div class="fb-text">${esc(f.text || '')}</div><div class="fb-meta"><span>${esc(at)}${f.email ? ` · <a href="mailto:${esc(f.email)}">${esc(f.email)}</a>` : ''}${f.signedIn ? '' : ' · no account'}</span><button class="line" data-del="${esc(d.id)}">Delete</button></div></div>`; }).join('') || '<p class="small">No feedback yet.</p>'}
     <h2>Deleted accounts (${dSnap.docs.length})</h2>
-    <p class="small">Logs are kept 30 days after someone deletes their account. To restore one: have them sign in again, copy their new <b>User UID</b> from Firebase console → Authentication → Users, paste it below and tap Restore, then ask them to close and reopen Spotter. After 30 days, tap <b>Delete for good</b>.</p>
+    <p class="small">Logs are kept 30 days after someone deletes their account. To restore one: have them sign in again, copy their new <b>User UID</b> from Firebase console → Authentication → Users, paste it below and tap Restore, then ask them to close and reopen Chalkbook. After 30 days, tap <b>Delete for good</b>.</p>
     ${dSnap.docs.map(d => { const r = d.data(), at = r.at && r.at.toMillis ? r.at.toMillis() : Date.now(), left = 30 - Math.floor((Date.now() - at) / DAY);
       return `<div class="del ${left <= 0 ? 'due' : ''}" data-uid="${esc(d.id)}"><div><b>${esc(r.email || '(no email)')}</b>${r.name ? ' · ' + esc(r.name) : ''}</div>
         <div class="small">Deleted ${esc(new Date(at).toLocaleDateString())} · ${left > 0 ? `${left} day${left === 1 ? '' : 's'} left to restore` : '<span class="err">30 days are up: delete for good</span>'} · old ID ${esc(d.id)}</div>
@@ -184,7 +185,7 @@ async function moveLog(oldUid, newUid) {
   if (newUid) for (const d of docs) await F.setDoc(F.doc(fs, 'data/users/' + newUid + '/' + d.id), d.data());
   for (const d of docs) await F.deleteDoc(d.ref);
   await F.deleteDoc(F.doc(fs, 'usermeta', oldUid)).catch(() => {});
-  // Spotter Pro moves with the log on a restore, and goes with it on a delete for good
+  // Chalkbook Pro moves with the log on a restore, and goes with it on a delete for good
   const ent = await F.getDoc(F.doc(fs, 'entitlements', oldUid)).catch(() => null);
   if (ent && ent.exists()) { if (newUid) await F.setDoc(F.doc(fs, 'entitlements', newUid), ent.data()); await F.deleteDoc(ent.ref); }
   await F.deleteDoc(F.doc(fs, 'deletions', oldUid));
@@ -197,7 +198,7 @@ out.addEventListener('click', async e => {
   if (b.hasAttribute('data-restore') && (!newUid || newUid === uid)) { msg.textContent = 'Paste their new User UID first.'; return; }
   if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = newUid ? 'Tap again to restore' : 'Tap again to delete for good'; return; }
   box.querySelectorAll('button').forEach(x => x.disabled = true); msg.textContent = 'Working…';
-  try { const n = await moveLog(uid, newUid); box.innerHTML = `<div class="small">${newUid ? `Restored ${n} documents to ${esc(newUid)}. Ask them to close and reopen Spotter.` : `Deleted ${n} documents for good.`}</div>`; }
+  try { const n = await moveLog(uid, newUid); box.innerHTML = `<div class="small">${newUid ? `Restored ${n} documents to ${esc(newUid)}. Ask them to close and reopen Chalkbook.` : `Deleted ${n} documents for good.`}</div>`; }
   catch (err) { console.warn(err); msg.textContent = 'Didn’t finish (' + ((err && err.code) || 'error') + '). Tap again to retry.'; box.querySelectorAll('button').forEach(x => { x.disabled = false; delete x.dataset.sure; }); }
 });
 A.onAuthStateChanged(auth, user => user ? load(user) : signInView());

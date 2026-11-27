@@ -1,4 +1,4 @@
-// Spotter service worker: lets the app open with no signal (your log itself is cached by Firestore).
+// Chalkbook service worker: lets the app open with no signal (your log itself is cached by Firestore).
 const CACHE = 'spotter-shell-v1';
 const SHELL = ['./', './index.html', './config.js', './manifest.webmanifest', './icons/icon-192.png'];
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); });

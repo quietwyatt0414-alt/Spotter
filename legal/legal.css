@@ -6,7 +6,8 @@
 html,body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--body);font-size:17px;line-height:1.6}
 main{max-width:720px;margin:0 auto;padding:28px 16px 64px}
 .brand{display:inline-flex;align-items:center;gap:8px;font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:.14em;color:var(--tx);text-decoration:none}
-.brand i{width:10px;height:10px;border-radius:3px;background:var(--acc);transform:rotate(45deg)}
+:root{--mark:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%20fill%3D%22%23000%22%3E%3Cg%20stroke%3D%22%23000%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M14%2012v40M26%2012v40M38%2012v40M50%2012v40%22%2F%3E%3Cpath%20d%3D%22M7%2044L57%2020%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")}
+.brand i{width:20px;height:20px;flex:none;background:var(--acc);-webkit-mask:var(--mark) center/contain no-repeat;mask:var(--mark) center/contain no-repeat}
 h1{font-family:var(--head);font-size:40px;font-weight:800;text-transform:uppercase;line-height:1.05;margin:28px 0 6px}
 h2{font-family:var(--head);font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin:36px 0 8px}
 .meta{color:var(--tx2);font-size:15px;margin:0 0 20px}
