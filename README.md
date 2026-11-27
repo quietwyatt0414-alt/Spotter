@@ -1,4 +1,4 @@
-# Spotter
+# Chalkbook
 
 A free workout tracker (free forever, no ads, optional one-time Pro): routines, live logging with your previous sets, rest timer, PRs, a calendar with
 day streaks, an exercise-by-exercise progress view that tells you whether you're progressively
@@ -25,16 +25,16 @@ change the code  →  pull request  →  preview link posted on the PR  →  mer
 
 | Path | What it is |
 |---|---|
-| `app/index.html` | **The whole app** — one self-contained HTML file. Edit this. It's also the exact file published as the Spotter page on Claude. |
+| `app/index.html` | **The whole app** — one self-contained HTML file. Edit this. It's also the exact file published as the Chalkbook page on Claude. |
 | `app/demo-data.html` | Generates the demo lifter's 5 months of data (only used for `/demo/`). |
 | `firebase/host.html` | Sign-in screen (Google, Apple, email) + Firestore saving, added in front of the app for the website. |
 | `firebase/config.js` | Your Firebase project's web config (public by design). |
 | `firebase/sw.js`, `manifest.webmanifest`, `icons/` | Home-screen app icon and offline support. |
 | `scripts/build.py` | Builds `public/` (the website) from the files above. GitHub Actions runs it on every deploy. |
-| `landing/` | The landing page at `/about/`: what Spotter is, screenshots, pricing, FAQ. Share this link in posts. Screenshots in `landing/shots/` come from the demo; `og.png` is the link-preview image. |
+| `landing/` | The landing page at `/about/`: what Chalkbook is, screenshots, pricing, FAQ. Share this link in posts. Screenshots in `landing/shots/` come from the demo; `og.png` is the link-preview image. |
 | `firebase/stats.html` | Owner-only stats page at `/stats/`: sign-ups, workouts, active people, 1-week retention, and feedback. |
 | `firestore.rules` | Privacy rules: each person can only read and write their own data. |
-| `functions/` | Spotter Pro payments: Stripe Checkout and the webhook that unlocks Pro (needs the Blaze plan). See **[PAYMENTS.md](PAYMENTS.md)**. |
+| `functions/` | Chalkbook Pro payments: Stripe Checkout and the webhook that unlocks Pro (needs the Blaze plan). See **[PAYMENTS.md](PAYMENTS.md)**. |
 | `.github/workflows/` | Auto-deploy: live on `main`, previews on pull requests. `deploy-backend.yml` deploys `firestore.rules` and `functions/` (after the one-time setup in PAYMENTS.md). |
 
 Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `firebase emulators:start --only hosting`.
@@ -50,7 +50,7 @@ Build locally (optional): `python3 scripts/build.py`, then `firebase serve` or `
   If you add a new document name, update `firestore.rules` too and deploy rules: `firebase deploy --only firestore:rules`.
 - Changes to `firestore.rules` are deployed by the **Deploy backend** workflow once its service account has the roles in
   PAYMENTS.md step 3. Until then, deploy them by hand: `firebase deploy --only firestore:rules`.
-- **Spotter Pro**: free = a workout log (logging, routines, history, PRs, streaks, imports, backups). Pro = the Progress
+- **Chalkbook Pro**: free = a workout log (logging, routines, history, PRs, streaks, imports, backups). Pro = the Progress
   tab (`progressOpen()`, locked without Pro except in the demo) and CSV export. Warm-up sets are free. The owner can give Pro free from `/stats/`. Pro tools call `proGate()`;
   `isPro()` reads `HOST.pro()`, which comes from `entitlements/<uid>` (written only by `functions/` and the owner).
   The demo has Pro unlocked. Server tests: `cd functions && npm test`.

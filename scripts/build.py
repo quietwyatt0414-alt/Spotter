@@ -5,7 +5,7 @@
   public/stats/index.html  owner-only analytics + feedback page = firebase/stats.html
   public/config.js, sw.js, manifest.webmanifest, icons/   copied from firebase/
   public/privacy/, public/terms/, public/legal.css         copied from legal/
-  public/about/            the landing page (what Spotter is, pricing, FAQ) = landing/
+  public/about/            the landing page (what Chalkbook is, pricing, FAQ) = landing/
 
 app/index.html is the single source for the app; it's also the exact file published on Claude.
 Run:  python3 scripts/build.py
@@ -21,7 +21,7 @@ if app.count(marker) != 1:
 def inject(block_path, title=None):
     html = app.replace(marker, (root / block_path).read_text() + marker, 1)
     if title:
-        html = html.replace("<title>Spotter — Workout Tracker</title>", f"<title>{title}</title>", 1)
+        html = html.replace("<title>Chalkbook — Workout Tracker</title>", f"<title>{title}</title>", 1)
     return html
 
 pub = root / "public"
@@ -30,7 +30,7 @@ if pub.exists():
 (pub / "demo").mkdir(parents=True)
 (pub / "stats").mkdir()
 (pub / "index.html").write_text(inject("firebase/host.html"))
-(pub / "demo" / "index.html").write_text(inject("app/demo-data.html", "Spotter — Demo Data"))
+(pub / "demo" / "index.html").write_text(inject("app/demo-data.html", "Chalkbook — Demo Data"))
 shutil.copy(root / "firebase" / "stats.html", pub / "stats" / "index.html")
 for f in ["config.js", "sw.js", "manifest.webmanifest"]:
     shutil.copy(root / "firebase" / f, pub / f)

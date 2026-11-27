@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Spotter keeps each person's log at data/users/{their uid}/{profile | active | log-YYYY-MM}.
+// Chalkbook keeps each person's log at data/users/{their uid}/{profile | active | log-YYYY-MM}.
 // People can read and write only their own documents. Everything else is closed.
 //
 // Analytics and feedback (see firebase/host.html and /stats/):
@@ -8,7 +8,7 @@ rules_version = '2';
 //   usermeta/{uid}        each person's own "already counted" flags, name and email (the owner's People list).
 //   feedback/{id}         messages from the in-app feedback form. Anyone can send one; nobody can edit them.
 //   deletions/{uid}       accounts deleted in the app; their log is kept 30 days for a restore, then deleted.
-//   entitlements/{uid}    Spotter Pro. Written only by the Stripe webhook (functions/, which bypasses these rules)
+//   entitlements/{uid}    Chalkbook Pro. Written only by the Stripe webhook (functions/, which bypasses these rules)
 //                         and the owner. People can read their own, so nobody can unlock Pro from their browser.
 // Only the owner (the uid below) can read metrics and feedback, on the /stats/ page.
 // To find your uid: Firebase console → Authentication → Users → copy the "User UID" of your Google account.

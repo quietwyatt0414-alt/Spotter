@@ -1,6 +1,6 @@
 {
-  "name": "Spotter — Workout Tracker",
-  "short_name": "Spotter",
+  "name": "Chalkbook — Workout Tracker",
+  "short_name": "Chalkbook",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

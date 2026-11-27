@@ -4,7 +4,7 @@
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
-<meta name="apple-mobile-web-app-title" content="Spotter">
+<meta name="apple-mobile-web-app-title" content="Chalkbook">
 <style>
 #gate{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
 #gate[hidden],#gate [hidden]{display:none!important}
@@ -28,11 +28,11 @@
 #gate .g-row{display:flex;justify-content:space-between;gap:10px;font-size:14px}
 #gate .g-row .link{padding:0;font-size:14px}
 #gate .g-ok{color:var(--tx2);font-size:14px}
-#gate .g-feats span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--acc);transform:rotate(45deg);margin-right:8px;vertical-align:1px}
+#gate .g-feats span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--acc);margin-right:8px;vertical-align:1px}
 </style>
 <div id="gate" hidden>
   <div class="g-in">
-    <div class="brand g-brand"><span class="brand-dot"></span>SPOTTER</div>
+    <div class="brand g-brand"><span class="brand-dot"></span>CHALKBOOK</div>
     <h1>Free workout tracker</h1>
     <p>Log your lifts, see if you’re progressing, keep your streak. Free forever. No ads, ever. Optional one-time Pro.</p>
     <div class="g-feats"><span>Routines & PRs</span><span>Rest timer</span><span>Streaks & history</span><span>Syncs to your phone & laptop</span></div>
@@ -52,7 +52,7 @@
     <div id="gateErr" class="g-err" role="alert"></div>
     <button class="btn btn-line block" id="gateLocal">Use without an account</button>
     <div class="g-small">Without an account, your log stays on this device only. You can sign in later from Settings and it moves over.</div>
-    <div class="g-small">New here? <a href="about/">See what Spotter does</a> or <a href="demo/">try the demo</a>.</div>
+    <div class="g-small">New here? <a href="about/">See what Chalkbook does</a> or <a href="demo/">try the demo</a>.</div>
     <div class="g-small">By signing in you agree to the <a href="terms/">Terms</a> and <a href="privacy/">Privacy Policy</a>.</div>
   </div>
 </div>
@@ -67,8 +67,8 @@
   const wait = new Promise(r => { settle = r; });
   window.__spotter = {state, settle:user => { if (state.done) return; state.done = true; settle(user); }};
   window.SPOTTER_HOST = {
-    cloudName:'your Spotter account',
-    privacyNote:'Your log syncs between your phone and laptop. Other people using this app can’t see it. Spotter only counts anonymous totals (like how many workouts get logged each day) to see what’s working.',
+    cloudName:'your Chalkbook account',
+    privacyNote:'Your log syncs between your phone and laptop. Other people using this app can’t see it. Chalkbook only counts anonymous totals (like how many workouts get logged each day) to see what’s working.',
     wait,
     // via: how this account signs in ('google' | 'apple' | 'password'); the app asks for the password to delete a 'password' account
     account:() => state.user ? {name:state.user.displayName || '', email:state.user.email || '', via:viaOf(state.user)} : null,
@@ -78,7 +78,7 @@
     contact:'quietwyatt0414@gmail.com',
     deleteAccount:password => window.__spotter.deleteAccount ? window.__spotter.deleteAccount(password) : Promise.reject({code:'unavailable'}),
     sendFeedback:fb => window.__spotter.feedback ? window.__spotter.feedback(fb) : Promise.reject(new Error('offline')),
-    // Spotter Pro: entitlements/{uid} is written only by the Stripe webhook (functions/index.js)
+    // Chalkbook Pro: entitlements/{uid} is written only by the Stripe webhook (functions/index.js)
     pro:() => state.pro,
     proPrice:PRO.price || '$19.99',
     proOnSale:!!PRO.onSale,
@@ -122,7 +122,7 @@ if (/FBAN|FBAV|Instagram|Line\/|Snapchat|musical_ly|TikTok|Bytedance|; wv\)/i.te
 const cfg = window.SPOTTER_FIREBASE_CONFIG || {};
 if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
   const s = $g('gateSetup'); s.hidden = false;
-  s.innerHTML = '<b>Almost set up.</b> Paste your Firebase config into <code>config.js</code> and deploy again (see README). Until then, you can use Spotter without an account.';
+  s.innerHTML = '<b>Almost set up.</b> Paste your Firebase config into <code>config.js</code> and deploy again (see README). Until then, you can use Chalkbook without an account.';
   ['gateSignIn', 'gateApple', 'gateEmailBtn'].forEach(id => { $g(id).disabled = true; $g(id).style.opacity = .4; });
   if (noAccount()) goLocal(); else showGate();
 } else {
@@ -211,7 +211,7 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
       try { localStorage.removeItem('spotter.v1'); localStorage.removeItem('spotter.noaccount'); sessionStorage.setItem('spotter.deleted', '1'); } catch {}
     };
 
-    /* Spotter Pro: listen to entitlements/{uid} (only the Stripe webhook and the owner can write it), and start
+    /* Chalkbook Pro: listen to entitlements/{uid} (only the Stripe webhook and the owner can write it), and start
        Stripe Checkout through the createCheckout function. Both need the Blaze plan and the backend deploy. */
     const watchPro = user => {
       let first = true;
@@ -248,7 +248,7 @@ if (!cfg.apiKey || /PASTE|YOUR_/.test(cfg.apiKey + cfg.projectId)) {
     const authMsg = (c, e) =>
         c === 'auth/unauthorized-domain' ? 'This address isn’t on the Firebase project’s allowed list yet. Add it under Authentication → Settings → Authorized domains.'
       : c === 'auth/network-request-failed' ? 'No connection. Try again, or use without an account for now.'
-      : c === 'auth/account-exists-with-different-credential' ? 'You already have a Spotter account with that email. Sign in the way you did before (' + others + ' or email).'
+      : c === 'auth/account-exists-with-different-credential' ? 'You already have a Chalkbook account with that email. Sign in the way you did before (' + others + ' or email).'
       : c === 'auth/operation-not-allowed' ? 'That sign-in option isn’t switched on yet. Try another one.'
       : c === 'auth/too-many-requests' ? 'Too many tries. Wait a few minutes, or reset your password.'
       : 'Sign-in didn’t work (' + (c || (e && e.message)) + ').';
