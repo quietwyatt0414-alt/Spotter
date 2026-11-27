@@ -52,8 +52,8 @@ Enroll at **developer.apple.com/programs/enroll** first (Apple can take up to 2 
 2. **Identifiers → +** → **Services IDs** → Description `Spotter web`, Identifier `com.witwire.spotter.web` →
    **Continue → Register**. Open it again, tick **Sign In with Apple** → **Configure**:
    - Primary App ID: `com.witwire.spotter`
-   - Domains: `chalkbook.web.app`
-   - Return URLs: `https://chalkbook.web.app/__/auth/handler`
+   - Domains: `chalkbookapp.web.app`
+   - Return URLs: `https://chalkbookapp.web.app/__/auth/handler`
 
    **Next → Done → Continue → Save**.
 3. **Keys → +** → name `Spotter sign-in`, tick **Sign In with Apple** → **Configure** → pick `com.witwire.spotter`
@@ -127,7 +127,7 @@ It creates a secret in your GitHub repo named something like `FIREBASE_SERVICE_A
 
 ## 7. Done
 
-Claude pushes the final touches, GitHub deploys, and your site is live at `https://chalkbook.web.app`.
+Claude pushes the final touches, GitHub deploys, and your site is live at `https://chalkbookapp.web.app`.
 
 - Open it, **Sign in with Google**.
 - Moving over from the Claude version: there, **Settings → Copy backup**; here, **Settings → Paste backup**.

@@ -2078,7 +2078,7 @@ function viewSettings() {
    On the website, firebase/host.html provides HOST.pro() (read from entitlements/{uid}, which only the Stripe
    webhook can write) and HOST.buyPro() (Stripe Checkout). The demo has Pro unlocked so people can try it.
    On Claude (no HOST) Pro isn't sold, so Pro tools stay locked with a pointer to the website. */
-const PRO_SITE = 'https://chalkbook.web.app';
+const PRO_SITE = 'https://chalkbookapp.web.app';
 const proState = () => (HOST && typeof HOST.pro === 'function' && HOST.pro()) || null;
 const isPro = () => !!DEMO || !!(proState() && proState().pro);
 // The Progress tab is Pro (open in the demo, where Pro is unlocked).

@@ -59,7 +59,7 @@
 <script src="config.js"></script>
 <script>
 // Moving from the old address: spotter-6d902.web.app hands over a log that was kept only on that device
-// (no account) as chalkbook.web.app/#handoff=<z|j>.<base64url of {v:1, keys:{...}}>. See firebase/moved/index.html.
+// (no account) as chalkbookapp.web.app/#handoff=<z|j>.<base64url of {v:1, keys:{...}}>. See firebase/moved/index.html.
 (() => {
   const m = location.hash.match(/^#handoff=([zj])\.([A-Za-z0-9_-]+)$/); if (!m) return;
   const KEYS = ['spotter.v1', 'spotter.noaccount', 'spotter.quote', 'spotter.upnext'];

@@ -29,8 +29,8 @@ const stripe = () => {
 };
 
 // only send people back to Chalkbook's own addresses (live site, PR previews, local testing)
-const ORIGIN_OK = /^https:\/\/(chalkbook|spotter-6d902)(--[a-z0-9-]+)?\.(web\.app|firebaseapp\.com)$|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
-const LIVE = 'https://chalkbook.web.app';
+const ORIGIN_OK = /^https:\/\/(chalkbookapp|spotter-6d902)(--[a-z0-9-]+)?\.(web\.app|firebaseapp\.com)$|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const LIVE = 'https://chalkbookapp.web.app';
 
 exports.createCheckout = onCall(async req => {
   if (!req.auth) throw new HttpsError('unauthenticated', 'Sign in to buy Chalkbook Pro.');

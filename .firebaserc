@@ -6,7 +6,7 @@
     "spotter-6d902": {
       "hosting": {
         "app": [
-          "chalkbook"
+          "chalkbookapp"
         ],
         "old": [
           "spotter-6d902"

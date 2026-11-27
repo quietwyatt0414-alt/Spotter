@@ -90,7 +90,7 @@ variables → Actions → **Variables** → `PRO_PRICE_CENTS` = `2999`, run **De
 
 ## Giving Pro to friends for free
 
-Open `https://chalkbook.web.app/stats/` (signed in with your Google account), find your friend under
+Open `https://chalkbookapp.web.app/stats/` (signed in with your Google account), find your friend under
 **People** (search by name or email), and switch **Pro** on. It unlocks for them within seconds. Switch it off to take
 it back.
 

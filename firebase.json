@@ -49,7 +49,7 @@
       "redirects": [
         {
           "regex": "^/(?P<page>about|privacy|terms|demo|stats)(?:/.*)?$",
-          "destination": "https://chalkbook.web.app/:page/",
+          "destination": "https://chalkbookapp.web.app/:page/",
           "type": 301
         }
       ],

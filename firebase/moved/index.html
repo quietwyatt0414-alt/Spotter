@@ -6,7 +6,7 @@
 <title>Chalkbook has moved</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0b0b0d">
-<link rel="canonical" href="https://chalkbook.web.app/">
+<link rel="canonical" href="https://chalkbookapp.web.app/">
 <style>
 :root{--bg:#0b0b0d;--s1:#141417;--line:#2a2a31;--tx:#f4f4f5;--tx2:#a3a3ad;--acc:#2dd4bf}
 *{box-sizing:border-box}
@@ -28,18 +28,18 @@ small{display:block;color:var(--tx2);margin-top:18px;font-size:13px}
 <main id="m">
   <div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><g stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none"><path d="M14 12v40M26 12v40M38 12v40M50 12v40"/><path d="M7 44L57 20"/></g></svg>CHALKBOOK</div>
   <h1>Spotter is now Chalkbook</h1>
-  <p>Same app, new name and a new address: <b>chalkbook.web.app</b>.</p>
+  <p>Same app, new name and a new address: <b>chalkbookapp.web.app</b>.</p>
   <p>Your workout log is saved only on this device, so tap below to bring it with you. Nothing is uploaded: it goes straight from this page to the new one.</p>
   <button class="go" id="move">Move my log to Chalkbook</button>
   <button class="alt" id="dl">Download a backup instead</button>
   <div id="err"></div>
-  <small>Added it to your home screen? After moving, remove the old icon and add chalkbook.web.app again.</small>
+  <small>Added it to your home screen? After moving, remove the old icon and add chalkbookapp.web.app again.</small>
 </main>
 <script>
 // The old address. People with an account just go to the new one (their log is in their account).
 // People without one have their log in this browser's storage for this address only, so they hand it over first.
 (() => {
-  const NEW = 'https://chalkbook.web.app';
+  const NEW = 'https://chalkbookapp.web.app';
   const KEYS = ['spotter.v1', 'spotter.noaccount', 'spotter.quote', 'spotter.upnext'];
   if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
   let ls = null; try { ls = window.localStorage; } catch {}
@@ -57,7 +57,7 @@ small{display:block;color:var(--tx2);margin-top:18px;font-size:13px}
       if (window.CompressionStream) { bytes = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer()); tag = 'z'; }
       try { ls.setItem('spotter.moved', '1'); } catch {}
       location.replace(NEW + '/#handoff=' + tag + '.' + b64(bytes));
-    } catch (e) { document.getElementById('err').textContent = 'That didn’t work on this browser. Download a backup instead, then open chalkbook.web.app and import it in Settings.'; }
+    } catch (e) { document.getElementById('err').textContent = 'That didn’t work on this browser. Download a backup instead, then open chalkbookapp.web.app and import it in Settings.'; }
   };
   document.getElementById('dl').onclick = () => {
     let S = {}; try { S = JSON.parse(log); } catch {}

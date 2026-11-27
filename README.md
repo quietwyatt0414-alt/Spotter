@@ -6,8 +6,8 @@ overloading, gym-switch fixes, sick/vacation days, 20 color themes, and imports 
 
 It runs as a website with sign-in through Google, email or Apple (Firebase), so friends can use it from a link and add it to their home screen.
 
-- **Live site:** `https://chalkbook.web.app` (after setup)
-- **Demo with 5 months of sample data:** `https://chalkbook.web.app/demo/`
+- **Live site:** `https://chalkbookapp.web.app` (after setup)
+- **Demo with 5 months of sample data:** `https://chalkbookapp.web.app/demo/`
 
 First time? Follow **[SETUP.md](SETUP.md)**.
 
