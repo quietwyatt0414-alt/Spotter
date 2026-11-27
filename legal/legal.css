@@ -1,7 +1,7 @@
 /* Shared styles for the privacy policy and terms pages (copied to public/legal.css by scripts/build.py). */
-:root{--bg:#0b0b0d;--s1:#141417;--line:#2a2a31;--tx:#f4f4f6;--tx2:#a3a3ad;--acc:#d4ff3f;--mark:#5a4a12;--mark-tx:#ffe9a8;
+:root{--bg:#0b0b0d;--s1:#141417;--line:#2a2a31;--tx:#f4f4f6;--tx2:#a3a3ad;--acc:#2dd4bf;--mark:#5a4a12;--mark-tx:#ffe9a8;
   --head:'Barlow Condensed',system-ui,sans-serif;--body:'Barlow',system-ui,-apple-system,sans-serif}
-@media (prefers-color-scheme: light){:root{--bg:#f6f6f3;--s1:#ffffff;--line:#e2e2dc;--tx:#141417;--tx2:#55555e;--acc:#4d6b00;--mark:#fff1b8;--mark-tx:#3d2f00}}
+@media (prefers-color-scheme: light){:root{--bg:#f6f6f3;--s1:#ffffff;--line:#e2e2dc;--tx:#141417;--tx2:#55555e;--acc:#0f766e;--mark:#fff1b8;--mark-tx:#3d2f00}}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--body);font-size:17px;line-height:1.6}
 main{max-width:720px;margin:0 auto;padding:28px 16px 64px}
