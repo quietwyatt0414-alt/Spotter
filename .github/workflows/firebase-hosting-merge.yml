@@ -1,4 +1,5 @@
-# Every push to main builds the site and puts it live on Firebase Hosting.
+# Every push to main builds the site and puts it live on Firebase Hosting: the app at chalkbookapp.web.app and the
+# "we moved" page at the old address spotter-6d902.web.app (both sites, see firebase.json and .firebaserc).
 name: Deploy live
 on:
   push:

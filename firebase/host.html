@@ -58,6 +58,27 @@
 </div>
 <script src="config.js"></script>
 <script>
+// Moving from the old address: spotter-6d902.web.app hands over a log that was kept only on that device
+// (no account) as chalkbookapp.web.app/#handoff=<z|j>.<base64url of {v:1, keys:{...}}>. See firebase/moved/index.html.
+(() => {
+  const m = location.hash.match(/^#handoff=([zj])\.([A-Za-z0-9_-]+)$/); if (!m) return;
+  const KEYS = ['spotter.v1', 'spotter.noaccount', 'spotter.quote', 'spotter.upnext'];
+  window.__handoff = (async () => {
+    const bin = atob(m[2].replace(/-/g, '+').replace(/_/g, '/'));
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    const text = m[1] === 'z' ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text() : new TextDecoder().decode(bytes);
+    const p = JSON.parse(text);
+    if (!p || p.v !== 1 || !p.keys || typeof p.keys !== 'object') return;
+    const mine = localStorage.getItem('spotter.v1');
+    for (const k of KEYS) {
+      const v = p.keys[k]; if (typeof v !== 'string') continue;
+      if (k === 'spotter.v1' && mine && mine !== v) { localStorage.setItem('spotter.v1.moved', v); continue; }   // never overwrite a log already here
+      localStorage.setItem(k, v);
+    }
+  })().catch(() => {}).finally(() => { history.replaceState(null, '', location.pathname + location.search); location.reload(); });
+})();
+</script>
+<script>
 // Classic script: runs before the app, so the app sees SPOTTER_HOST and window.claude right away.
 (() => {
   let settle;

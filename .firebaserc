@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "spotter-6d902"
+  },
+  "targets": {
+    "spotter-6d902": {
+      "hosting": {
+        "app": [
+          "chalkbookapp"
+        ],
+        "old": [
+          "spotter-6d902"
+        ]
+      }
+    }
   }
 }

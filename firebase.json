@@ -1,18 +1,77 @@
 {
-  "hosting": {
-    "public": "public",
-    "ignore": ["firebase.json", "**/.*"],
-    "headers": [
-      { "source": "**/*.@(html|js|webmanifest)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
-      { "source": "icons/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] }
-    ]
-  },
+  "hosting": [
+    {
+      "target": "app",
+      "public": "public",
+      "ignore": [
+        "firebase.json",
+        "**/.*"
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(html|js|webmanifest)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        },
+        {
+          "source": "icons/**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=604800"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "old",
+      "public": "public-old",
+      "ignore": [
+        "firebase.json",
+        "**/.*"
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        }
+      ],
+      "redirects": [
+        {
+          "regex": "^/(?P<page>about|privacy|terms|demo|stats)(?:/.*)?$",
+          "destination": "https://chalkbookapp.web.app/:page/",
+          "type": 301
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ],
   "firestore": {
     "rules": "firestore.rules"
   },
   "functions": {
     "source": "functions",
     "runtime": "nodejs22",
-    "ignore": ["node_modules", "test", ".git", "*.log"]
+    "ignore": [
+      "node_modules",
+      "test",
+      ".git",
+      "*.log"
+    ]
   }
 }
