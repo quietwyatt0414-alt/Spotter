@@ -6,6 +6,7 @@
   public/config.js, sw.js, manifest.webmanifest, icons/   copied from firebase/
   public/privacy/, public/terms/, public/legal.css         copied from legal/
   public/about/            the landing page (what Chalkbook is, pricing, FAQ) = landing/
+  public-old/              the old address (spotter-6d902.web.app): "we moved" page + log handoff = firebase/moved/
 
 app/index.html is the single source for the app; it's also the exact file published on Claude.
 Run:  python3 scripts/build.py
@@ -44,6 +45,11 @@ for page in ["privacy", "terms"]:
     (pub / page / "index.html").write_text(src)
 shutil.copy(root / "legal" / "legal.css", pub / "legal.css")
 shutil.copytree(root / "landing", pub / "about")
+
+old = root / "public-old"
+if old.exists():
+    shutil.rmtree(old)
+shutil.copytree(root / "firebase" / "moved", old)
 
 cfg = (root / "firebase" / "config.js").read_text()
 if "PASTE_" in cfg or "YOUR_PROJECT_ID" in cfg:
